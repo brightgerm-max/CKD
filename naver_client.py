@@ -3,12 +3,22 @@
 import requests
 from datetime import datetime, timedelta
 
-NAVER_CLIENT_ID = "tb4OjXskE3YsQlZGOizW"
-NAVER_CLIENT_SECRET = "PT49R7jgJ2"
+# 데이터랩 API 키
+DATALAB_CLIENT_ID = "tb4OjXskE3YsQlZGOizW"
+DATALAB_CLIENT_SECRET = "PT49R7jgJ2"
 
-HEADERS = {
-    "X-Naver-Client-Id": NAVER_CLIENT_ID,
-    "X-Naver-Client-Secret": NAVER_CLIENT_SECRET,
+# 검색 API 키
+SEARCH_CLIENT_ID = "XD2DNizdSkR3an6vV6hZ"
+SEARCH_CLIENT_SECRET = "gDsSKV4Ye0"
+
+DATALAB_HEADERS = {
+    "X-Naver-Client-Id": DATALAB_CLIENT_ID,
+    "X-Naver-Client-Secret": DATALAB_CLIENT_SECRET,
+}
+
+SEARCH_HEADERS = {
+    "X-Naver-Client-Id": SEARCH_CLIENT_ID,
+    "X-Naver-Client-Secret": SEARCH_CLIENT_SECRET,
 }
 
 
@@ -33,7 +43,7 @@ def fetch_search_trend(keywords_kr: list[str], months_back: int = 12) -> list[di
     try:
         resp = requests.post(
             "https://openapi.naver.com/v1/datalab/search",
-            headers={**HEADERS, "Content-Type": "application/json"},
+            headers={**DATALAB_HEADERS, "Content-Type": "application/json"},
             json=body,
             timeout=10,
         )
@@ -68,7 +78,7 @@ def search_tv_health_news(ingredient_kr: str, display: int = 5) -> list[dict]:
         try:
             resp = requests.get(
                 "https://openapi.naver.com/v1/search/news.json",
-                headers=HEADERS,
+                headers=SEARCH_HEADERS,
                 params={"query": query, "display": display, "sort": "date"},
                 timeout=10,
             )
