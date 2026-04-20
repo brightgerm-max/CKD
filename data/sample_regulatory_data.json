@@ -1,0 +1,76 @@
+{
+  "regulatory_notices": [
+    {
+      "date": "2026-04-12",
+      "source": "식약처",
+      "title": "프로바이오틱스 건강기능식품 기능성 원료 재평가 결과 고시",
+      "ingredients": ["유산균", "프로바이오틱스"],
+      "summary": "프로바이오틱스 19종의 기능성 등급을 '개별인정형'에서 '고시형'으로 전환 검토 발표",
+      "impact": "긍정",
+      "url": "https://www.mfds.go.kr"
+    },
+    {
+      "date": "2026-03-28",
+      "source": "식약처",
+      "title": "건강기능식품 광고 심의 가이드라인 개정 안내",
+      "ingredients": ["전체"],
+      "summary": "건강기능식품 광고 시 '과학적 근거' 표현 기준 강화, 논문 인용 시 출처 명시 의무화",
+      "impact": "주의",
+      "url": "https://www.mfds.go.kr"
+    },
+    {
+      "date": "2026-03-15",
+      "source": "식약처",
+      "title": "콘드로이친 황산 기능성 원료 기준·규격 변경 고시",
+      "ingredients": ["콘드로이친"],
+      "summary": "콘드로이친 황산 나트륨의 순도 기준을 90%에서 95%로 상향, 2026년 하반기 시행",
+      "impact": "주의",
+      "url": "https://www.mfds.go.kr"
+    },
+    {
+      "date": "2026-03-05",
+      "source": "식약처",
+      "title": "루테인 일일 섭취량 상한 기준 재검토 공고",
+      "ingredients": ["루테인", "지아잔틴"],
+      "summary": "루테인 일일 최대 섭취량을 기존 20mg에서 유지하되, 지아잔틴 별도 기준 신설 검토",
+      "impact": "정보",
+      "url": "https://www.mfds.go.kr"
+    },
+    {
+      "date": "2026-02-20",
+      "source": "식약처",
+      "title": "오메가-3 지방산 rTG 형태 기능성 인정 범위 확대 고시",
+      "ingredients": ["오메가3", "EPA", "DHA"],
+      "summary": "rTG(재에스테르화 트리글리세리드) 형태 오메가-3의 '기억력 개선' 기능성 추가 인정",
+      "impact": "긍정",
+      "url": "https://www.mfds.go.kr"
+    },
+    {
+      "date": "2026-02-10",
+      "source": "식약처",
+      "title": "포스파티딜세린 기능성 표시 문구 변경 안내",
+      "ingredients": ["포스파티딜세린"],
+      "summary": "'인지력 개선에 도움을 줄 수 있음' 표현을 '인지기능 개선에 도움을 줄 수 있음'으로 통일",
+      "impact": "정보",
+      "url": "https://www.mfds.go.kr"
+    },
+    {
+      "date": "2026-01-25",
+      "source": "식약처",
+      "title": "밀크씨슬(실리마린) 간 건강 기능성 원료 재평가 착수",
+      "ingredients": ["밀크씨슬", "실리마린"],
+      "summary": "실리마린 기능성 원료에 대한 최신 논문 기반 재평가 시작, 결과는 하반기 발표 예정",
+      "impact": "정보",
+      "url": "https://www.mfds.go.kr"
+    },
+    {
+      "date": "2026-01-15",
+      "source": "식약처",
+      "title": "홍국(모나콜린K) 함량 기준 국제 조화 검토",
+      "ingredients": ["홍국", "모나콜린K"],
+      "summary": "EU의 모나콜린K 일일 섭취량 3mg 제한 기준에 맞춰 국내 기준도 재검토 착수",
+      "impact": "주의",
+      "url": "https://www.mfds.go.kr"
+    }
+  ]
+}

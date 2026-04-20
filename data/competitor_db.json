@@ -1,0 +1,394 @@
+{
+  "categories": {
+    "장 건강": {
+      "ckd_brand": "락토핏 골드",
+      "competitors": [
+        {
+          "company": "뉴트리원",
+          "brand": "쾌변 유산균",
+          "usp": "배변 특화 유산균",
+          "channels": ["인플루언서", "SNS"],
+          "price_position": "중",
+          "premium_score": 5,
+          "price_score": 5
+        },
+        {
+          "company": "한국야쿠르트",
+          "brand": "프로바이오틱스 윌",
+          "usp": "50년 유산균 연구력",
+          "channels": ["TV", "DA"],
+          "price_position": "중상",
+          "premium_score": 7,
+          "price_score": 6
+        },
+        {
+          "company": "일동제약",
+          "brand": "지큐랩",
+          "usp": "프리미엄 균주 기술",
+          "channels": ["SNS", "검색광고"],
+          "price_position": "상",
+          "premium_score": 8,
+          "price_score": 8
+        },
+        {
+          "company": "대웅제약",
+          "brand": "락피더스",
+          "usp": "대웅제약 신뢰도",
+          "channels": ["TV", "검색광고"],
+          "price_position": "중",
+          "premium_score": 6,
+          "price_score": 5
+        }
+      ],
+      "ckd_position": {
+        "premium_score": 7,
+        "price_score": 6,
+        "usp": "유산균 판매 No.1",
+        "channels": ["TV", "검색광고"]
+      },
+      "differentiation": [
+        "과학적 근거 기반 마케팅 — 경쟁사 대부분 감성 마케팅 중심",
+        "장-면역 연결 최신 논문 트렌드 활용 가능",
+        "타겟 세분화 전략 — 경쟁사는 범용 메시지 중심",
+        "서브 브랜드 라인업 다양성 (골드/코어/슬림/키즈/맘)"
+      ]
+    },
+    "관절 건강": {
+      "ckd_brand": "콘드로이친",
+      "competitors": [
+        {
+          "company": "GC녹십자",
+          "brand": "관절엔 콘드로이친",
+          "usp": "녹십자 브랜드 신뢰",
+          "channels": ["TV", "검색광고"],
+          "price_position": "중",
+          "premium_score": 6,
+          "price_score": 5
+        },
+        {
+          "company": "안국건강",
+          "brand": "안심 관절",
+          "usp": "복합 관절 영양소",
+          "channels": ["홈쇼핑", "DA"],
+          "price_position": "중상",
+          "premium_score": 5,
+          "price_score": 6
+        },
+        {
+          "company": "동아제약",
+          "brand": "글루코사민",
+          "usp": "동아 관절 솔루션",
+          "channels": ["TV", "약국"],
+          "price_position": "상",
+          "premium_score": 7,
+          "price_score": 7
+        }
+      ],
+      "ckd_position": {
+        "premium_score": 7,
+        "price_score": 5,
+        "usp": "종근당 콘드로이친 원료",
+        "channels": ["TV", "검색광고"]
+      },
+      "differentiation": [
+        "콘드로이친 특화 포지셔닝 — 경쟁사 글루코사민 중심",
+        "해외 임상 논문 근거 보유",
+        "시니어 타겟 전문성 강조 가능"
+      ]
+    },
+    "두뇌 건강": {
+      "ckd_brand": "포스파티딜세린",
+      "competitors": [
+        {
+          "company": "일양약품",
+          "brand": "브레인 PS",
+          "usp": "두뇌 영양 전문",
+          "channels": ["검색광고", "블로그"],
+          "price_position": "중",
+          "premium_score": 5,
+          "price_score": 5
+        },
+        {
+          "company": "뉴트리디데이",
+          "brand": "포스파티딜세린",
+          "usp": "가성비 두뇌 영양제",
+          "channels": ["SNS", "쿠팡"],
+          "price_position": "하",
+          "premium_score": 3,
+          "price_score": 3
+        }
+      ],
+      "ckd_position": {
+        "premium_score": 7,
+        "price_score": 6,
+        "usp": "종근당 두뇌 건강 전문",
+        "channels": ["검색광고", "블로그"]
+      },
+      "differentiation": [
+        "수험생+시니어 듀얼 타겟 전략 가능",
+        "메타분석 논문 기반 커뮤니케이션",
+        "종근당 제약 브랜드 신뢰도 활용"
+      ]
+    },
+    "눈 건강": {
+      "ckd_brand": "아이클리어 루테인",
+      "competitors": [
+        {
+          "company": "안국건강",
+          "brand": "루테인 지아잔틴",
+          "usp": "눈 건강 1위",
+          "channels": ["TV", "검색광고"],
+          "price_position": "중",
+          "premium_score": 6,
+          "price_score": 5
+        },
+        {
+          "company": "뉴트리원",
+          "brand": "아이 루테인",
+          "usp": "프리미엄 루테인",
+          "channels": ["인플루언서", "SNS"],
+          "price_position": "상",
+          "premium_score": 7,
+          "price_score": 7
+        }
+      ],
+      "ckd_position": {
+        "premium_score": 6,
+        "price_score": 5,
+        "usp": "아이클리어 눈 전문",
+        "channels": ["검색광고", "DA"]
+      },
+      "differentiation": [
+        "루테인+지아잔틴 복합 포뮬러 차별화",
+        "디지털 디바이스 시대 타겟 메시지",
+        "황반 건강 논문 근거 활용"
+      ]
+    },
+    "혈행 건강": {
+      "ckd_brand": "오메가3",
+      "competitors": [
+        {
+          "company": "동아제약",
+          "brand": "써큐란",
+          "usp": "혈행 개선 특화",
+          "channels": ["TV", "약국"],
+          "price_position": "상",
+          "premium_score": 8,
+          "price_score": 7
+        },
+        {
+          "company": "뉴트리디데이",
+          "brand": "rTG 오메가3",
+          "usp": "고순도 rTG",
+          "channels": ["SNS", "쿠팡"],
+          "price_position": "중",
+          "premium_score": 5,
+          "price_score": 4
+        }
+      ],
+      "ckd_position": {
+        "premium_score": 6,
+        "price_score": 5,
+        "usp": "rTG 오메가3 프리미엄",
+        "channels": ["검색광고", "블로그"]
+      },
+      "differentiation": [
+        "rTG 고순도 원료 차별화",
+        "혈행+기억력 복합 기능성 강조",
+        "오메가3 임상 근거 풍부"
+      ]
+    },
+    "간 건강": {
+      "ckd_brand": "밀크씨슬",
+      "competitors": [
+        {
+          "company": "대웅제약",
+          "brand": "밀크씨슬 간에좋은",
+          "usp": "간 건강 대표",
+          "channels": ["TV", "검색광고"],
+          "price_position": "중상",
+          "premium_score": 7,
+          "price_score": 6
+        }
+      ],
+      "ckd_position": {
+        "premium_score": 6,
+        "price_score": 5,
+        "usp": "종근당 간 건강",
+        "channels": ["검색광고"]
+      },
+      "differentiation": [
+        "실리마린 고함량 차별화",
+        "30-50대 남성 타겟 집중"
+      ]
+    },
+    "뼈 건강": {
+      "ckd_brand": "칼슘 마그네슘 비타민D",
+      "competitors": [
+        {
+          "company": "유한양행",
+          "brand": "뼈엔 엠비피",
+          "usp": "MBP 뼈 건강",
+          "channels": ["TV", "홈쇼핑"],
+          "price_position": "상",
+          "premium_score": 8,
+          "price_score": 7
+        }
+      ],
+      "ckd_position": {
+        "premium_score": 5,
+        "price_score": 4,
+        "usp": "칼마디 복합 포뮬러",
+        "channels": ["검색광고"]
+      },
+      "differentiation": [
+        "칼슘+마그네슘+비타민D 복합 시너지",
+        "갱년기 여성 타겟 전문화"
+      ]
+    },
+    "콜레스테롤": {
+      "ckd_brand": "홍국",
+      "competitors": [
+        {
+          "company": "한미약품",
+          "brand": "홍국 모나콜린K",
+          "usp": "한미 콜레스테롤 관리",
+          "channels": ["검색광고", "블로그"],
+          "price_position": "중",
+          "premium_score": 5,
+          "price_score": 5
+        }
+      ],
+      "ckd_position": {
+        "premium_score": 6,
+        "price_score": 5,
+        "usp": "종근당 홍국 프리미엄",
+        "channels": ["검색광고"]
+      },
+      "differentiation": [
+        "모나콜린K 정량 보증",
+        "콜레스테롤 관리 임상 근거"
+      ]
+    },
+    "면역 건강": {
+      "ckd_brand": "비타민C",
+      "competitors": [
+        {
+          "company": "고려은단",
+          "brand": "비타민C 1000",
+          "usp": "비타민C No.1 브랜드",
+          "channels": ["TV", "검색광고", "DA"],
+          "price_position": "중",
+          "premium_score": 6,
+          "price_score": 5
+        }
+      ],
+      "ckd_position": {
+        "premium_score": 5,
+        "price_score": 4,
+        "usp": "종근당 비타민C",
+        "channels": ["검색광고"]
+      },
+      "differentiation": [
+        "면역+항산화 듀얼 기능 강조",
+        "종근당 브랜드 신뢰도 활용"
+      ]
+    },
+    "피부 건강": {
+      "ckd_brand": "콜라겐",
+      "competitors": [
+        {
+          "company": "뉴트리원",
+          "brand": "이너뷰티 콜라겐",
+          "usp": "저분자 콜라겐 뷰티",
+          "channels": ["인플루언서", "SNS"],
+          "price_position": "상",
+          "premium_score": 7,
+          "price_score": 7
+        }
+      ],
+      "ckd_position": {
+        "premium_score": 5,
+        "price_score": 5,
+        "usp": "저분자 피쉬 콜라겐",
+        "channels": ["SNS", "검색광고"]
+      },
+      "differentiation": [
+        "콜라겐+히알루론산 복합 포뮬러",
+        "피부 임상 논문 근거 활용"
+      ]
+    },
+    "남성 건강": {
+      "ckd_brand": "쏘팔메토",
+      "competitors": [
+        {
+          "company": "대웅제약",
+          "brand": "쏘팔메토",
+          "usp": "남성 건강 대웅",
+          "channels": ["TV", "검색광고"],
+          "price_position": "중",
+          "premium_score": 6,
+          "price_score": 5
+        }
+      ],
+      "ckd_position": {
+        "premium_score": 6,
+        "price_score": 5,
+        "usp": "종근당 전립선 건강",
+        "channels": ["검색광고"]
+      },
+      "differentiation": [
+        "전립선 건강 전문 포지셔닝",
+        "50-60대 남성 집중 타겟"
+      ]
+    },
+    "여성 건강": {
+      "ckd_brand": "크랜베리",
+      "competitors": [
+        {
+          "company": "뉴트리원",
+          "brand": "크랜베리 프로",
+          "usp": "여성 요로 건강",
+          "channels": ["SNS", "인플루언서"],
+          "price_position": "중상",
+          "premium_score": 6,
+          "price_score": 6
+        }
+      ],
+      "ckd_position": {
+        "premium_score": 5,
+        "price_score": 5,
+        "usp": "크랜베리 요로 건강",
+        "channels": ["검색광고", "SNS"]
+      },
+      "differentiation": [
+        "프로안토시아니딘 고함량",
+        "20-40대 여성 타겟 특화"
+      ]
+    },
+    "다이어트": {
+      "ckd_brand": "가르시니아",
+      "competitors": [
+        {
+          "company": "GC녹십자",
+          "brand": "다이어트 가르시니아",
+          "usp": "체지방 감소 특화",
+          "channels": ["SNS", "DA"],
+          "price_position": "중",
+          "premium_score": 5,
+          "price_score": 5
+        }
+      ],
+      "ckd_position": {
+        "premium_score": 5,
+        "price_score": 4,
+        "usp": "HCA 고함량 가르시니아",
+        "channels": ["검색광고", "SNS"]
+      },
+      "differentiation": [
+        "HCA 고함량 원료 차별화",
+        "MZ세대 다이어트 트렌드 연계"
+      ]
+    }
+  }
+}

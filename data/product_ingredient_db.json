@@ -1,0 +1,475 @@
+{
+  "company": "종근당건강",
+  "last_updated": "2026-04-20",
+  "products": [
+    {
+      "brand": "락토핏 골드",
+      "category": "장 건강",
+      "ingredients": [
+        "Bifidobacterium longum",
+        "Lactobacillus acidophilus",
+        "Lactobacillus rhamnosus",
+        "Streptococcus thermophilus"
+      ],
+      "ingredient_keywords_kr": [
+        "비피더스",
+        "유산균",
+        "프로바이오틱스",
+        "비피도박테리움",
+        "락토바실러스"
+      ],
+      "ingredient_keywords_en": [
+        "bifidobacterium",
+        "lactobacillus",
+        "probiotics",
+        "probiotic",
+        "gut microbiome",
+        "gut flora"
+      ],
+      "health_claims": [
+        "장 건강",
+        "유익균 증식",
+        "유해균 억제",
+        "배변활동 원활"
+      ],
+      "target_demographic": {
+        "gender": "all",
+        "age_min": 19,
+        "age_max": 70,
+        "primary_age": "30-50대"
+      },
+      "sub_products": [
+        "락토핏 골드",
+        "락토핏 코어",
+        "락토핏 슬림",
+        "락토핏 키즈",
+        "락토핏 맘",
+        "락토핏 생유산균"
+      ],
+      "product_url": "https://www.ckdmall.co.kr/product/lactofit-gold"
+    },
+    {
+      "brand": "콘드로이친",
+      "category": "관절 건강",
+      "ingredients": [
+        "Chondroitin sulfate",
+        "Glucosamine"
+      ],
+      "ingredient_keywords_kr": [
+        "콘드로이친",
+        "콘드로이틴",
+        "글루코사민",
+        "상어연골",
+        "연골"
+      ],
+      "ingredient_keywords_en": [
+        "chondroitin",
+        "chondroitin sulfate",
+        "glucosamine",
+        "cartilage",
+        "shark cartilage"
+      ],
+      "health_claims": [
+        "관절 건강",
+        "연골 구성성분",
+        "관절 기능 개선"
+      ],
+      "target_demographic": {
+        "gender": "all",
+        "age_min": 40,
+        "age_max": 80,
+        "primary_age": "50-70대"
+      },
+      "sub_products": [
+        "콘드로이친"
+      ],
+      "product_url": "https://www.ckdmall.co.kr/product/chondroitin"
+    },
+    {
+      "brand": "포스파티딜세린",
+      "category": "두뇌 건강",
+      "ingredients": [
+        "Phosphatidylserine"
+      ],
+      "ingredient_keywords_kr": [
+        "포스파티딜세린",
+        "PS",
+        "두뇌 영양제",
+        "인지기능"
+      ],
+      "ingredient_keywords_en": [
+        "phosphatidylserine",
+        "PS",
+        "cognitive",
+        "brain function",
+        "memory"
+      ],
+      "health_claims": [
+        "인지기능 개선",
+        "기억력 개선",
+        "두뇌 건강",
+        "집중력"
+      ],
+      "target_demographic": {
+        "gender": "all",
+        "age_min": 15,
+        "age_max": 70,
+        "primary_age": "수험생, 40-60대"
+      },
+      "sub_products": [
+        "포스파티딜세린"
+      ],
+      "product_url": "https://www.ckdmall.co.kr/product/phosphatidylserine"
+    },
+    {
+      "brand": "아이클리어 루테인",
+      "category": "눈 건강",
+      "ingredients": [
+        "Lutein",
+        "Zeaxanthin"
+      ],
+      "ingredient_keywords_kr": [
+        "루테인",
+        "지아잔틴",
+        "눈 영양제",
+        "황반"
+      ],
+      "ingredient_keywords_en": [
+        "lutein",
+        "zeaxanthin",
+        "macular",
+        "eye health",
+        "vision"
+      ],
+      "health_claims": [
+        "눈 건강",
+        "황반색소밀도 유지",
+        "눈의 피로 개선"
+      ],
+      "target_demographic": {
+        "gender": "all",
+        "age_min": 20,
+        "age_max": 70,
+        "primary_age": "30-60대"
+      },
+      "sub_products": [
+        "아이클리어 루테인"
+      ],
+      "product_url": "https://www.ckdmall.co.kr/product/eyeclear-lutein"
+    },
+    {
+      "brand": "오메가3",
+      "category": "혈행 건강",
+      "ingredients": [
+        "EPA",
+        "DHA",
+        "Omega-3 fatty acids"
+      ],
+      "ingredient_keywords_kr": [
+        "오메가3",
+        "EPA",
+        "DHA",
+        "혈행",
+        "중성지방"
+      ],
+      "ingredient_keywords_en": [
+        "omega-3",
+        "EPA",
+        "DHA",
+        "fish oil",
+        "fatty acid",
+        "triglyceride",
+        "cardiovascular"
+      ],
+      "health_claims": [
+        "혈중 중성지방 개선",
+        "혈행 개선",
+        "기억력 개선"
+      ],
+      "target_demographic": {
+        "gender": "all",
+        "age_min": 30,
+        "age_max": 70,
+        "primary_age": "40-60대"
+      },
+      "sub_products": [
+        "rTG 오메가3"
+      ],
+      "product_url": "https://www.ckdmall.co.kr/product/omega3"
+    },
+    {
+      "brand": "밀크씨슬",
+      "category": "간 건강",
+      "ingredients": [
+        "Silymarin",
+        "Milk thistle extract"
+      ],
+      "ingredient_keywords_kr": [
+        "밀크씨슬",
+        "실리마린",
+        "간 건강"
+      ],
+      "ingredient_keywords_en": [
+        "milk thistle",
+        "silymarin",
+        "liver",
+        "hepatoprotective"
+      ],
+      "health_claims": [
+        "간 건강",
+        "간세포 보호"
+      ],
+      "target_demographic": {
+        "gender": "male",
+        "age_min": 30,
+        "age_max": 60,
+        "primary_age": "30-50대 남성"
+      },
+      "sub_products": [
+        "밀크씨슬"
+      ],
+      "product_url": "https://www.ckdmall.co.kr/product/milk-thistle"
+    },
+    {
+      "brand": "칼슘 마그네슘 비타민D",
+      "category": "뼈 건강",
+      "ingredients": [
+        "Calcium",
+        "Magnesium",
+        "Vitamin D"
+      ],
+      "ingredient_keywords_kr": [
+        "칼슘",
+        "마그네슘",
+        "비타민D",
+        "뼈 건강",
+        "골다공증"
+      ],
+      "ingredient_keywords_en": [
+        "calcium",
+        "magnesium",
+        "vitamin D",
+        "bone",
+        "osteoporosis",
+        "bone density"
+      ],
+      "health_claims": [
+        "뼈 건강",
+        "칼슘 흡수 촉진",
+        "골다공증 예방"
+      ],
+      "target_demographic": {
+        "gender": "female",
+        "age_min": 40,
+        "age_max": 70,
+        "primary_age": "50-60대 여성"
+      },
+      "sub_products": [
+        "칼슘 마그네슘 비타민D"
+      ],
+      "product_url": "https://www.ckdmall.co.kr/product/calcium-magnesium-vitd"
+    },
+    {
+      "brand": "홍국",
+      "category": "콜레스테롤",
+      "ingredients": [
+        "Monacolin K",
+        "Red yeast rice"
+      ],
+      "ingredient_keywords_kr": [
+        "홍국",
+        "모나콜린K",
+        "콜레스테롤"
+      ],
+      "ingredient_keywords_en": [
+        "red yeast rice",
+        "monacolin K",
+        "cholesterol",
+        "lovastatin"
+      ],
+      "health_claims": [
+        "콜레스테롤 개선",
+        "혈중 LDL 감소"
+      ],
+      "target_demographic": {
+        "gender": "all",
+        "age_min": 40,
+        "age_max": 70,
+        "primary_age": "40-60대"
+      },
+      "sub_products": [
+        "홍국"
+      ],
+      "product_url": "https://www.ckdmall.co.kr/product/red-yeast-rice"
+    },
+    {
+      "brand": "비타민C",
+      "category": "면역 건강",
+      "ingredients": [
+        "Vitamin C",
+        "Ascorbic acid"
+      ],
+      "ingredient_keywords_kr": [
+        "비타민C",
+        "항산화",
+        "면역"
+      ],
+      "ingredient_keywords_en": [
+        "vitamin C",
+        "ascorbic acid",
+        "antioxidant",
+        "immune"
+      ],
+      "health_claims": [
+        "항산화",
+        "면역 기능",
+        "피부 건강",
+        "철 흡수"
+      ],
+      "target_demographic": {
+        "gender": "all",
+        "age_min": 15,
+        "age_max": 70,
+        "primary_age": "전 연령"
+      },
+      "sub_products": [
+        "비타민C 1000"
+      ],
+      "product_url": "https://www.ckdmall.co.kr/product/vitamin-c"
+    },
+    {
+      "brand": "콜라겐",
+      "category": "피부 건강",
+      "ingredients": [
+        "Collagen peptide",
+        "Hyaluronic acid"
+      ],
+      "ingredient_keywords_kr": [
+        "콜라겐",
+        "히알루론산",
+        "피부"
+      ],
+      "ingredient_keywords_en": [
+        "collagen",
+        "collagen peptide",
+        "hyaluronic acid",
+        "skin",
+        "wrinkle"
+      ],
+      "health_claims": [
+        "피부 보습",
+        "피부 탄력",
+        "자외선에 의한 피부손상 보호"
+      ],
+      "target_demographic": {
+        "gender": "female",
+        "age_min": 20,
+        "age_max": 50,
+        "primary_age": "20-40대 여성"
+      },
+      "sub_products": [
+        "저분자 콜라겐"
+      ],
+      "product_url": "https://www.ckdmall.co.kr/product/collagen"
+    },
+    {
+      "brand": "쏘팔메토",
+      "category": "남성 건강",
+      "ingredients": [
+        "Saw palmetto extract"
+      ],
+      "ingredient_keywords_kr": [
+        "쏘팔메토",
+        "전립선"
+      ],
+      "ingredient_keywords_en": [
+        "saw palmetto",
+        "prostate",
+        "BPH",
+        "urinary"
+      ],
+      "health_claims": [
+        "전립선 건강",
+        "배뇨 기능 개선"
+      ],
+      "target_demographic": {
+        "gender": "male",
+        "age_min": 40,
+        "age_max": 70,
+        "primary_age": "50-60대 남성"
+      },
+      "sub_products": [
+        "쏘팔메토"
+      ],
+      "product_url": "https://www.ckdmall.co.kr/product/saw-palmetto"
+    },
+    {
+      "brand": "크랜베리",
+      "category": "여성 건강",
+      "ingredients": [
+        "Cranberry extract",
+        "Proanthocyanidins"
+      ],
+      "ingredient_keywords_kr": [
+        "크랜베리",
+        "여성 건강",
+        "요로"
+      ],
+      "ingredient_keywords_en": [
+        "cranberry",
+        "proanthocyanidins",
+        "urinary tract",
+        "UTI"
+      ],
+      "health_claims": [
+        "요로 건강",
+        "항산화"
+      ],
+      "target_demographic": {
+        "gender": "female",
+        "age_min": 20,
+        "age_max": 50,
+        "primary_age": "20-40대 여성"
+      },
+      "sub_products": [
+        "크랜베리"
+      ],
+      "product_url": "https://www.ckdmall.co.kr/product/cranberry"
+    },
+    {
+      "brand": "가르시니아",
+      "category": "다이어트",
+      "ingredients": [
+        "Garcinia cambogia extract",
+        "HCA"
+      ],
+      "ingredient_keywords_kr": [
+        "가르시니아",
+        "HCA",
+        "다이어트",
+        "체지방"
+      ],
+      "ingredient_keywords_en": [
+        "garcinia cambogia",
+        "HCA",
+        "hydroxycitric acid",
+        "weight loss",
+        "body fat"
+      ],
+      "health_claims": [
+        "체지방 감소",
+        "탄수화물 대사"
+      ],
+      "target_demographic": {
+        "gender": "all",
+        "age_min": 20,
+        "age_max": 50,
+        "primary_age": "20-40대"
+      },
+      "sub_products": [
+        "가르시니아"
+      ],
+      "product_url": "https://www.ckdmall.co.kr/product/garcinia"
+    }
+  ]
+}
