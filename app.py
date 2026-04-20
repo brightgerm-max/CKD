@@ -1275,21 +1275,37 @@ def page_competitor():
     product = products[st.session_state["comp_product"]]
     cat_data = competitor_db.get("categories",{}).get(product["category"])
     if not cat_data:
-        st.warning(f"'{product['category']}' 카테고리의 경쟁사 데이터가 준비되지 않았습니다.")
-        return
+        # 카테고리가 없으면 빈 구조 생성
+        competitor_db.setdefault("categories",{})[product["category"]] = {
+            "ckd_brand": product["brand"], "competitors": [],
+            "ckd_position": {"premium_score":5,"price_score":5,"usp":{"headline":"","selling_points":[],"target":"","key_claim":""}},
+            "differentiation": []
+        }
+        save_competitor_db(competitor_db)
+        cat_data = competitor_db["categories"][product["category"]]
 
     competitors = cat_data.get("competitors",[])
     ckd = cat_data.get("ckd_position",{})
+    ckd_ingredient_names = [ing.lower() for ing in product.get("ingredient_keywords_kr",[])]
 
+    # ── 자동 경쟁사 탐색 (상품 선택 시 자동 실행) ──
+    scan_key = f"comp_scan_{product['brand']}"
+    if scan_key not in st.session_state:
+        with st.spinner(f"'{product['category']}' 카테고리 경쟁사를 네이버 쇼핑에서 탐색하고 있습니다..."):
+            scanned = scan_competitors(product["category"], ckd_brand=product["brand"])
+            st.session_state[scan_key] = scanned
+
+    scanned = st.session_state.get(scan_key, [])
+
+    # ── 헤더 + 경쟁사 추가 ──
     col_hdr, col_addbtn = st.columns([5, 1])
     with col_hdr:
-        st.markdown(f'<div class="s-header">⚔️ "{product["brand"]}" 카테고리 USP 비교</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="s-header">⚔️ "{product["brand"]}" 카테고리 경쟁사 분석</div>', unsafe_allow_html=True)
     with col_addbtn:
         st.markdown("")
         if st.button("＋ 경쟁사 추가", type="primary", use_container_width=True):
             st.session_state["comp_add_mode"] = True
 
-    # 경쟁사 추가 폼
     if st.session_state.get("comp_add_mode"):
         with st.expander("새 경쟁사 등록", expanded=True):
             with st.form("add_competitor_form"):
@@ -1297,113 +1313,46 @@ def page_competitor():
                 with ac1:
                     new_comp_company = st.text_input("회사명 *")
                     new_comp_brand = st.text_input("브랜드명 *")
-                    new_comp_search = st.text_input("네이버 검색어 (예: 쾌변 유산균 뉴트리원)")
-                    new_comp_premium = st.slider("프리미엄 점수", 1, 10, 5)
-                    new_comp_price = st.slider("가격 포지션", 1, 10, 5)
-                with ac2:
                     new_comp_headline = st.text_input("USP 헤드라인 *")
+                with ac2:
                     new_comp_sp = st.text_area("셀링포인트 (줄바꿈으로 구분)")
                     new_comp_target = st.text_input("타겟 고객층")
                     new_comp_claim = st.text_input("핵심 소구 포인트")
                 if st.form_submit_button("등록", type="primary"):
-                    if new_comp_company and new_comp_brand and new_comp_headline:
-                        new_competitor = {
-                            "company": new_comp_company,
-                            "brand": new_comp_brand,
-                            "search_keyword": new_comp_search or f"{new_comp_brand} {new_comp_company}",
-                            "usp": {
-                                "headline": new_comp_headline,
-                                "selling_points": [s.strip() for s in new_comp_sp.split("\n") if s.strip()],
-                                "target": new_comp_target,
-                                "key_claim": new_comp_claim,
-                            },
-                            "channels": [],
-                            "price_position": "중",
-                            "premium_score": new_comp_premium,
-                            "price_score": new_comp_price,
-                        }
-                        cat_data["competitors"].append(new_competitor)
+                    if new_comp_company and new_comp_brand:
+                        cat_data["competitors"].append({
+                            "company": new_comp_company, "brand": new_comp_brand,
+                            "search_keyword": f"{new_comp_brand} {new_comp_company}",
+                            "usp": {"headline": new_comp_headline or new_comp_brand,
+                                    "selling_points": [s.strip() for s in new_comp_sp.split("\n") if s.strip()],
+                                    "target": new_comp_target, "key_claim": new_comp_claim},
+                            "channels": [], "price_position": "중", "premium_score": 5, "price_score": 5,
+                        })
                         save_competitor_db(competitor_db)
                         st.session_state.pop("comp_add_mode", None)
-                        st.session_state.pop(comp_price_key, None)
                         st.rerun()
 
-    # 실시간 가격 수집
-    comp_price_key = f"comp_prices_{product['brand']}"
-    if comp_price_key not in st.session_state:
-        with st.spinner("네이버 쇼핑에서 실시간 가격을 조회하고 있습니다..."):
-            prices = {}
-            # 자사
-            prices["ckd"] = search_product_prices(f"종근당 {product['brand']}", brand_keywords=["종근당","종근당건강","ckd","ckdmall"])
-            # 경쟁사 — 각 회사명을 자사몰 키워드로
-            for c in competitors:
-                prices[c["brand"]] = search_product_prices(f"{c['brand']} {c['company']}", brand_keywords=[c["company"], c["brand"]])
-            st.session_state[comp_price_key] = prices
-
-    prices = st.session_state[comp_price_key]
-
-    def _price_chip(label, color, item, fallback_url=None):
-        """채널 가격 칩 HTML."""
-        if item and item.get("daily_price", 0) > 0:
-            return (f'<a href="{item["link"]}" target="_blank" style="text-decoration:none;display:inline-block;margin:3px">'
-                    f'<div style="background:{color};color:#fff;padding:6px 12px;border-radius:10px;font-size:0.78rem;font-weight:700;display:inline-block">{label}</div>'
-                    f'<div style="margin-top:2px;text-align:center">'
-                    f'<span style="font-weight:800;font-size:0.95rem">{item["price"]:,}원</span>'
-                    f'<br><span style="font-size:0.72rem;color:#64748b">({item["quantity"]}) 1일 {item["daily_price"]:,}원</span>'
-                    f'</div></a>')
-        elif item:
-            return (f'<a href="{item["link"]}" target="_blank" style="text-decoration:none;display:inline-block;margin:3px">'
-                    f'<div style="background:{color};color:#fff;padding:6px 12px;border-radius:10px;font-size:0.78rem;font-weight:700;display:inline-block">{label}</div>'
-                    f'<div style="margin-top:2px;text-align:center"><span style="font-weight:800;font-size:0.95rem">{item["price"]:,}원</span></div></a>')
-        elif fallback_url:
-            return (f'<a href="{fallback_url}" target="_blank" style="text-decoration:none;display:inline-block;margin:3px">'
-                    f'<div style="background:{color};opacity:0.5;color:#fff;padding:6px 12px;border-radius:10px;font-size:0.78rem;font-weight:700;display:inline-block">{label}</div>'
-                    f'<div style="margin-top:2px;text-align:center;font-size:0.75rem;color:#94a3b8">검색 →</div></a>')
-        return ""
-
-    def _price_html(price_data):
-        """채널별 가격 HTML 생성."""
-        nv = price_data["naver"][0] if price_data["naver"] else None
-        cp = price_data["coupang"][0] if price_data["coupang"] else None
-        br = price_data["brand"][0] if price_data["brand"] else None
-        cp_url = price_data.get("coupang_search_url", "#")
-        br_url = price_data.get("brand_search_url", "#")
-        html = '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:10px">'
-        html += _price_chip("네이버", "#03c75a", nv)
-        html += _price_chip("쿠팡", "#ef4444", cp, cp_url)
-        html += _price_chip("자사몰", "#2563eb", br, br_url)
-        html += '</div>'
-        return html
-
+    # ── 유틸 함수 ──
     def _get_usp_details(usp_data):
-        """USP 데이터가 문자열이든 객체든 통일된 형태로 반환."""
-        if isinstance(usp_data, dict):
-            return usp_data
+        if isinstance(usp_data, dict): return usp_data
         return {"headline": usp_data or "", "selling_points": [], "target": "", "key_claim": ""}
 
-    def _usp_selling_html(usp_info, dark=False):
-        """셀링포인트 HTML."""
-        html = ""
-        sp = usp_info.get("selling_points", [])
-        if sp:
-            color = "rgba(255,255,255,0.7)" if dark else "#475569"
-            for point in sp:
-                html += f'<div style="font-size:0.82rem;color:{color};padding:3px 0;line-height:1.5">• {point}</div>'
-        target = usp_info.get("target", "")
-        key_claim = usp_info.get("key_claim", "")
-        if target or key_claim:
-            tc = "rgba(255,255,255,0.45)" if dark else "#94a3b8"
-            parts = []
-            if target:
-                parts.append(f'🎯 {target}')
-            if key_claim:
-                parts.append(f'💎 {key_claim}')
-            html += f'<div style="font-size:0.75rem;color:{tc};margin-top:6px">{" · ".join(parts)}</div>'
+    def _ingredient_compare_html(comp_ingredients):
+        diff = compare_ingredients(ckd_ingredient_names, comp_ingredients)
+        html = '<div style="margin-top:8px;padding-top:8px;border-top:1px solid #f1f5f9">'
+        html += '<div style="font-size:0.72rem;color:#94a3b8;margin-bottom:4px">🧬 성분 비교 (자사 기준)</div><div style="display:flex;flex-wrap:wrap;gap:3px">'
+        for s in diff["common"]:
+            html += f'<span style="background:#dbeafe;color:#1d4ed8;padding:2px 8px;border-radius:12px;font-size:0.72rem;font-weight:600">🔵 {s}</span>'
+        for s in diff["ckd_only"]:
+            html += f'<span style="background:#dcfce7;color:#15803d;padding:2px 8px;border-radius:12px;font-size:0.72rem;font-weight:600">✅ {s}</span>'
+        for s in diff["competitor_only"]:
+            html += f'<span style="background:#fef2f2;color:#dc2626;padding:2px 8px;border-radius:12px;font-size:0.72rem;font-weight:600">⚠️ {s}</span>'
+        html += '</div></div>'
         return html
 
-    # 자사 USP 카드 + 가격
-    ckd_prices = prices.get("ckd", {"naver":[],"coupang":[],"brand":[]})
+    # ── 자사 USP 카드 ──
     ckd_usp = _get_usp_details(ckd.get("usp", ""))
+    ckd_ings_html = "".join(f'<span style="background:rgba(37,99,235,0.15);color:#93c5fd;padding:2px 8px;border-radius:12px;font-size:0.72rem;font-weight:600;margin:2px">{ing}</span>' for ing in product.get("ingredients",[]))
     st.markdown(
         f'<div style="background:linear-gradient(135deg,#1e293b,#334155);border-radius:16px;padding:20px;margin-bottom:16px;color:#fff">'
         f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'
@@ -1411,172 +1360,98 @@ def page_competitor():
         f'<span style="background:rgba(37,99,235,0.3);padding:3px 10px;border-radius:20px;font-size:0.75rem;margin-left:8px">자사</span></div></div>'
         f'<div style="background:rgba(255,255,255,0.08);border-radius:12px;padding:14px 16px;font-size:1rem;font-weight:600;margin-bottom:10px">'
         f'💡 {ckd_usp.get("headline","")}</div>'
-        f'{_usp_selling_html(ckd_usp, dark=True)}'
-        f'{_price_html(ckd_prices)}'
+        + ("".join(f'<div style="font-size:0.82rem;color:rgba(255,255,255,0.7);padding:3px 0;line-height:1.5">• {sp}</div>' for sp in ckd_usp.get("selling_points",[])))
+        + f'<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.1)">'
+        f'<div style="font-size:0.72rem;color:rgba(255,255,255,0.4);margin-bottom:4px">🧬 주요 성분</div>'
+        f'<div style="display:flex;flex-wrap:wrap;gap:3px">{ckd_ings_html}</div></div>'
         f'</div>', unsafe_allow_html=True)
 
-    # 경쟁사 USP 카드들 + 가격 + 수정/삭제
-    for cidx, c in enumerate(competitors):
-        c_prices = prices.get(c["brand"], {"naver":[],"coupang":[],"brand":[]})
-        c_usp = _get_usp_details(c.get("usp", ""))
-        st.markdown(
-            f'<div style="background:linear-gradient(160deg,#ffffff,#f8fafd);border:1px solid #e2e8f0;border-radius:16px;padding:18px 20px;margin-bottom:10px">'
-            f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
-            f'<div><span style="font-size:0.95rem;font-weight:700;color:#1e293b">{c["company"]}</span>'
-            f'<span style="color:#64748b;font-weight:500;margin-left:6px">{c["brand"]}</span>'
-            f'<span style="background:#fef2f2;color:#ef4444;padding:2px 8px;border-radius:20px;font-size:0.7rem;font-weight:600;margin-left:8px">경쟁사</span></div></div>'
-            f'<div style="background:#f8fafc;border-left:3px solid #ef4444;border-radius:0 10px 10px 0;padding:10px 14px;font-size:0.92rem;font-weight:600;color:#1e293b;margin-bottom:8px">'
-            f'{c_usp.get("headline","")}</div>'
-            f'{_usp_selling_html(c_usp)}'
-            f'{_price_html(c_prices)}'
-            f'</div>', unsafe_allow_html=True)
+    # ── 네이버 쇼핑 탐색 경쟁사 (상위 10개) ──
+    if scanned:
+        st.markdown(f'<div class="s-header">🛒 네이버 쇼핑 상위 경쟁 브랜드 ({len(scanned[:10])}개)</div>', unsafe_allow_html=True)
+        for si, sc in enumerate(scanned[:10]):
+            price_str = f"{sc['price']:,}원" if sc['price'] > 0 else ""
+            ing_html = _ingredient_compare_html(sc["ingredients"])
+            st.markdown(
+                f'<div style="background:linear-gradient(160deg,#ffffff,#f8fafd);border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;margin-bottom:8px">'
+                f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
+                f'<div><span style="font-weight:700;color:#1e293b;font-size:0.92rem">{sc["brand"]}</span>'
+                f'<span style="background:#fff7ed;color:#ea580c;padding:2px 8px;border-radius:20px;font-size:0.68rem;font-weight:600;margin-left:8px">쇼핑 상위</span>'
+                f'<span style="color:#94a3b8;font-size:0.78rem;margin-left:8px">{price_str}</span></div>'
+                f'<a href="{sc["link"]}" target="_blank" class="d-link" style="font-size:0.75rem">상품 보기 →</a></div>'
+                f'<div style="font-size:0.82rem;color:#475569;margin-bottom:4px">{sc["product_name"]}</div>'
+                f'{ing_html}'
+                f'<div style="font-size:0.68rem;color:#cbd5e1;margin-top:4px">🔵 공통 · ✅ 자사만 보유 · ⚠️ 경쟁사만 보유</div>'
+                f'</div>', unsafe_allow_html=True)
 
-        # 수정/삭제 버튼
-        be1, be2, _ = st.columns([1,1,10])
-        with be1:
-            if st.button("✏️ 수정", key=f"comp_edit_{cidx}"):
-                st.session_state["comp_edit_idx"] = cidx
-        with be2:
-            if st.button("🗑️ 삭제", key=f"comp_del_{cidx}"):
-                st.session_state["comp_del_idx"] = cidx
+    # ── DB 등록 경쟁사 (USP 상세) ──
+    if competitors:
+        st.markdown(f'<div class="s-header">📋 등록된 경쟁사 USP 상세 ({len(competitors)}개)</div>', unsafe_allow_html=True)
+        for cidx, c in enumerate(competitors):
+            c_usp = _get_usp_details(c.get("usp", ""))
+            sp_html = "".join(f'<div style="font-size:0.82rem;color:#475569;padding:3px 0;line-height:1.5">• {sp}</div>' for sp in c_usp.get("selling_points",[]))
+            target_html = ""
+            if c_usp.get("target") or c_usp.get("key_claim"):
+                parts = []
+                if c_usp.get("target"): parts.append(f'🎯 {c_usp["target"]}')
+                if c_usp.get("key_claim"): parts.append(f'💎 {c_usp["key_claim"]}')
+                target_html = f'<div style="font-size:0.75rem;color:#94a3b8;margin-top:6px">{" · ".join(parts)}</div>'
 
-        # 삭제 확인
-        if st.session_state.get("comp_del_idx") == cidx:
-            st.warning(f"'{c['company']} {c['brand']}' 경쟁사를 삭제하시겠습니까?")
-            dd1, dd2, _ = st.columns([1,1,10])
-            with dd1:
-                if st.button("삭제 확인", key=f"comp_del_ok_{cidx}", type="primary"):
-                    cat_data["competitors"].pop(cidx)
-                    save_competitor_db(competitor_db)
-                    st.session_state.pop("comp_del_idx", None)
-                    st.session_state.pop(comp_price_key, None)
-                    st.rerun()
-            with dd2:
-                if st.button("취소", key=f"comp_del_cancel_{cidx}"):
-                    st.session_state.pop("comp_del_idx", None)
-                    st.rerun()
+            st.markdown(
+                f'<div style="background:linear-gradient(160deg,#ffffff,#f8fafd);border:1px solid #e2e8f0;border-radius:16px;padding:18px 20px;margin-bottom:10px">'
+                f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
+                f'<div><span style="font-size:0.95rem;font-weight:700;color:#1e293b">{c["company"]}</span>'
+                f'<span style="color:#64748b;font-weight:500;margin-left:6px">{c["brand"]}</span>'
+                f'<span style="background:#fef2f2;color:#ef4444;padding:2px 8px;border-radius:20px;font-size:0.7rem;font-weight:600;margin-left:8px">경쟁사</span></div></div>'
+                f'<div style="background:#f8fafc;border-left:3px solid #ef4444;border-radius:0 10px 10px 0;padding:10px 14px;font-size:0.92rem;font-weight:600;color:#1e293b;margin-bottom:8px">'
+                f'{c_usp.get("headline","")}</div>'
+                f'{sp_html}{target_html}'
+                f'</div>', unsafe_allow_html=True)
 
-        # 수정 폼
-        if st.session_state.get("comp_edit_idx") == cidx:
-            with st.form(f"comp_edit_form_{cidx}"):
-                ec1, ec2 = st.columns(2)
-                with ec1:
-                    ed_company = st.text_input("회사명", value=c.get("company",""))
-                    ed_brand = st.text_input("브랜드명", value=c.get("brand",""))
-                    ed_search = st.text_input("네이버 검색어", value=c.get("search_keyword",""))
-                    ed_premium = st.slider("프리미엄 점수", 1, 10, c.get("premium_score",5), key=f"ed_prem_{cidx}")
-                    ed_price = st.slider("가격 포지션", 1, 10, c.get("price_score",5), key=f"ed_price_{cidx}")
-                with ec2:
-                    ed_headline = st.text_input("USP 헤드라인", value=c_usp.get("headline",""))
-                    ed_sp = st.text_area("셀링포인트 (줄바꿈 구분)", value="\n".join(c_usp.get("selling_points",[])))
-                    ed_target = st.text_input("타겟 고객층", value=c_usp.get("target",""))
-                    ed_claim = st.text_input("핵심 소구 포인트", value=c_usp.get("key_claim",""))
-                if st.form_submit_button("저장", type="primary"):
-                    c["company"] = ed_company
-                    c["brand"] = ed_brand
-                    c["search_keyword"] = ed_search
-                    c["premium_score"] = ed_premium
-                    c["price_score"] = ed_price
-                    c["usp"] = {
-                        "headline": ed_headline,
-                        "selling_points": [s.strip() for s in ed_sp.split("\n") if s.strip()],
-                        "target": ed_target,
-                        "key_claim": ed_claim,
-                    }
-                    save_competitor_db(competitor_db)
-                    st.session_state.pop("comp_edit_idx", None)
-                    st.session_state.pop(comp_price_key, None)
-                    st.rerun()
+            be1, be2, _ = st.columns([1,1,10])
+            with be1:
+                if st.button("✏️ 수정", key=f"comp_edit_{cidx}"):
+                    st.session_state["comp_edit_idx"] = cidx
+            with be2:
+                if st.button("🗑️ 삭제", key=f"comp_del_{cidx}"):
+                    st.session_state["comp_del_idx"] = cidx
 
-    st.markdown("")
+            if st.session_state.get("comp_del_idx") == cidx:
+                st.warning(f"'{c['company']} {c['brand']}' 경쟁사를 삭제하시겠습니까?")
+                dd1, dd2, _ = st.columns([1,1,10])
+                with dd1:
+                    if st.button("삭제 확인", key=f"comp_del_ok_{cidx}", type="primary"):
+                        cat_data["competitors"].pop(cidx)
+                        save_competitor_db(competitor_db)
+                        st.session_state.pop("comp_del_idx", None)
+                        st.rerun()
+                with dd2:
+                    if st.button("취소", key=f"comp_del_cancel_{cidx}"):
+                        st.session_state.pop("comp_del_idx", None)
+                        st.rerun()
 
-    # 1일당 가격 비교 차트
-    with st.container(border=True):
-        st.markdown("**💰 1일당 가격 비교** _(네이버 쇼핑 실시간 데이터 · 동일 단위 환산)_")
-        chart_data = []
-        all_brands = [("종근당 " + product["brand"], "ckd")] + [(f"{c['brand']}", c["brand"]) for c in competitors]
-        for brand_label, price_key in all_brands:
-            pd_data = prices.get(price_key, {"naver":[],"coupang":[],"brand":[]})
-            for ch_name, ch_key in [("네이버", "naver"), ("쿠팡", "coupang"), ("자사몰", "brand")]:
-                if pd_data[ch_key] and pd_data[ch_key][0].get("daily_price", 0) > 0:
-                    chart_data.append({"브랜드": brand_label[:10], "채널": ch_name, "1일당 가격": pd_data[ch_key][0]["daily_price"]})
+            if st.session_state.get("comp_edit_idx") == cidx:
+                with st.form(f"comp_edit_form_{cidx}"):
+                    ec1, ec2 = st.columns(2)
+                    with ec1:
+                        ed_company = st.text_input("회사명", value=c.get("company",""))
+                        ed_brand = st.text_input("브랜드명", value=c.get("brand",""))
+                    with ec2:
+                        ed_headline = st.text_input("USP 헤드라인", value=c_usp.get("headline",""))
+                        ed_sp = st.text_area("셀링포인트", value="\n".join(c_usp.get("selling_points",[])))
+                        ed_target = st.text_input("타겟", value=c_usp.get("target",""))
+                        ed_claim = st.text_input("핵심 소구", value=c_usp.get("key_claim",""))
+                    if st.form_submit_button("저장", type="primary"):
+                        c["company"]=ed_company; c["brand"]=ed_brand
+                        c["usp"]={"headline":ed_headline,"selling_points":[s.strip() for s in ed_sp.split("\n") if s.strip()],"target":ed_target,"key_claim":ed_claim}
+                        save_competitor_db(competitor_db)
+                        st.session_state.pop("comp_edit_idx",None)
+                        st.rerun()
 
-        if chart_data:
-            fig_price = px.bar(
-                pd.DataFrame(chart_data), x="브랜드", y="1일당 가격", color="채널", barmode="group",
-                color_discrete_map={"네이버":"#03c75a","쿠팡":"#ef4444","자사몰":"#2563eb"},
-                text="1일당 가격",
-            )
-            fig_price.update_traces(texttemplate="%{text:,}원/일", textposition="outside", textfont_size=10)
-            fig_price.update_layout(
-                height=350, margin=dict(t=20,b=20,l=20,r=20),
-                yaxis=dict(title="1일당 가격 (원)", gridcolor="#f1f5f9"),
-                paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-                legend=dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right",x=1),
-            )
-            st.plotly_chart(fig_price, use_container_width=True)
-        else:
-            st.caption("가격 데이터를 가져올 수 없습니다.")
-
+    # ── 차별화 포인트 ──
     st.markdown('<div class="s-header">💡 자사 차별화 포인트</div>', unsafe_allow_html=True)
     for i, pt in enumerate(cat_data.get("differentiation",[])):
         st.markdown(f'<div class="diff-c"><b>{i+1}.</b> {pt}</div>', unsafe_allow_html=True)
-
-    # ── 자동 경쟁사 탐색 + 성분 비교 ──
-    st.markdown(f'<div class="s-header">🔎 자동 경쟁사 탐색 — "{product["category"]}" 카테고리</div>', unsafe_allow_html=True)
-
-    scan_key = f"comp_scan_{product['brand']}"
-    if scan_key not in st.session_state:
-        _, scan_btn, _ = st.columns([2,2,2])
-        with scan_btn:
-            if st.button("🔍 네이버 쇼핑에서 경쟁사 자동 탐색", key="scan_comp_btn", type="primary", use_container_width=True):
-                with st.spinner(f"'{product['category']}' 카테고리 경쟁 브랜드를 탐색하고 있습니다..."):
-                    scanned = scan_competitors(product["category"], ckd_brand=product["brand"])
-                    st.session_state[scan_key] = scanned
-                    st.rerun()
-    else:
-        scanned = st.session_state[scan_key]
-        ckd_ingredient_names = [ing.lower() for ing in product.get("ingredient_keywords_kr",[])]
-
-        if scanned:
-            st.markdown(f"네이버 쇼핑에서 **{len(scanned)}개** 경쟁 브랜드를 발견했습니다.")
-
-            for si, sc in enumerate(scanned[:10]):
-                # 성분 비교
-                diff = compare_ingredients(ckd_ingredient_names, sc["ingredients"])
-                ckd_only = diff["ckd_only"]
-                comp_only = diff["competitor_only"]
-                common = diff["common"]
-
-                # 성분 비교 뱃지 HTML
-                common_html = "".join(f'<span style="background:#dbeafe;color:#1d4ed8;padding:2px 8px;border-radius:12px;font-size:0.72rem;font-weight:600;margin:2px">🔵 {s}</span>' for s in common)
-                ckd_only_html = "".join(f'<span style="background:#dcfce7;color:#15803d;padding:2px 8px;border-radius:12px;font-size:0.72rem;font-weight:600;margin:2px">✅ {s}</span>' for s in ckd_only)
-                comp_only_html = "".join(f'<span style="background:#fef2f2;color:#dc2626;padding:2px 8px;border-radius:12px;font-size:0.72rem;font-weight:600;margin:2px">⚠️ {s}</span>' for s in comp_only)
-
-                price_str = f"{sc['price']:,}원" if sc["price"] > 0 else "가격 미확인"
-
-                st.markdown(
-                    f'<div style="background:linear-gradient(160deg,#ffffff,#f8fafd);border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;margin-bottom:8px">'
-                    f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
-                    f'<div>'
-                    f'<span style="font-weight:700;color:#1e293b;font-size:0.92rem">{sc["brand"]}</span>'
-                    f'<span style="color:#94a3b8;font-size:0.78rem;margin-left:8px">{price_str}</span>'
-                    f'</div>'
-                    f'<a href="{sc["link"]}" target="_blank" class="d-link" style="font-size:0.75rem">상품 보기 →</a>'
-                    f'</div>'
-                    f'<div style="font-size:0.82rem;color:#475569;margin-bottom:8px">{sc["product_name"]}</div>'
-                    f'<div style="margin-bottom:6px">'
-                    f'<div style="font-size:0.72rem;color:#94a3b8;margin-bottom:3px">성분 비교 (자사 기준)</div>'
-                    f'<div style="display:flex;flex-wrap:wrap;gap:3px">'
-                    f'{common_html}{ckd_only_html}{comp_only_html}'
-                    f'</div>'
-                    f'</div>'
-                    f'<div style="font-size:0.7rem;color:#94a3b8">'
-                    f'🔵 공통 · ✅ 자사만 보유 · ⚠️ 경쟁사만 보유'
-                    f'</div>'
-                    f'</div>', unsafe_allow_html=True)
-        else:
-            st.caption("탐색된 경쟁 브랜드가 없습니다.")
 
 
 # ═══════════════════════════════════════════
