@@ -1060,19 +1060,59 @@ def page_usp():
         return
 
     product = products[st.session_state["usp_product"]]
+    kr_keywords = product.get("ingredient_keywords_kr", [])
+    en_keywords = product.get("ingredient_keywords_en", [])
 
-    cache_key = f"usp_articles_{product['brand']}"
-    if cache_key not in st.session_state:
-        with st.spinner(f"'{product['brand']}' 관련 논문을 분석하고 있습니다..."):
+    # ── 데이터 수집 (5소스 통합) ──
+    usp_dc_key = f"usp_dc_{product['brand']}"
+    if usp_dc_key not in st.session_state:
+        with st.spinner(f"'{product['brand']}' 핵심 성분 데이터를 수집하고 있습니다 (PubMed + 임상시험 + 뉴스 + 식약처 + 트렌드)..."):
+            collected = {}
+            query = build_product_query(product)
+            # 1) PubMed
             try:
-                pmids = search_pubmed(build_product_query(product), max_results=10, days_back=365)
+                pmids = search_pubmed(query, max_results=15, days_back=1825)
                 time.sleep(0.4)
-                st.session_state[cache_key] = fetch_article_details(pmids)
-            except Exception as e:
-                st.error(f"논문 검색 실패: {e}")
-                st.session_state[cache_key] = []
+                collected["pubmed"] = fetch_article_details(pmids)
+            except Exception:
+                collected["pubmed"] = []
+            # 2) ClinicalTrials
+            try:
+                ct_q = " ".join(en_keywords[:2]) + " supplement"
+                collected["clinical"] = search_clinical_trials(ct_q, max_results=8)
+            except Exception:
+                collected["clinical"] = []
+            # 3) TV·건강 뉴스
+            try:
+                news = search_tv_health_news(kr_keywords[0] if kr_keywords else product["brand"], display=5)
+                collected["tv"] = news if news else []
+            except Exception:
+                collected["tv"] = []
+            # 4) 식약처
+            try:
+                mfds = []
+                for kw in en_keywords[:2] + kr_keywords[:1]:
+                    for item in search_health_food(kw, max_results=5):
+                        if not any(r["report_no"]==item["report_no"] for r in mfds):
+                            mfds.append(item)
+                        if len(mfds)>=5: break
+                    if len(mfds)>=5: break
+                collected["mfds"] = mfds
+            except Exception:
+                collected["mfds"] = []
+            # 5) 트렌드
+            try:
+                td = fetch_search_trend(kr_keywords[:3], months_back=12)
+                collected["trend"] = td if td else []
+            except Exception:
+                collected["trend"] = []
 
-    articles = st.session_state.get(cache_key, [])
+            st.session_state[usp_dc_key] = collected
+
+    dc = st.session_state[usp_dc_key]
+    articles = dc.get("pubmed", [])
+
+    # 매칭 분석
     article_matches = []
     for a in articles:
         ms = match_article_to_products(a, products)
@@ -1082,18 +1122,19 @@ def page_usp():
     sorted_matches = sorted(article_matches, key=lambda x: x["match"]["score"] if x["match"] else 0, reverse=True)
     top_articles = [am for am in sorted_matches if am["match"]][:5]
 
-    # 인사이트 대시보드
-    st.markdown(f'<div class="s-header">📊 {product["brand"]} — 성분 기반 인사이트</div>', unsafe_allow_html=True)
+    # ── 수집 현황 메트릭 ──
+    st.markdown(f'<div class="s-header">📊 {product["brand"]} — 수집 데이터 기반 인사이트</div>', unsafe_allow_html=True)
 
     matched_count = sum(1 for am in article_matches if am["match"])
-    direct_count = sum(1 for am in article_matches if am["match"] and am["match"]["match_type"]=="direct")
-    avg_score = (sum(am["match"]["score"] for am in article_matches if am["match"])/matched_count) if matched_count else 0
-
-    mc = st.columns(4)
-    for col, val, lbl, cls in zip(mc,
-        [str(len(articles)), str(matched_count), str(direct_count), f"{avg_score:.0f}"],
-        ["수집 논문","매칭 논문","직접 연관","평균 점수"],
-        ["","m-val-blue","m-val-green","m-val-orange"]):
+    mc = st.columns(5)
+    metrics = [
+        (str(len(articles)), "PubMed 논문", "m-val-blue"),
+        (str(len(dc.get("clinical",[]))), "임상시험", "m-val-blue"),
+        (str(len(dc.get("tv",[]))), "뉴스", "m-val-green"),
+        (str(len(dc.get("mfds",[]))), "식약처", "m-val-orange"),
+        (str(matched_count), "매칭 논문", ""),
+    ]
+    for col, (val, lbl, cls) in zip(mc, metrics):
         with col:
             st.markdown(f'<div class="m-card"><div class="m-val {cls}">{val}</div><div class="m-lbl">{lbl}</div></div>', unsafe_allow_html=True)
 
@@ -1102,7 +1143,7 @@ def page_usp():
 
     with r1l:
         st.markdown('<div class="g-card"><div class="g-card-header">🧬 활용 가능 성분</div>', unsafe_allow_html=True)
-        for kw in product.get("ingredient_keywords_kr",[])[:6]:
+        for kw in kr_keywords[:6]:
             cnt = sum(1 for am in article_matches if am["match"] and any(kw.lower() in t.lower() or kw in t for t in am["match"].get("matched_terms",[])))
             stars, clr = ("★★★","#059669") if cnt>=5 else (("★★","#d97706") if cnt>=2 else ("★","#94a3b8"))
             st.markdown(f'<div class="d-item" style="display:flex;justify-content:space-between;align-items:center"><span style="font-weight:600">{kw}</span><span style="font-size:0.82rem"><span style="color:{clr};font-weight:700">{stars}</span> · {cnt}건</span></div>', unsafe_allow_html=True)
@@ -1118,19 +1159,31 @@ def page_usp():
             st.plotly_chart(fig, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # 핵심 논문
-    st.markdown('<div class="g-card"><div class="g-card-header">📄 핵심 논문 요약</div>', unsafe_allow_html=True)
+    # 핵심 근거 (논문 + 임상시험 + 뉴스 통합)
+    st.markdown('<div class="g-card"><div class="g-card-header">📄 핵심 근거 자료</div>', unsafe_allow_html=True)
     if top_articles:
-        for i, am in enumerate(top_articles):
+        for i, am in enumerate(top_articles[:3]):
             a, m = am["article"], am["match"]
             sc = "#22c55e" if m["score"]>=15 else ("#eab308" if m["score"]>=8 else "#94a3b8")
             st.markdown(
                 f'<div class="d-item"><div style="display:flex;justify-content:space-between;align-items:start">'
-                f'<div class="d-title" style="flex:1">{i+1}. {a["title"][:100]}</div>'
+                f'<div class="d-title" style="flex:1">📰 {a["title"][:90]}</div>'
                 f'<div style="background:{sc};color:white;padding:2px 10px;border-radius:20px;font-size:0.72rem;font-weight:700;margin-left:8px;white-space:nowrap">{m["relevance"]}</div>'
-                f'</div><div class="d-meta">📰 {a.get("journal","")} · 📅 {a.get("pub_date","")} · 점수 {m["score"]} · {", ".join(m["matched_terms"][:3])}</div></div>', unsafe_allow_html=True)
-    else:
-        st.caption("매칭된 논문이 없습니다.")
+                f'</div><div class="d-meta">{a.get("journal","")} · {a.get("pub_date","")}'
+                f' · <a href="{a.get("url","#")}" target="_blank" class="d-link">원문 →</a></div></div>', unsafe_allow_html=True)
+    for t in dc.get("clinical",[])[:2]:
+        sc2 = {"RECRUITING":"#059669","COMPLETED":"#2563eb"}.get(t["status"],"#64748b")
+        st.markdown(
+            f'<div class="d-item"><div class="d-title">🏥 {t["title"][:90]}</div>'
+            f'<div class="d-meta"><span style="color:{sc2};font-weight:600">{t["status"]}</span> · Phase {t["phase"]}'
+            f' · <a href="{t["url"]}" target="_blank" class="d-link">원문 →</a></div></div>', unsafe_allow_html=True)
+    for n in dc.get("tv",[])[:2]:
+        st.markdown(
+            f'<div class="d-item"><div class="d-title">📺 {n["title"][:90]}</div>'
+            f'<div class="d-meta">{n.get("pubDate","")}'
+            f' · <a href="{n.get("link","#")}" target="_blank" class="d-link">원문 →</a></div></div>', unsafe_allow_html=True)
+    if not top_articles and not dc.get("clinical") and not dc.get("tv"):
+        st.caption("근거 자료 없음")
     st.markdown('</div>', unsafe_allow_html=True)
 
     # 타겟별 USP
