@@ -30,6 +30,7 @@ from naver_client import fetch_search_trend, search_tv_health_news
 from mfds_client import search_health_food
 from clinicaltrials_client import search_clinical_trials
 from price_client import search_product_prices
+from competitor_scanner import scan_competitors, compare_ingredients
 
 # ─── 경로 & 데이터 ───
 DATA_DIR = Path(__file__).parent / "data"
@@ -1520,6 +1521,62 @@ def page_competitor():
     st.markdown('<div class="s-header">💡 자사 차별화 포인트</div>', unsafe_allow_html=True)
     for i, pt in enumerate(cat_data.get("differentiation",[])):
         st.markdown(f'<div class="diff-c"><b>{i+1}.</b> {pt}</div>', unsafe_allow_html=True)
+
+    # ── 자동 경쟁사 탐색 + 성분 비교 ──
+    st.markdown(f'<div class="s-header">🔎 자동 경쟁사 탐색 — "{product["category"]}" 카테고리</div>', unsafe_allow_html=True)
+
+    scan_key = f"comp_scan_{product['brand']}"
+    if scan_key not in st.session_state:
+        _, scan_btn, _ = st.columns([2,2,2])
+        with scan_btn:
+            if st.button("🔍 네이버 쇼핑에서 경쟁사 자동 탐색", key="scan_comp_btn", type="primary", use_container_width=True):
+                with st.spinner(f"'{product['category']}' 카테고리 경쟁 브랜드를 탐색하고 있습니다..."):
+                    scanned = scan_competitors(product["category"], ckd_brand=product["brand"])
+                    st.session_state[scan_key] = scanned
+                    st.rerun()
+    else:
+        scanned = st.session_state[scan_key]
+        ckd_ingredient_names = [ing.lower() for ing in product.get("ingredient_keywords_kr",[])]
+
+        if scanned:
+            st.markdown(f"네이버 쇼핑에서 **{len(scanned)}개** 경쟁 브랜드를 발견했습니다.")
+
+            for si, sc in enumerate(scanned[:10]):
+                # 성분 비교
+                diff = compare_ingredients(ckd_ingredient_names, sc["ingredients"])
+                ckd_only = diff["ckd_only"]
+                comp_only = diff["competitor_only"]
+                common = diff["common"]
+
+                # 성분 비교 뱃지 HTML
+                common_html = "".join(f'<span style="background:#dbeafe;color:#1d4ed8;padding:2px 8px;border-radius:12px;font-size:0.72rem;font-weight:600;margin:2px">🔵 {s}</span>' for s in common)
+                ckd_only_html = "".join(f'<span style="background:#dcfce7;color:#15803d;padding:2px 8px;border-radius:12px;font-size:0.72rem;font-weight:600;margin:2px">✅ {s}</span>' for s in ckd_only)
+                comp_only_html = "".join(f'<span style="background:#fef2f2;color:#dc2626;padding:2px 8px;border-radius:12px;font-size:0.72rem;font-weight:600;margin:2px">⚠️ {s}</span>' for s in comp_only)
+
+                price_str = f"{sc['price']:,}원" if sc["price"] > 0 else "가격 미확인"
+
+                st.markdown(
+                    f'<div style="background:linear-gradient(160deg,#ffffff,#f8fafd);border:1px solid #e2e8f0;border-radius:14px;padding:16px 18px;margin-bottom:8px">'
+                    f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
+                    f'<div>'
+                    f'<span style="font-weight:700;color:#1e293b;font-size:0.92rem">{sc["brand"]}</span>'
+                    f'<span style="color:#94a3b8;font-size:0.78rem;margin-left:8px">{price_str}</span>'
+                    f'</div>'
+                    f'<a href="{sc["link"]}" target="_blank" class="d-link" style="font-size:0.75rem">상품 보기 →</a>'
+                    f'</div>'
+                    f'<div style="font-size:0.82rem;color:#475569;margin-bottom:8px">{sc["product_name"]}</div>'
+                    f'<div style="margin-bottom:6px">'
+                    f'<div style="font-size:0.72rem;color:#94a3b8;margin-bottom:3px">성분 비교 (자사 기준)</div>'
+                    f'<div style="display:flex;flex-wrap:wrap;gap:3px">'
+                    f'{common_html}{ckd_only_html}{comp_only_html}'
+                    f'</div>'
+                    f'</div>'
+                    f'<div style="font-size:0.7rem;color:#94a3b8">'
+                    f'🔵 공통 · ✅ 자사만 보유 · ⚠️ 경쟁사만 보유'
+                    f'</div>'
+                    f'</div>', unsafe_allow_html=True)
+        else:
+            st.caption("탐색된 경쟁 브랜드가 없습니다.")
 
 
 # ═══════════════════════════════════════════
