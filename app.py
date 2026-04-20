@@ -1292,6 +1292,25 @@ def page_competitor():
 
     prices = st.session_state[comp_price_key]
 
+    def _price_chip(label, color, item, fallback_url=None):
+        """채널 가격 칩 HTML."""
+        if item and item.get("daily_price", 0) > 0:
+            return (f'<a href="{item["link"]}" target="_blank" style="text-decoration:none;display:inline-block;margin:3px">'
+                    f'<div style="background:{color};color:#fff;padding:6px 12px;border-radius:10px;font-size:0.78rem;font-weight:700;display:inline-block">{label}</div>'
+                    f'<div style="margin-top:2px;text-align:center">'
+                    f'<span style="font-weight:800;font-size:0.95rem">{item["price"]:,}원</span>'
+                    f'<br><span style="font-size:0.72rem;color:#64748b">({item["quantity"]}) 1일 {item["daily_price"]:,}원</span>'
+                    f'</div></a>')
+        elif item:
+            return (f'<a href="{item["link"]}" target="_blank" style="text-decoration:none;display:inline-block;margin:3px">'
+                    f'<div style="background:{color};color:#fff;padding:6px 12px;border-radius:10px;font-size:0.78rem;font-weight:700;display:inline-block">{label}</div>'
+                    f'<div style="margin-top:2px;text-align:center"><span style="font-weight:800;font-size:0.95rem">{item["price"]:,}원</span></div></a>')
+        elif fallback_url:
+            return (f'<a href="{fallback_url}" target="_blank" style="text-decoration:none;display:inline-block;margin:3px">'
+                    f'<div style="background:{color};opacity:0.5;color:#fff;padding:6px 12px;border-radius:10px;font-size:0.78rem;font-weight:700;display:inline-block">{label}</div>'
+                    f'<div style="margin-top:2px;text-align:center;font-size:0.75rem;color:#94a3b8">검색 →</div></a>')
+        return ""
+
     def _price_html(price_data):
         """채널별 가격 HTML 생성."""
         nv = price_data["naver"][0] if price_data["naver"] else None
@@ -1299,46 +1318,57 @@ def page_competitor():
         br = price_data["brand"][0] if price_data["brand"] else None
         cp_url = price_data.get("coupang_search_url", "#")
         br_url = price_data.get("brand_search_url", "#")
-        parts = []
-        if nv:
-            parts.append(f'<a href="{nv["link"]}" target="_blank" style="text-decoration:none">'
-                         f'<span style="background:#03c75a;color:#fff;padding:3px 8px;border-radius:6px;font-size:0.75rem;font-weight:700">네이버</span>'
-                         f'<span style="font-weight:700;margin-left:4px;font-size:0.88rem">{nv["price"]:,}원</span></a>')
-        else:
-            parts.append('<span style="color:#cbd5e1;font-size:0.78rem">네이버 —</span>')
-        if cp:
-            parts.append(f'<a href="{cp["link"]}" target="_blank" style="text-decoration:none">'
-                         f'<span style="background:#ef4444;color:#fff;padding:3px 8px;border-radius:6px;font-size:0.75rem;font-weight:700">쿠팡</span>'
-                         f'<span style="font-weight:700;margin-left:4px;font-size:0.88rem">{cp["price"]:,}원</span></a>')
-        else:
-            parts.append(f'<a href="{cp_url}" target="_blank" style="text-decoration:none">'
-                         f'<span style="background:#ef4444;color:#fff;padding:3px 8px;border-radius:6px;font-size:0.75rem;font-weight:700">쿠팡</span>'
-                         f'<span style="color:#94a3b8;margin-left:4px;font-size:0.78rem">검색 →</span></a>')
-        if br:
-            parts.append(f'<a href="{br["link"]}" target="_blank" style="text-decoration:none">'
-                         f'<span style="background:#2563eb;color:#fff;padding:3px 8px;border-radius:6px;font-size:0.75rem;font-weight:700">자사몰</span>'
-                         f'<span style="font-weight:700;margin-left:4px;font-size:0.88rem">{br["price"]:,}원</span></a>')
-        else:
-            parts.append(f'<a href="{br_url}" target="_blank" style="text-decoration:none">'
-                         f'<span style="background:#2563eb;color:#fff;padding:3px 8px;border-radius:6px;font-size:0.75rem;font-weight:700">자사몰</span>'
-                         f'<span style="color:#94a3b8;margin-left:4px;font-size:0.78rem">검색 →</span></a>')
-        return '<div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:8px">' + ''.join(f'<div>{p}</div>' for p in parts) + '</div>'
+        html = '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:10px">'
+        html += _price_chip("네이버", "#03c75a", nv)
+        html += _price_chip("쿠팡", "#ef4444", cp, cp_url)
+        html += _price_chip("자사몰", "#2563eb", br, br_url)
+        html += '</div>'
+        return html
+
+    def _get_usp_details(usp_data):
+        """USP 데이터가 문자열이든 객체든 통일된 형태로 반환."""
+        if isinstance(usp_data, dict):
+            return usp_data
+        return {"headline": usp_data or "", "selling_points": [], "target": "", "key_claim": ""}
+
+    def _usp_selling_html(usp_info, dark=False):
+        """셀링포인트 HTML."""
+        html = ""
+        sp = usp_info.get("selling_points", [])
+        if sp:
+            color = "rgba(255,255,255,0.7)" if dark else "#475569"
+            for point in sp:
+                html += f'<div style="font-size:0.82rem;color:{color};padding:3px 0;line-height:1.5">• {point}</div>'
+        target = usp_info.get("target", "")
+        key_claim = usp_info.get("key_claim", "")
+        if target or key_claim:
+            tc = "rgba(255,255,255,0.45)" if dark else "#94a3b8"
+            parts = []
+            if target:
+                parts.append(f'🎯 {target}')
+            if key_claim:
+                parts.append(f'💎 {key_claim}')
+            html += f'<div style="font-size:0.75rem;color:{tc};margin-top:6px">{" · ".join(parts)}</div>'
+        return html
 
     # 자사 USP 카드 + 가격
     ckd_prices = prices.get("ckd", {"naver":[],"coupang":[],"brand":[]})
+    ckd_usp = _get_usp_details(ckd.get("usp", ""))
     st.markdown(
         f'<div style="background:linear-gradient(135deg,#1e293b,#334155);border-radius:16px;padding:20px;margin-bottom:16px;color:#fff">'
         f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'
         f'<div><span style="font-size:1.1rem;font-weight:800">종근당 {product["brand"]}</span>'
         f'<span style="background:rgba(37,99,235,0.3);padding:3px 10px;border-radius:20px;font-size:0.75rem;margin-left:8px">자사</span></div></div>'
         f'<div style="background:rgba(255,255,255,0.08);border-radius:12px;padding:14px 16px;font-size:1rem;font-weight:600;margin-bottom:10px">'
-        f'💡 {ckd.get("usp","")}</div>'
+        f'💡 {ckd_usp.get("headline","")}</div>'
+        f'{_usp_selling_html(ckd_usp, dark=True)}'
         f'{_price_html(ckd_prices)}'
         f'</div>', unsafe_allow_html=True)
 
     # 경쟁사 USP 카드들 + 가격
     for c in competitors:
         c_prices = prices.get(c["brand"], {"naver":[],"coupang":[],"brand":[]})
+        c_usp = _get_usp_details(c.get("usp", ""))
         st.markdown(
             f'<div style="background:linear-gradient(160deg,#ffffff,#f8fafd);border:1px solid #e2e8f0;border-radius:16px;padding:18px 20px;margin-bottom:10px">'
             f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
@@ -1346,33 +1376,34 @@ def page_competitor():
             f'<span style="color:#64748b;font-weight:500;margin-left:6px">{c["brand"]}</span>'
             f'<span style="background:#fef2f2;color:#ef4444;padding:2px 8px;border-radius:20px;font-size:0.7rem;font-weight:600;margin-left:8px">경쟁사</span></div></div>'
             f'<div style="background:#f8fafc;border-left:3px solid #ef4444;border-radius:0 10px 10px 0;padding:10px 14px;font-size:0.92rem;font-weight:600;color:#1e293b;margin-bottom:8px">'
-            f'{c.get("usp","")}</div>'
+            f'{c_usp.get("headline","")}</div>'
+            f'{_usp_selling_html(c_usp)}'
             f'{_price_html(c_prices)}'
             f'</div>', unsafe_allow_html=True)
 
     st.markdown("")
 
-    # 가격 비교 차트
+    # 1일당 가격 비교 차트
     with st.container(border=True):
-        st.markdown("**💰 채널별 최저가 비교** _(네이버 쇼핑 실시간 데이터)_")
+        st.markdown("**💰 1일당 가격 비교** _(네이버 쇼핑 실시간 데이터 · 동일 단위 환산)_")
         chart_data = []
-        all_brands = [("종근당 " + product["brand"], "ckd")] + [(f"{c['company']} {c['brand']}", c["brand"]) for c in competitors]
+        all_brands = [("종근당 " + product["brand"], "ckd")] + [(f"{c['brand']}", c["brand"]) for c in competitors]
         for brand_label, price_key in all_brands:
             pd_data = prices.get(price_key, {"naver":[],"coupang":[],"brand":[]})
-            for ch_name, ch_key in [("네이버",  "naver"), ("쿠팡", "coupang"), ("자사몰", "brand")]:
-                if pd_data[ch_key]:
-                    chart_data.append({"브랜드": brand_label[:10], "채널": ch_name, "최저가": pd_data[ch_key][0]["price"]})
+            for ch_name, ch_key in [("네이버", "naver"), ("쿠팡", "coupang"), ("자사몰", "brand")]:
+                if pd_data[ch_key] and pd_data[ch_key][0].get("daily_price", 0) > 0:
+                    chart_data.append({"브랜드": brand_label[:10], "채널": ch_name, "1일당 가격": pd_data[ch_key][0]["daily_price"]})
 
         if chart_data:
             fig_price = px.bar(
-                pd.DataFrame(chart_data), x="브랜드", y="최저가", color="채널", barmode="group",
+                pd.DataFrame(chart_data), x="브랜드", y="1일당 가격", color="채널", barmode="group",
                 color_discrete_map={"네이버":"#03c75a","쿠팡":"#ef4444","자사몰":"#2563eb"},
-                text="최저가",
+                text="1일당 가격",
             )
-            fig_price.update_traces(texttemplate="%{text:,}원", textposition="outside", textfont_size=10)
+            fig_price.update_traces(texttemplate="%{text:,}원/일", textposition="outside", textfont_size=10)
             fig_price.update_layout(
                 height=350, margin=dict(t=20,b=20,l=20,r=20),
-                yaxis=dict(title="가격 (원)", gridcolor="#f1f5f9"),
+                yaxis=dict(title="1일당 가격 (원)", gridcolor="#f1f5f9"),
                 paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
                 legend=dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right",x=1),
             )
