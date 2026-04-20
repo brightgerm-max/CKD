@@ -719,19 +719,19 @@ def page_product_management():
 # 페이지 2: 데이터 수집
 # ═══════════════════════════════════════════
 def page_data_collection():
-    render_page_header("📡","데이터 수집","성분별 PubMed 논문 · TV 방송 · 식약처 · 검색 트렌드를 한눈에 조회합니다","green")
+    hdr_col, period_col = st.columns([4, 1.5])
+    with hdr_col:
+        render_page_header("📡","데이터 수집","성분별 PubMed 논문 · TV 방송 · 식약처 · 검색 트렌드를 한눈에 조회합니다","green")
+    with period_col:
+        st.markdown("")
+        period_map = {"최근 1개월":30,"최근 3개월":90,"최근 6개월":180,"최근 1년":365,"최근 2년":730,"최근 5년":1825}
+        period_label = st.selectbox("📅 검색 기간", list(period_map.keys()), index=3)
+        days_back = period_map[period_label]
 
     products_data = load_products()
     all_ingredients = extract_all_ingredients(products_data)
     tv_data = load_tv_data()
     reg_data = load_regulatory_data()
-
-    # 검색 기간
-    _, pc, _ = st.columns([0.3,2,5.7])
-    with pc:
-        period_map = {"최근 1개월":30,"최근 3개월":90,"최근 6개월":180,"최근 1년":365,"최근 2년":730,"최근 5년":1825}
-        period_label = st.selectbox("검색 기간", list(period_map.keys()), index=3)
-        days_back = period_map[period_label]
 
     # 성분 선택
     st.markdown('<div class="s-header">성분 선택</div>', unsafe_allow_html=True)
