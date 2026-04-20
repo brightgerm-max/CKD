@@ -415,7 +415,15 @@ section[data-testid="stMainBlockContainer"] [data-testid="stLinkButton"] a:hover
     box-shadow: 0 4px 10px rgba(37,99,235,0.15) !important;
     transform: translateY(-1px) !important;
 }
-.stSelectbox > div > div { border-radius: 10px !important; }
+.stSelectbox > div > div {
+    border-radius: 10px !important;
+    background: linear-gradient(160deg, #ffffff 0%, #f0f4fa 100%) !important;
+    border: 1.5px solid #e2e8f0 !important;
+}
+.stSelectbox > div > div:hover {
+    border-color: #93c5fd !important;
+    box-shadow: 0 2px 8px rgba(37,99,235,0.1) !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
