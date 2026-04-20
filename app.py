@@ -1355,69 +1355,103 @@ def page_competitor():
         html += '</div></div>'
         return html
 
-    # ── 자사 USP 카드 ──
-    ckd_usp = _get_usp_details(ckd.get("usp", ""))
-    ckd_ings_html = "".join(f'<span style="background:rgba(37,99,235,0.15);color:#93c5fd;padding:2px 8px;border-radius:12px;font-size:0.72rem;font-weight:600;margin:2px">{ing}</span>' for ing in product.get("ingredients",[]))
+    # ── 채널별 가격 수집 (자사 + 경쟁사) ──
+    price_cache_key = f"comp_allprices_{product['brand']}"
+    if price_cache_key not in st.session_state:
+        with st.spinner("자사 및 경쟁사 채널별 가격을 조회하고 있습니다..."):
+            all_prices = {}
+            all_prices["ckd"] = search_product_prices(f"종근당 {product['brand']}", brand_keywords=["종근당","종근당건강","ckd"])
+            for sc in scanned[:10]:
+                all_prices[sc["brand"]] = search_product_prices(sc["product_name"][:30], brand_keywords=[sc["brand"], sc.get("mall","")])
+            st.session_state[price_cache_key] = all_prices
+    all_prices = st.session_state[price_cache_key]
+
+    def _price_chips(pd_data, brand_name=""):
+        """채널별 가격 칩 HTML (1일당 가격 포함)."""
+        import urllib.parse
+        enc = urllib.parse.quote(brand_name[:30])
+        html = '<div style="display:flex;gap:8px;flex-wrap:wrap">'
+        for ch_key, ch_name, ch_color, fallback in [("naver","네이버","#03c75a",None),("coupang","쿠팡","#ef4444",f"https://www.coupang.com/np/search?q={enc}"),("brand","자사몰","#2563eb",f"https://www.ckdmall.co.kr/search?q={enc}")]:
+            items = pd_data.get(ch_key,[])
+            if items and items[0].get("daily_price",0) > 0:
+                it = items[0]
+                html += (f'<a href="{it["link"]}" target="_blank" style="text-decoration:none">'
+                         f'<span style="background:{ch_color};color:#fff;padding:3px 8px;border-radius:8px;font-size:0.72rem;font-weight:700">{ch_name}</span>'
+                         f' <span style="font-weight:700;font-size:0.85rem">{it["price"]:,}원</span>'
+                         f' <span style="font-size:0.68rem;color:#94a3b8">({it["quantity"]}, 1일 {it["daily_price"]:,}원)</span></a>')
+            elif items:
+                it = items[0]
+                html += (f'<a href="{it["link"]}" target="_blank" style="text-decoration:none">'
+                         f'<span style="background:{ch_color};color:#fff;padding:3px 8px;border-radius:8px;font-size:0.72rem;font-weight:700">{ch_name}</span>'
+                         f' <span style="font-weight:700;font-size:0.85rem">{it["price"]:,}원</span></a>')
+            elif fallback:
+                html += (f'<a href="{fallback}" target="_blank" style="text-decoration:none">'
+                         f'<span style="background:{ch_color};opacity:0.5;color:#fff;padding:3px 8px;border-radius:8px;font-size:0.72rem;font-weight:700">{ch_name}</span>'
+                         f' <span style="color:#94a3b8;font-size:0.75rem">검색 →</span></a>')
+        html += '</div>'
+        return html
+
+    # ── 자사 카드 ──
+    ckd_kr_ings = product.get("ingredient_keywords_kr",[])
+    ckd_claims = product.get("health_claims",[])
+    target_info = product.get("target_demographic",{})
+    ckd_ings_html = "".join(f'<span style="background:rgba(37,99,235,0.15);color:#93c5fd;padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:600;margin:2px">{ing}</span>' for ing in ckd_kr_ings)
+    ckd_claims_html = "".join(f'<span style="background:rgba(34,197,94,0.15);color:#86efac;padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:600;margin:2px">{c}</span>' for c in ckd_claims)
+    ckd_pd = all_prices.get("ckd",{"naver":[],"coupang":[],"brand":[]})
+
     st.markdown(
         f'<div style="background:linear-gradient(135deg,#1e293b,#334155);border-radius:16px;padding:20px;margin-bottom:16px;color:#fff">'
         f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'
         f'<div><span style="font-size:1.1rem;font-weight:800">종근당 {product["brand"]}</span>'
-        f'<span style="background:rgba(37,99,235,0.3);padding:3px 10px;border-radius:20px;font-size:0.75rem;margin-left:8px">자사</span></div></div>'
-        f'<div style="background:rgba(255,255,255,0.08);border-radius:12px;padding:14px 16px;font-size:1rem;font-weight:600;margin-bottom:10px">'
-        f'💡 {ckd_usp.get("headline","")}</div>'
-        + ("".join(f'<div style="font-size:0.82rem;color:rgba(255,255,255,0.7);padding:3px 0;line-height:1.5">• {sp}</div>' for sp in ckd_usp.get("selling_points",[])))
-        + f'<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.1)">'
-        f'<div style="font-size:0.72rem;color:rgba(255,255,255,0.4);margin-bottom:4px">🧬 주요 성분</div>'
-        f'<div style="display:flex;flex-wrap:wrap;gap:3px">{ckd_ings_html}</div></div>'
+        f'<span style="background:rgba(37,99,235,0.3);padding:3px 10px;border-radius:20px;font-size:0.75rem;margin-left:8px">자사</span></div>'
+        f'<span style="color:#94a3b8;font-size:0.82rem">🎯 타겟: {target_info.get("primary_age","")}</span></div>'
+        # 제품명
+        f'<div style="font-size:0.72rem;color:rgba(255,255,255,0.4);margin-bottom:2px">제품명</div>'
+        f'<div style="font-size:0.88rem;color:#e2e8f0;margin-bottom:12px;padding:8px 12px;background:rgba(255,255,255,0.06);border-radius:8px">{product["brand"]} ({", ".join(product.get("sub_products",[])[:3])})</div>'
+        # 가격
+        f'<div style="font-size:0.72rem;color:rgba(255,255,255,0.4);margin-bottom:4px">채널별 가격</div>'
+        f'{_price_chips(ckd_pd, product["brand"])}'
+        # 주요 성분
+        f'<div style="margin-top:12px;font-size:0.72rem;color:rgba(255,255,255,0.4);margin-bottom:4px">주요 성분</div>'
+        f'<div style="display:flex;flex-wrap:wrap;gap:3px">{ckd_ings_html}</div>'
+        # 건강기능 표시
+        f'<div style="margin-top:8px;font-size:0.72rem;color:rgba(255,255,255,0.4);margin-bottom:4px">건강기능 표시</div>'
+        f'<div style="display:flex;flex-wrap:wrap;gap:3px">{ckd_claims_html}</div>'
         f'</div>', unsafe_allow_html=True)
 
     # ── 네이버 쇼핑 상위 경쟁 브랜드 ──
     if scanned:
         st.markdown(f'<div class="s-header">🛒 네이버 쇼핑 상위 경쟁 브랜드 ({len(scanned[:10])}개)</div>', unsafe_allow_html=True)
 
-        chart_prices = [{"브랜드": f"종근당 {product['brand']}", "가격": scanned[0]["price"] if scanned else 0, "유형": "자사"}] if scanned else []
-
         for si, sc in enumerate(scanned[:10]):
-            price_str = f"{sc['price']:,}원" if sc['price'] > 0 else "가격 미확인"
             diff = compare_ingredients(ckd_ingredient_names, sc["ingredients"])
-
             in_ckd = diff["common"]
             not_in_ckd = diff["competitor_only"]
             ckd_only = diff["ckd_only"]
 
-            # 주요 성분 뱃지
             all_ings = sc["ingredients"]
             ings_html = "".join(f'<span style="background:#f1f5f9;color:#475569;padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:600;margin:2px">{s}</span>' for s in all_ings) if all_ings else '<span style="color:#cbd5e1;font-size:0.75rem">성분 정보 없음</span>'
-
-            # 성분 비교
             in_ckd_html = "".join(f'<span style="background:#dcfce7;color:#15803d;padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:600;margin:2px">✅ {s}</span>' for s in in_ckd) if in_ckd else '<span style="color:#cbd5e1;font-size:0.75rem">—</span>'
             not_in_ckd_html = "".join(f'<span style="background:#fef2f2;color:#dc2626;padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:600;margin:2px">⚠️ {s}</span>' for s in not_in_ckd) if not_in_ckd else '<span style="color:#cbd5e1;font-size:0.75rem">—</span>'
             ckd_only_html = "".join(f'<span style="background:#dbeafe;color:#2563eb;padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:600;margin:2px">💪 {s}</span>' for s in ckd_only) if ckd_only else '<span style="color:#cbd5e1;font-size:0.75rem">—</span>'
 
-            # 쿠팡/자사몰 검색 링크
-            import urllib.parse
-            enc_name = urllib.parse.quote(sc["product_name"][:30])
-            cp_link = f"https://www.coupang.com/np/search?q={enc_name}"
+            sc_pd = all_prices.get(sc["brand"],{"naver":[],"coupang":[],"brand":[]})
 
             st.markdown(
                 f'<div style="background:linear-gradient(160deg,#ffffff,#f8fafd);border:1px solid #e2e8f0;border-radius:16px;padding:18px 20px;margin-bottom:10px">'
-                # 브랜드
                 f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
                 f'<div><span style="font-size:0.95rem;font-weight:700;color:#1e293b">{sc["brand"]}</span>'
                 f'<span style="background:#fff7ed;color:#ea580c;padding:2px 8px;border-radius:20px;font-size:0.68rem;font-weight:600;margin-left:8px">쇼핑 상위</span></div>'
                 f'<a href="{sc["link"]}" target="_blank" class="d-link" style="font-size:0.75rem">상품 보기 →</a></div>'
                 # 제품명
                 f'<div style="font-size:0.72rem;font-weight:700;color:#94a3b8;margin-bottom:2px">제품명</div>'
-                f'<div style="font-size:0.85rem;color:#475569;margin-bottom:12px;padding:8px 12px;background:#f8fafc;border-radius:8px">{sc["product_name"]}</div>'
-                # 가격
-                f'<div style="font-size:0.72rem;font-weight:700;color:#94a3b8;margin-bottom:4px">가격</div>'
-                f'<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">'
-                f'<a href="{sc["link"]}" target="_blank" style="text-decoration:none"><span style="background:#03c75a;color:#fff;padding:4px 10px;border-radius:8px;font-size:0.75rem;font-weight:700">네이버</span> <span style="font-weight:700;font-size:0.88rem">{price_str}</span></a>'
-                f'<a href="{cp_link}" target="_blank" style="text-decoration:none"><span style="background:#ef4444;color:#fff;padding:4px 10px;border-radius:8px;font-size:0.75rem;font-weight:700">쿠팡</span> <span style="color:#94a3b8;font-size:0.78rem">검색 →</span></a>'
-                f'</div>'
+                f'<div style="font-size:0.85rem;color:#475569;margin-bottom:10px;padding:8px 12px;background:#f8fafc;border-radius:8px">{sc["product_name"]}</div>'
+                # 채널별 가격
+                f'<div style="font-size:0.72rem;font-weight:700;color:#94a3b8;margin-bottom:4px">채널별 가격</div>'
+                f'{_price_chips(sc_pd, sc["brand"])}'
                 # 주요 성분
-                f'<div style="font-size:0.72rem;font-weight:700;color:#94a3b8;margin-bottom:4px">주요 성분</div>'
-                f'<div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:12px">{ings_html}</div>'
+                f'<div style="margin-top:10px;font-size:0.72rem;font-weight:700;color:#94a3b8;margin-bottom:4px">주요 성분</div>'
+                f'<div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:10px">{ings_html}</div>'
                 # 성분 분석 — 3열
                 f'<div style="font-size:0.72rem;font-weight:700;color:#94a3b8;margin-bottom:6px">성분 분석 (자사 상품 기준)</div>'
                 f'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">'
@@ -1433,26 +1467,34 @@ def page_competitor():
                 f'</div>'
                 f'</div>', unsafe_allow_html=True)
 
-            if sc["price"] > 0:
-                chart_prices.append({"브랜드": sc["brand"][:8], "가격": sc["price"], "유형": "경쟁사"})
-
-    # ── 가격 포지셔닝 맵 ──
-    if scanned and chart_prices:
+    # ── 채널별 1일당 가격 비교 차트 ──
+    if scanned:
         with st.container(border=True):
-            st.markdown("**💰 가격 포지셔닝 맵** _(네이버 쇼핑 기준)_")
-            df_prices = pd.DataFrame(chart_prices)
-            fig_pos = px.scatter(
-                df_prices, x="브랜드", y="가격", color="유형", size_max=18,
-                color_discrete_map={"자사": "#2563eb", "경쟁사": "#ef4444"},
-            )
-            fig_pos.update_traces(marker=dict(size=16, line=dict(width=2, color="white")))
-            fig_pos.update_layout(
-                height=350, margin=dict(t=20,b=20,l=20,r=20),
-                yaxis=dict(title="가격 (원)", gridcolor="#f1f5f9"),
-                paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-                showlegend=True, legend=dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right",x=1),
-            )
-            st.plotly_chart(fig_pos, use_container_width=True)
+            st.markdown("**💰 채널별 1일당 가격 비교** _(네이버 쇼핑 실시간 데이터 · 동일 단위 환산)_")
+            chart_data = []
+            chart_brands = [("종근당 " + product["brand"][:4], "ckd")] + [(sc["brand"][:8], sc["brand"]) for sc in scanned[:10]]
+            for label, key in chart_brands:
+                pd_data = all_prices.get(key, {"naver":[],"coupang":[],"brand":[]})
+                for ch_name, ch_key in [("네이버","naver"),("쿠팡","coupang"),("자사몰","brand")]:
+                    if pd_data[ch_key] and pd_data[ch_key][0].get("daily_price",0) > 0:
+                        chart_data.append({"브랜드":label,"채널":ch_name,"1일당 가격":pd_data[ch_key][0]["daily_price"]})
+
+            if chart_data:
+                fig_price = px.bar(
+                    pd.DataFrame(chart_data), x="브랜드", y="1일당 가격", color="채널", barmode="group",
+                    color_discrete_map={"네이버":"#03c75a","쿠팡":"#ef4444","자사몰":"#2563eb"},
+                    text="1일당 가격",
+                )
+                fig_price.update_traces(texttemplate="%{text:,}원/일", textposition="outside", textfont_size=9)
+                fig_price.update_layout(
+                    height=380, margin=dict(t=20,b=20,l=20,r=20),
+                    yaxis=dict(title="1일당 가격 (원)", gridcolor="#f1f5f9"),
+                    paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                    legend=dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right",x=1),
+                )
+                st.plotly_chart(fig_price, use_container_width=True)
+            else:
+                st.caption("가격 데이터를 가져올 수 없습니다.")
 
     # ── 차별화 포인트 ──
     st.markdown('<div class="s-header">💡 자사 차별화 포인트</div>', unsafe_allow_html=True)
