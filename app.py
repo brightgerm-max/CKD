@@ -766,21 +766,16 @@ def page_data_collection():
         return
 
     sel_ing = all_ingredients[st.session_state["dc_ingredient"]]
-    st.markdown(f'<div class="s-header">🔎 "{sel_ing["name_kr"]}" 수집 데이터</div>', unsafe_allow_html=True)
 
-    # 4분할 대시보드
-    col_l, col_r = st.columns(2)
+    # 데이터 수집 실행 버튼 (PubMed 미검색 시)
+    query = find_query_for_ingredient(sel_ing)
+    cache_key = f"pubmed_{sel_ing['name_kr']}_{days_back}"
 
-    with col_l:
-        query = find_query_for_ingredient(sel_ing)
-        cache_key = f"pubmed_{sel_ing['name_kr']}_{days_back}"
-
-        badge = f'<span class="g-card-badge g-badge-blue">{len(st.session_state.get(cache_key,[]))}건</span>' if cache_key in st.session_state else ""
-        st.markdown(f'<div class="g-card"><div class="g-card-header">📰 PubMed 논문 {badge}</div>', unsafe_allow_html=True)
-
-        if cache_key not in st.session_state:
-            if st.button("논문 검색 실행", key="search_pubmed_btn", type="primary", use_container_width=True):
-                with st.spinner("PubMed 검색 중..."):
+    if cache_key not in st.session_state:
+        _, btn_col, _ = st.columns([2, 2, 2])
+        with btn_col:
+            if st.button(f"🔍 \"{sel_ing['name_kr']}\" 데이터 수집 실행", key="search_pubmed_btn", type="primary", use_container_width=True):
+                with st.spinner("PubMed 논문 + TV 방송 + 식약처 + 트렌드 데이터를 수집하고 있습니다..."):
                     try:
                         pmids = search_pubmed(query, max_results=10, days_back=days_back)
                         time.sleep(0.4)
@@ -789,14 +784,23 @@ def page_data_collection():
                         st.rerun()
                     except Exception as e:
                         st.error(f"검색 실패: {e}")
-        else:
-            for a in st.session_state[cache_key][:8]:
-                st.markdown(
-                    f'<div class="d-item">'
-                    f'<div class="d-title">{a["title"][:90]}</div>'
-                    f'<div class="d-meta">{a.get("journal","N/A")} · {a.get("pub_date","")}'
-                    f' · <a href="{a.get("url","#")}" target="_blank" class="d-link">원문 →</a></div>'
-                    f'</div>', unsafe_allow_html=True)
+        return
+
+    st.markdown(f'<div class="s-header">🔎 "{sel_ing["name_kr"]}" 수집 데이터</div>', unsafe_allow_html=True)
+
+    # 4분할 대시보드
+    col_l, col_r = st.columns(2)
+
+    with col_l:
+        badge = f'<span class="g-card-badge g-badge-blue">{len(st.session_state.get(cache_key,[]))}건</span>'
+        st.markdown(f'<div class="g-card"><div class="g-card-header">📰 PubMed 논문 {badge}</div>', unsafe_allow_html=True)
+        for a in st.session_state[cache_key][:8]:
+            st.markdown(
+                f'<div class="d-item">'
+                f'<div class="d-title">{a["title"][:90]}</div>'
+                f'<div class="d-meta">{a.get("journal","N/A")} · {a.get("pub_date","")}'
+                f' · <a href="{a.get("url","#")}" target="_blank" class="d-link">원문 →</a></div>'
+                f'</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
     with col_r:
