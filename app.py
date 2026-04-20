@@ -17,6 +17,7 @@ from pubmed_client import search_pubmed, fetch_article_details, INGREDIENT_QUERI
 from matching_engine import load_product_db, match_article_to_products, TARGET_SEGMENTS
 from usp_generator import generate_usp_with_ai, generate_usp_template
 from naver_client import fetch_search_trend, search_tv_health_news
+from mfds_client import search_health_food
 
 # ─── 경로 & 데이터 ───
 DATA_DIR = Path(__file__).parent / "data"
@@ -848,22 +849,35 @@ def page_data_collection():
     col_l2, col_r2 = st.columns(2)
 
     with col_l2:
-        reg_results = get_regulatory_data_for_ingredient(reg_data, sel_ing)
-        badge = f'<span class="g-card-badge g-badge-yellow">{len(reg_results)}건</span>' if reg_results else ""
-        st.markdown(f'<div class="g-card"><div class="g-card-header">🏛️ 식약처 공지 {badge}</div>', unsafe_allow_html=True)
-        if reg_results:
-            for r in reg_results:
-                ic = {"긍정":"#059669","주의":"#d97706","정보":"#2563eb"}.get(r.get("impact",""),"#64748b")
-                reg_url = r.get("url","https://www.mfds.go.kr")
+        # 식약처 건강기능식품 DB 실제 API
+        mfds_cache_key = f"mfds_{sel_ing['name_kr']}"
+        if mfds_cache_key not in st.session_state:
+            # 영문 키워드로 검색 (원료명이 영문인 경우가 많음)
+            mfds_results = []
+            for kw in sel_ing["keywords_en"][:2] + sel_ing["keywords_kr"][:1]:
+                found = search_health_food(kw, max_results=5)
+                for item in found:
+                    if not any(r["report_no"] == item["report_no"] for r in mfds_results):
+                        mfds_results.append(item)
+                if len(mfds_results) >= 5:
+                    break
+            st.session_state[mfds_cache_key] = mfds_results
+
+        mfds_items = st.session_state[mfds_cache_key]
+        badge = f'<span class="g-card-badge g-badge-yellow">{len(mfds_items)}건</span>' if mfds_items else ""
+        st.markdown(f'<div class="g-card"><div class="g-card-header">🏛️ 식약처 기능성 인정 현황 {badge}</div>', unsafe_allow_html=True)
+        if mfds_items:
+            for item in mfds_items[:5]:
+                fnclty = item["functionality"].replace("\r\n", " ").replace("\n", " ")[:100]
                 st.markdown(
                     f'<div class="d-item">'
-                    f'<div class="d-title">{r["title"]}</div>'
-                    f'<div class="d-meta">{r["date"]} · <span style="color:{ic};font-weight:600">{r.get("impact","")}</span>'
-                    f' · <a href="{reg_url}" target="_blank" class="d-link">원문 →</a></div>'
-                    f'<div style="font-size:0.8rem;color:#64748b;margin-top:4px">{r["summary"]}</div>'
+                    f'<div class="d-title">{item["name"]}</div>'
+                    f'<div class="d-meta">{item["company"]} · 인정일 {item["approval_date"][:4]}.{item["approval_date"][4:6]}'
+                    f' · <a href="{item["url"]}" target="_blank" class="d-link">원문 →</a></div>'
+                    f'<div style="font-size:0.8rem;color:#64748b;margin-top:4px">기능성: {fnclty}...</div>'
                     f'</div>', unsafe_allow_html=True)
         else:
-            st.caption("관련 식약처 공지 없음")
+            st.caption("관련 식약처 데이터 없음")
         st.markdown('</div>', unsafe_allow_html=True)
 
     with col_r2:
