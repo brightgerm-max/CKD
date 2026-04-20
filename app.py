@@ -42,6 +42,10 @@ def save_product_db(data):
     with open(DATA_DIR / "product_ingredient_db.json", "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
+def save_competitor_db(data):
+    with open(DATA_DIR / "competitor_db.json", "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
 def load_products():
     return load_json("product_ingredient_db.json")
 
@@ -1276,7 +1280,52 @@ def page_competitor():
     competitors = cat_data.get("competitors",[])
     ckd = cat_data.get("ckd_position",{})
 
-    st.markdown(f'<div class="s-header">⚔️ "{product["brand"]}" 카테고리 USP 비교</div>', unsafe_allow_html=True)
+    col_hdr, col_addbtn = st.columns([5, 1])
+    with col_hdr:
+        st.markdown(f'<div class="s-header">⚔️ "{product["brand"]}" 카테고리 USP 비교</div>', unsafe_allow_html=True)
+    with col_addbtn:
+        st.markdown("")
+        if st.button("＋ 경쟁사 추가", type="primary", use_container_width=True):
+            st.session_state["comp_add_mode"] = True
+
+    # 경쟁사 추가 폼
+    if st.session_state.get("comp_add_mode"):
+        with st.expander("새 경쟁사 등록", expanded=True):
+            with st.form("add_competitor_form"):
+                ac1, ac2 = st.columns(2)
+                with ac1:
+                    new_comp_company = st.text_input("회사명 *")
+                    new_comp_brand = st.text_input("브랜드명 *")
+                    new_comp_search = st.text_input("네이버 검색어 (예: 쾌변 유산균 뉴트리원)")
+                    new_comp_premium = st.slider("프리미엄 점수", 1, 10, 5)
+                    new_comp_price = st.slider("가격 포지션", 1, 10, 5)
+                with ac2:
+                    new_comp_headline = st.text_input("USP 헤드라인 *")
+                    new_comp_sp = st.text_area("셀링포인트 (줄바꿈으로 구분)")
+                    new_comp_target = st.text_input("타겟 고객층")
+                    new_comp_claim = st.text_input("핵심 소구 포인트")
+                if st.form_submit_button("등록", type="primary"):
+                    if new_comp_company and new_comp_brand and new_comp_headline:
+                        new_competitor = {
+                            "company": new_comp_company,
+                            "brand": new_comp_brand,
+                            "search_keyword": new_comp_search or f"{new_comp_brand} {new_comp_company}",
+                            "usp": {
+                                "headline": new_comp_headline,
+                                "selling_points": [s.strip() for s in new_comp_sp.split("\n") if s.strip()],
+                                "target": new_comp_target,
+                                "key_claim": new_comp_claim,
+                            },
+                            "channels": [],
+                            "price_position": "중",
+                            "premium_score": new_comp_premium,
+                            "price_score": new_comp_price,
+                        }
+                        cat_data["competitors"].append(new_competitor)
+                        save_competitor_db(competitor_db)
+                        st.session_state.pop("comp_add_mode", None)
+                        st.session_state.pop(comp_price_key, None)
+                        st.rerun()
 
     # 실시간 가격 수집
     comp_price_key = f"comp_prices_{product['brand']}"
@@ -1365,8 +1414,8 @@ def page_competitor():
         f'{_price_html(ckd_prices)}'
         f'</div>', unsafe_allow_html=True)
 
-    # 경쟁사 USP 카드들 + 가격
-    for c in competitors:
+    # 경쟁사 USP 카드들 + 가격 + 수정/삭제
+    for cidx, c in enumerate(competitors):
         c_prices = prices.get(c["brand"], {"naver":[],"coupang":[],"brand":[]})
         c_usp = _get_usp_details(c.get("usp", ""))
         st.markdown(
@@ -1380,6 +1429,63 @@ def page_competitor():
             f'{_usp_selling_html(c_usp)}'
             f'{_price_html(c_prices)}'
             f'</div>', unsafe_allow_html=True)
+
+        # 수정/삭제 버튼
+        be1, be2, _ = st.columns([1,1,10])
+        with be1:
+            if st.button("✏️ 수정", key=f"comp_edit_{cidx}"):
+                st.session_state["comp_edit_idx"] = cidx
+        with be2:
+            if st.button("🗑️ 삭제", key=f"comp_del_{cidx}"):
+                st.session_state["comp_del_idx"] = cidx
+
+        # 삭제 확인
+        if st.session_state.get("comp_del_idx") == cidx:
+            st.warning(f"'{c['company']} {c['brand']}' 경쟁사를 삭제하시겠습니까?")
+            dd1, dd2, _ = st.columns([1,1,10])
+            with dd1:
+                if st.button("삭제 확인", key=f"comp_del_ok_{cidx}", type="primary"):
+                    cat_data["competitors"].pop(cidx)
+                    save_competitor_db(competitor_db)
+                    st.session_state.pop("comp_del_idx", None)
+                    st.session_state.pop(comp_price_key, None)
+                    st.rerun()
+            with dd2:
+                if st.button("취소", key=f"comp_del_cancel_{cidx}"):
+                    st.session_state.pop("comp_del_idx", None)
+                    st.rerun()
+
+        # 수정 폼
+        if st.session_state.get("comp_edit_idx") == cidx:
+            with st.form(f"comp_edit_form_{cidx}"):
+                ec1, ec2 = st.columns(2)
+                with ec1:
+                    ed_company = st.text_input("회사명", value=c.get("company",""))
+                    ed_brand = st.text_input("브랜드명", value=c.get("brand",""))
+                    ed_search = st.text_input("네이버 검색어", value=c.get("search_keyword",""))
+                    ed_premium = st.slider("프리미엄 점수", 1, 10, c.get("premium_score",5), key=f"ed_prem_{cidx}")
+                    ed_price = st.slider("가격 포지션", 1, 10, c.get("price_score",5), key=f"ed_price_{cidx}")
+                with ec2:
+                    ed_headline = st.text_input("USP 헤드라인", value=c_usp.get("headline",""))
+                    ed_sp = st.text_area("셀링포인트 (줄바꿈 구분)", value="\n".join(c_usp.get("selling_points",[])))
+                    ed_target = st.text_input("타겟 고객층", value=c_usp.get("target",""))
+                    ed_claim = st.text_input("핵심 소구 포인트", value=c_usp.get("key_claim",""))
+                if st.form_submit_button("저장", type="primary"):
+                    c["company"] = ed_company
+                    c["brand"] = ed_brand
+                    c["search_keyword"] = ed_search
+                    c["premium_score"] = ed_premium
+                    c["price_score"] = ed_price
+                    c["usp"] = {
+                        "headline": ed_headline,
+                        "selling_points": [s.strip() for s in ed_sp.split("\n") if s.strip()],
+                        "target": ed_target,
+                        "key_claim": ed_claim,
+                    }
+                    save_competitor_db(competitor_db)
+                    st.session_state.pop("comp_edit_idx", None)
+                    st.session_state.pop(comp_price_key, None)
+                    st.rerun()
 
     st.markdown("")
 
