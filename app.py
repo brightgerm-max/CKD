@@ -29,6 +29,7 @@ from usp_generator import generate_usp_with_ai, generate_usp_template
 from naver_client import fetch_search_trend, search_tv_health_news
 from mfds_client import search_health_food
 from clinicaltrials_client import search_clinical_trials
+from price_client import search_product_prices
 
 # ─── 경로 & 데이터 ───
 DATA_DIR = Path(__file__).parent / "data"
@@ -1277,64 +1278,101 @@ def page_competitor():
 
     st.markdown(f'<div class="s-header">⚔️ "{product["brand"]}" 카테고리 USP 비교</div>', unsafe_allow_html=True)
 
-    # 가격대 매핑
-    price_map = {"하":"15,000~25,000원","중":"25,000~40,000원","중상":"35,000~50,000원","상":"45,000~70,000원"}
+    # 실시간 가격 수집
+    comp_price_key = f"comp_prices_{product['brand']}"
+    if comp_price_key not in st.session_state:
+        with st.spinner("네이버 쇼핑에서 실시간 가격을 조회하고 있습니다..."):
+            prices = {}
+            # 자사
+            prices["ckd"] = search_product_prices(f"종근당 {product['brand']}")
+            # 경쟁사
+            for c in competitors:
+                prices[c["brand"]] = search_product_prices(f"{c['brand']} {c['company']}")
+            st.session_state[comp_price_key] = prices
 
-    # 자사 USP 카드
-    ckd_price = price_map.get(ckd.get("price_position","중"), "25,000~40,000원")
+    prices = st.session_state[comp_price_key]
+
+    def _price_html(price_data):
+        """채널별 가격 HTML 생성."""
+        nv = price_data["naver"][0] if price_data["naver"] else None
+        cp = price_data["coupang"][0] if price_data["coupang"] else None
+        br = price_data["brand"][0] if price_data["brand"] else None
+        parts = []
+        if nv:
+            parts.append(f'<a href="{nv["link"]}" target="_blank" style="text-decoration:none">'
+                         f'<span style="background:#03c75a;color:#fff;padding:3px 8px;border-radius:6px;font-size:0.75rem;font-weight:700">네이버</span>'
+                         f'<span style="font-weight:700;margin-left:4px;font-size:0.88rem">{nv["price"]:,}원</span></a>')
+        else:
+            parts.append('<span style="color:#cbd5e1;font-size:0.78rem">네이버 —</span>')
+        if cp:
+            parts.append(f'<a href="{cp["link"]}" target="_blank" style="text-decoration:none">'
+                         f'<span style="background:#ef4444;color:#fff;padding:3px 8px;border-radius:6px;font-size:0.75rem;font-weight:700">쿠팡</span>'
+                         f'<span style="font-weight:700;margin-left:4px;font-size:0.88rem">{cp["price"]:,}원</span></a>')
+        else:
+            parts.append('<span style="color:#cbd5e1;font-size:0.78rem">쿠팡 —</span>')
+        if br:
+            parts.append(f'<a href="{br["link"]}" target="_blank" style="text-decoration:none">'
+                         f'<span style="background:#2563eb;color:#fff;padding:3px 8px;border-radius:6px;font-size:0.75rem;font-weight:700">자사몰</span>'
+                         f'<span style="font-weight:700;margin-left:4px;font-size:0.88rem">{br["price"]:,}원</span></a>')
+        else:
+            parts.append('<span style="color:#cbd5e1;font-size:0.78rem">자사몰 —</span>')
+        return '<div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:8px">' + ''.join(f'<div>{p}</div>' for p in parts) + '</div>'
+
+    # 자사 USP 카드 + 가격
+    ckd_prices = prices.get("ckd", {"naver":[],"coupang":[],"brand":[]})
     st.markdown(
         f'<div style="background:linear-gradient(135deg,#1e293b,#334155);border-radius:16px;padding:20px;margin-bottom:16px;color:#fff">'
         f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'
         f'<div><span style="font-size:1.1rem;font-weight:800">종근당 {product["brand"]}</span>'
-        f'<span style="background:rgba(37,99,235,0.3);padding:3px 10px;border-radius:20px;font-size:0.75rem;margin-left:8px">자사</span></div>'
-        f'<span style="color:#94a3b8;font-size:0.85rem">가격대: {ckd_price}</span></div>'
+        f'<span style="background:rgba(37,99,235,0.3);padding:3px 10px;border-radius:20px;font-size:0.75rem;margin-left:8px">자사</span></div></div>'
         f'<div style="background:rgba(255,255,255,0.08);border-radius:12px;padding:14px 16px;font-size:1rem;font-weight:600;margin-bottom:10px">'
         f'💡 {ckd.get("usp","")}</div>'
-        f'<div style="font-size:0.82rem;color:#94a3b8">프리미엄: {ckd.get("premium_score",5)}/10 · 가격 포지션: {ckd.get("price_score",5)}/10</div>'
+        f'{_price_html(ckd_prices)}'
         f'</div>', unsafe_allow_html=True)
 
-    # 경쟁사 USP 카드들
+    # 경쟁사 USP 카드들 + 가격
     for c in competitors:
-        c_price = price_map.get(c.get("price_position","중"), "25,000~40,000원")
+        c_prices = prices.get(c["brand"], {"naver":[],"coupang":[],"brand":[]})
         st.markdown(
             f'<div style="background:linear-gradient(160deg,#ffffff,#f8fafd);border:1px solid #e2e8f0;border-radius:16px;padding:18px 20px;margin-bottom:10px">'
             f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
             f'<div><span style="font-size:0.95rem;font-weight:700;color:#1e293b">{c["company"]}</span>'
             f'<span style="color:#64748b;font-weight:500;margin-left:6px">{c["brand"]}</span>'
-            f'<span style="background:#fef2f2;color:#ef4444;padding:2px 8px;border-radius:20px;font-size:0.7rem;font-weight:600;margin-left:8px">경쟁사</span></div>'
-            f'<span style="color:#64748b;font-size:0.82rem">가격대: {c_price}</span></div>'
+            f'<span style="background:#fef2f2;color:#ef4444;padding:2px 8px;border-radius:20px;font-size:0.7rem;font-weight:600;margin-left:8px">경쟁사</span></div></div>'
             f'<div style="background:#f8fafc;border-left:3px solid #ef4444;border-radius:0 10px 10px 0;padding:10px 14px;font-size:0.92rem;font-weight:600;color:#1e293b;margin-bottom:8px">'
             f'{c.get("usp","")}</div>'
-            f'<div style="font-size:0.78rem;color:#94a3b8">프리미엄: {c.get("premium_score",5)}/10 · 가격 포지션: {c.get("price_score",5)}/10</div>'
+            f'{_price_html(c_prices)}'
             f'</div>', unsafe_allow_html=True)
 
     st.markdown("")
 
-    # 포지셔닝 맵 (풀 폭)
+    # 가격 비교 차트
     with st.container(border=True):
-        st.markdown("**🗺️ USP 포지셔닝 맵**  _(마우스를 올리면 가격대와 USP를 확인할 수 있습니다)_")
-        sd = []
-        sd.append({"브랜드":f"종근당 {product['brand']}","프리미엄":ckd.get("premium_score",5),"가격포지션":ckd.get("price_score",5),"유형":"자사","가격대":ckd_price,"USP":ckd.get("usp","")})
-        for c in competitors:
-            c_price = price_map.get(c.get("price_position","중"), "25,000~40,000원")
-            sd.append({"브랜드":f"{c['company']} {c['brand']}","프리미엄":c.get("premium_score",5),"가격포지션":c.get("price_score",5),"유형":"경쟁사","가격대":c_price,"USP":c.get("usp","")})
+        st.markdown("**💰 채널별 최저가 비교** _(네이버 쇼핑 실시간 데이터)_")
+        chart_data = []
+        all_brands = [("종근당 " + product["brand"], "ckd")] + [(f"{c['company']} {c['brand']}", c["brand"]) for c in competitors]
+        for brand_label, price_key in all_brands:
+            pd_data = prices.get(price_key, {"naver":[],"coupang":[],"brand":[]})
+            for ch_name, ch_key in [("네이버",  "naver"), ("쿠팡", "coupang"), ("자사몰", "brand")]:
+                if pd_data[ch_key]:
+                    chart_data.append({"브랜드": brand_label[:10], "채널": ch_name, "최저가": pd_data[ch_key][0]["price"]})
 
-        df_scatter = pd.DataFrame(sd)
-        fig = px.scatter(
-            df_scatter, x="프리미엄", y="가격포지션", text="브랜드", color="유형",
-            color_discrete_map={"자사":"#2563eb","경쟁사":"#ef4444"},
-            hover_data={"가격대":True,"USP":True,"프리미엄":True,"가격포지션":True,"유형":False,"브랜드":False},
-        )
-        fig.update_traces(textposition="top center", marker=dict(size=18, line=dict(width=2, color="white")))
-        fig.update_layout(
-            height=380, margin=dict(t=20,b=20,l=20,r=20),
-            xaxis=dict(range=[0,10],title="프리미엄 이미지 →",gridcolor="#f1f5f9"),
-            yaxis=dict(range=[0,10],title="가격대 →",gridcolor="#f1f5f9"),
-            paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-            showlegend=True, legend=dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right",x=1),
-            hoverlabel=dict(bgcolor="white",font_size=13),
-        )
-        st.plotly_chart(fig, use_container_width=True)
+        if chart_data:
+            fig_price = px.bar(
+                pd.DataFrame(chart_data), x="브랜드", y="최저가", color="채널", barmode="group",
+                color_discrete_map={"네이버":"#03c75a","쿠팡":"#ef4444","자사몰":"#2563eb"},
+                text="최저가",
+            )
+            fig_price.update_traces(texttemplate="%{text:,}원", textposition="outside", textfont_size=10)
+            fig_price.update_layout(
+                height=350, margin=dict(t=20,b=20,l=20,r=20),
+                yaxis=dict(title="가격 (원)", gridcolor="#f1f5f9"),
+                paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                legend=dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right",x=1),
+            )
+            st.plotly_chart(fig_price, use_container_width=True)
+        else:
+            st.caption("가격 데이터를 가져올 수 없습니다.")
 
     st.markdown('<div class="s-header">💡 자사 차별화 포인트</div>', unsafe_allow_html=True)
     for i, pt in enumerate(cat_data.get("differentiation",[])):
