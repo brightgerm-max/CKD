@@ -156,24 +156,25 @@ section[data-testid="stSidebar"] .stButton > button[kind="primary"] {
 .p-card:hover { border-color: #93c5fd; box-shadow: 0 8px 24px rgba(37,99,235,0.12); transform: translateY(-3px); }
 .p-card:hover::before { background: linear-gradient(90deg, #60a5fa, #2563eb); }
 .p-card-sel {
-    background: linear-gradient(160deg, #eff6ff 0%, #dbeafe 100%);
-    border: 2px solid #2563eb; border-radius: 16px;
+    background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+    border: 2px solid #1d4ed8; border-radius: 16px;
     padding: 22px 14px 18px; text-align: center; min-height: 110px;
     display: flex; flex-direction: column; justify-content: center; align-items: center;
-    box-shadow: 0 8px 24px rgba(37,99,235,0.18);
-    position: relative; overflow: hidden;
+    box-shadow: 0 8px 24px rgba(37,99,235,0.3);
+    position: relative; overflow: hidden; color: #ffffff;
 }
 .p-card-sel::before {
     content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px;
-    background: linear-gradient(90deg, #2563eb, #60a5fa);
+    background: linear-gradient(90deg, #60a5fa, #93c5fd);
     border-radius: 16px 16px 0 0;
 }
+.p-card-sel .p-brand { color: #ffffff; }
 .p-brand { font-size: 1rem; font-weight: 700; color: #1e293b; margin-bottom: 6px; }
 .p-cat {
     font-size: 0.75rem; color: #64748b; background: #e8edf3;
     padding: 3px 12px; border-radius: 20px; display: inline-block; font-weight: 500;
 }
-.p-card-sel .p-cat { background: rgba(37,99,235,0.12); color: #1d4ed8; }
+.p-card-sel .p-cat { background: rgba(255,255,255,0.2); color: #ffffff; }
 
 /* ── 미니 메트릭 ── */
 .m-card {
