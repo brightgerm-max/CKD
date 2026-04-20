@@ -16,6 +16,7 @@ from pathlib import Path
 from pubmed_client import search_pubmed, fetch_article_details, INGREDIENT_QUERIES
 from matching_engine import load_product_db, match_article_to_products, TARGET_SEGMENTS
 from usp_generator import generate_usp_with_ai, generate_usp_template
+from naver_client import fetch_search_trend, search_tv_health_news
 
 # ─── 경로 & 데이터 ───
 DATA_DIR = Path(__file__).parent / "data"
@@ -804,22 +805,44 @@ def page_data_collection():
         st.markdown('</div>', unsafe_allow_html=True)
 
     with col_r:
-        tv_results = get_tv_data_for_ingredient(tv_data, sel_ing)
-        badge = f'<span class="g-card-badge g-badge-green">{len(tv_results)}건</span>' if tv_results else ""
-        st.markdown(f'<div class="g-card"><div class="g-card-header">📺 TV 방송 {badge}</div>', unsafe_allow_html=True)
-        if tv_results:
-            for tv in tv_results:
-                tv_search = tv["title"].replace(" ","+")
-                tv_url = f'https://search.naver.com/search.naver?query={tv_search}'
+        # 네이버 뉴스 API로 TV/건강 방송 관련 기사 검색
+        tv_cache_key = f"tv_news_{sel_ing['name_kr']}"
+        if tv_cache_key not in st.session_state:
+            news = search_tv_health_news(sel_ing["name_kr"], display=5)
+            # API 결과가 없으면 샘플 데이터 폴백
+            if news:
+                st.session_state[tv_cache_key] = {"source": "api", "data": news}
+            else:
+                fallback = get_tv_data_for_ingredient(tv_data, sel_ing)
+                st.session_state[tv_cache_key] = {"source": "sample", "data": fallback}
+
+        tv_cached = st.session_state[tv_cache_key]
+        tv_source = tv_cached["source"]
+        tv_items = tv_cached["data"]
+
+        source_label = "" if tv_source == "api" else ' <span class="g-card-badge g-badge-gray">샘플</span>'
+        badge = f'<span class="g-card-badge g-badge-green">{len(tv_items)}건</span>' if tv_items else ""
+        st.markdown(f'<div class="g-card"><div class="g-card-header">📺 TV·건강 뉴스 {badge}{source_label}</div>', unsafe_allow_html=True)
+
+        if tv_items and tv_source == "api":
+            for item in tv_items:
+                st.markdown(
+                    f'<div class="d-item">'
+                    f'<div class="d-title">{item["title"]}</div>'
+                    f'<div class="d-meta">{item.get("pubDate","")}'
+                    f' · <a href="{item["link"]}" target="_blank" class="d-link">원문 →</a></div>'
+                    f'<div style="font-size:0.8rem;color:#64748b;margin-top:4px">{item.get("description","")[:120]}</div>'
+                    f'</div>', unsafe_allow_html=True)
+        elif tv_items and tv_source == "sample":
+            for tv in tv_items:
                 st.markdown(
                     f'<div class="d-item">'
                     f'<div class="d-title">{tv["title"]}</div>'
-                    f'<div class="d-meta">{tv["program"]} ({tv["channel"]}) · {tv["date"]}'
-                    f' · <a href="{tv_url}" target="_blank" class="d-link">원문 →</a></div>'
+                    f'<div class="d-meta">{tv["program"]} ({tv["channel"]}) · {tv["date"]}</div>'
                     f'<div style="font-size:0.8rem;color:#64748b;margin-top:4px">{tv["summary"]}</div>'
                     f'</div>', unsafe_allow_html=True)
         else:
-            st.caption("관련 방송 데이터 없음")
+            st.caption("관련 뉴스 없음")
         st.markdown('</div>', unsafe_allow_html=True)
 
     col_l2, col_r2 = st.columns(2)
@@ -844,13 +867,42 @@ def page_data_collection():
         st.markdown('</div>', unsafe_allow_html=True)
 
     with col_r2:
-        st.markdown('<div class="g-card"><div class="g-card-header">📈 검색 트렌드 <span class="g-card-badge g-badge-gray">샘플</span></div>', unsafe_allow_html=True)
-        trend_df = generate_trend_data(sel_ing["name_kr"])
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(x=trend_df["월"],y=trend_df["네이버"],name="네이버",line=dict(color="#03c75a",width=2.5),fill="tozeroy",fillcolor="rgba(3,199,90,0.06)"))
-        fig.add_trace(go.Scatter(x=trend_df["월"],y=trend_df["구글"],name="구글",line=dict(color="#4285f4",width=2.5),fill="tozeroy",fillcolor="rgba(66,133,244,0.06)"))
-        fig.update_layout(height=260,margin=dict(t=10,b=20,l=20,r=20),legend=dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right",x=1),paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",yaxis=dict(gridcolor="#f1f5f9"))
-        st.plotly_chart(fig, use_container_width=True)
+        # 네이버 데이터랩 실제 API로 검색 트렌드
+        trend_cache_key = f"trend_{sel_ing['name_kr']}"
+        if trend_cache_key not in st.session_state:
+            trend_data = fetch_search_trend(sel_ing["keywords_kr"][:3], months_back=12)
+            if trend_data:
+                st.session_state[trend_cache_key] = {"source": "api", "data": trend_data}
+            else:
+                st.session_state[trend_cache_key] = {"source": "sample", "data": None}
+
+        trend_cached = st.session_state[trend_cache_key]
+        source_label = "" if trend_cached["source"] == "api" else ' <span class="g-card-badge g-badge-gray">샘플</span>'
+        st.markdown(f'<div class="g-card"><div class="g-card-header">📈 검색 트렌드 (네이버){source_label}</div>', unsafe_allow_html=True)
+
+        if trend_cached["source"] == "api" and trend_cached["data"]:
+            td = trend_cached["data"]
+            trend_df = pd.DataFrame(td)
+            trend_df.columns = ["월", "검색량"]
+            trend_df["월"] = trend_df["월"].str[:7]
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(
+                x=trend_df["월"], y=trend_df["검색량"], name="네이버 검색량",
+                line=dict(color="#03c75a", width=2.5),
+                fill="tozeroy", fillcolor="rgba(3,199,90,0.06)",
+            ))
+            fig.update_layout(height=260, margin=dict(t=10,b=20,l=20,r=20),
+                              legend=dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right",x=1),
+                              paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                              yaxis=dict(gridcolor="#f1f5f9", title="상대 검색량"))
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            trend_df = generate_trend_data(sel_ing["name_kr"])
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(x=trend_df["월"],y=trend_df["네이버"],name="네이버",line=dict(color="#03c75a",width=2.5),fill="tozeroy",fillcolor="rgba(3,199,90,0.06)"))
+            fig.add_trace(go.Scatter(x=trend_df["월"],y=trend_df["구글"],name="구글",line=dict(color="#4285f4",width=2.5),fill="tozeroy",fillcolor="rgba(66,133,244,0.06)"))
+            fig.update_layout(height=260,margin=dict(t=10,b=20,l=20,r=20),legend=dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right",x=1),paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",yaxis=dict(gridcolor="#f1f5f9"))
+            st.plotly_chart(fig, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
 
