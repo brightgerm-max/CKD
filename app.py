@@ -18,7 +18,7 @@ from matching_engine import load_product_db, match_article_to_products, TARGET_S
 from usp_generator import generate_usp_with_ai, generate_usp_template
 
 # ─── 경로 & 데이터 ───
-DATA_DIR = Path(__file__).parent.parent / "data"
+DATA_DIR = Path(__file__).parent / "data"
 
 def load_json(filename):
     with open(DATA_DIR / filename, "r", encoding="utf-8") as f:
