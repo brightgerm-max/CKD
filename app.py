@@ -809,10 +809,13 @@ def page_data_collection():
         st.markdown(f'<div class="g-card"><div class="g-card-header">📺 TV 방송 {badge}</div>', unsafe_allow_html=True)
         if tv_results:
             for tv in tv_results:
+                tv_search = tv["title"].replace(" ","+")
+                tv_url = f'https://search.naver.com/search.naver?query={tv_search}'
                 st.markdown(
                     f'<div class="d-item">'
                     f'<div class="d-title">{tv["title"]}</div>'
-                    f'<div class="d-meta">{tv["program"]} ({tv["channel"]}) · {tv["date"]}</div>'
+                    f'<div class="d-meta">{tv["program"]} ({tv["channel"]}) · {tv["date"]}'
+                    f' · <a href="{tv_url}" target="_blank" class="d-link">원문 →</a></div>'
                     f'<div style="font-size:0.8rem;color:#64748b;margin-top:4px">{tv["summary"]}</div>'
                     f'</div>', unsafe_allow_html=True)
         else:
@@ -828,10 +831,12 @@ def page_data_collection():
         if reg_results:
             for r in reg_results:
                 ic = {"긍정":"#059669","주의":"#d97706","정보":"#2563eb"}.get(r.get("impact",""),"#64748b")
+                reg_url = r.get("url","https://www.mfds.go.kr")
                 st.markdown(
                     f'<div class="d-item">'
                     f'<div class="d-title">{r["title"]}</div>'
-                    f'<div class="d-meta">{r["date"]} · <span style="color:{ic};font-weight:600">{r.get("impact","")}</span></div>'
+                    f'<div class="d-meta">{r["date"]} · <span style="color:{ic};font-weight:600">{r.get("impact","")}</span>'
+                    f' · <a href="{reg_url}" target="_blank" class="d-link">원문 →</a></div>'
                     f'<div style="font-size:0.8rem;color:#64748b;margin-top:4px">{r["summary"]}</div>'
                     f'</div>', unsafe_allow_html=True)
         else:
