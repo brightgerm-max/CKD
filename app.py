@@ -1275,88 +1275,66 @@ def page_competitor():
     competitors = cat_data.get("competitors",[])
     ckd = cat_data.get("ckd_position",{})
 
-    st.markdown(f'<div class="s-header">⚔️ "{product["brand"]}" 카테고리 경쟁사 비교</div>', unsafe_allow_html=True)
-
-    tbl = '<div class="ct-wrap">'
-    tbl += '<div class="ct-row ct-hdr"><div>브랜드</div><div>USP 포인트</div><div>매체 전략</div></div>'
-    tbl += f'<div class="ct-row ct-ckd"><div><b style="color:#2563eb">종근당 {product["brand"]}</b></div><div>{ckd.get("usp","")}</div><div>{", ".join(ckd.get("channels",[]))}</div></div>'
-    for c in competitors:
-        tbl += f'<div class="ct-row"><div><b>{c["company"]}</b> {c["brand"]}</div><div>{c.get("usp","")}</div><div>{", ".join(c.get("channels",[]))}</div></div>'
-    tbl += '</div>'
-    st.markdown(tbl, unsafe_allow_html=True)
-
-    st.markdown("")
+    st.markdown(f'<div class="s-header">⚔️ "{product["brand"]}" 카테고리 USP 비교</div>', unsafe_allow_html=True)
 
     # 가격대 매핑
     price_map = {"하":"15,000~25,000원","중":"25,000~40,000원","중상":"35,000~50,000원","상":"45,000~70,000원"}
 
-    cl, cr = st.columns(2)
+    # 자사 USP 카드
+    ckd_price = price_map.get(ckd.get("price_position","중"), "25,000~40,000원")
+    st.markdown(
+        f'<div style="background:linear-gradient(135deg,#1e293b,#334155);border-radius:16px;padding:20px;margin-bottom:16px;color:#fff">'
+        f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'
+        f'<div><span style="font-size:1.1rem;font-weight:800">종근당 {product["brand"]}</span>'
+        f'<span style="background:rgba(37,99,235,0.3);padding:3px 10px;border-radius:20px;font-size:0.75rem;margin-left:8px">자사</span></div>'
+        f'<span style="color:#94a3b8;font-size:0.85rem">가격대: {ckd_price}</span></div>'
+        f'<div style="background:rgba(255,255,255,0.08);border-radius:12px;padding:14px 16px;font-size:1rem;font-weight:600;margin-bottom:10px">'
+        f'💡 {ckd.get("usp","")}</div>'
+        f'<div style="font-size:0.82rem;color:#94a3b8">프리미엄: {ckd.get("premium_score",5)}/10 · 가격 포지션: {ckd.get("price_score",5)}/10</div>'
+        f'</div>', unsafe_allow_html=True)
 
-    with cl:
-        with st.container(border=True):
-            st.markdown("**🗺️ 포지셔닝 맵**")
-            sd = []
-            ckd_price = price_map.get(ckd.get("price_position","중"), "25,000~40,000원")
-            sd.append({"브랜드":f"종근당 {product['brand']}","프리미엄":ckd.get("premium_score",5),"가격포지션":ckd.get("price_score",5),"유형":"자사","가격대":ckd_price,"USP":ckd.get("usp","")})
-            for c in competitors:
-                c_price = price_map.get(c.get("price_position","중"), "25,000~40,000원")
-                sd.append({"브랜드":c["brand"],"프리미엄":c.get("premium_score",5),"가격포지션":c.get("price_score",5),"유형":"경쟁사","가격대":c_price,"USP":c.get("usp","")})
+    # 경쟁사 USP 카드들
+    for c in competitors:
+        c_price = price_map.get(c.get("price_position","중"), "25,000~40,000원")
+        st.markdown(
+            f'<div style="background:linear-gradient(160deg,#ffffff,#f8fafd);border:1px solid #e2e8f0;border-radius:16px;padding:18px 20px;margin-bottom:10px">'
+            f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
+            f'<div><span style="font-size:0.95rem;font-weight:700;color:#1e293b">{c["company"]}</span>'
+            f'<span style="color:#64748b;font-weight:500;margin-left:6px">{c["brand"]}</span>'
+            f'<span style="background:#fef2f2;color:#ef4444;padding:2px 8px;border-radius:20px;font-size:0.7rem;font-weight:600;margin-left:8px">경쟁사</span></div>'
+            f'<span style="color:#64748b;font-size:0.82rem">가격대: {c_price}</span></div>'
+            f'<div style="background:#f8fafc;border-left:3px solid #ef4444;border-radius:0 10px 10px 0;padding:10px 14px;font-size:0.92rem;font-weight:600;color:#1e293b;margin-bottom:8px">'
+            f'{c.get("usp","")}</div>'
+            f'<div style="font-size:0.78rem;color:#94a3b8">프리미엄: {c.get("premium_score",5)}/10 · 가격 포지션: {c.get("price_score",5)}/10</div>'
+            f'</div>', unsafe_allow_html=True)
 
-            df_scatter = pd.DataFrame(sd)
-            fig = px.scatter(
-                df_scatter, x="프리미엄", y="가격포지션", text="브랜드", color="유형",
-                color_discrete_map={"자사":"#2563eb","경쟁사":"#ef4444"},
-                hover_data={"가격대":True,"USP":True,"프리미엄":True,"가격포지션":True,"유형":False,"브랜드":False},
-            )
-            fig.update_traces(textposition="top center", marker=dict(size=18, line=dict(width=2, color="white")))
-            fig.update_layout(
-                height=340, margin=dict(t=20,b=20,l=20,r=20),
-                xaxis=dict(range=[0,10],title="프리미엄 이미지 →",gridcolor="#f1f5f9"),
-                yaxis=dict(range=[0,10],title="가격대 →",gridcolor="#f1f5f9"),
-                paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-                showlegend=True, legend=dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right",x=1),
-                hoverlabel=dict(bgcolor="white",font_size=13),
-            )
-            st.plotly_chart(fig, use_container_width=True)
+    st.markdown("")
 
-    with cr:
-        with st.container(border=True):
-            st.markdown("**📺 매체 전략 비교**")
-            all_channels = set()
-            all_channels.update(ckd.get("channels",[]))
-            for c in competitors:
-                all_channels.update(c.get("channels",[]))
-            all_channels = sorted(all_channels)
+    # 포지셔닝 맵 (풀 폭)
+    with st.container(border=True):
+        st.markdown("**🗺️ USP 포지셔닝 맵**  _(마우스를 올리면 가격대와 USP를 확인할 수 있습니다)_")
+        sd = []
+        sd.append({"브랜드":f"종근당 {product['brand']}","프리미엄":ckd.get("premium_score",5),"가격포지션":ckd.get("price_score",5),"유형":"자사","가격대":ckd_price,"USP":ckd.get("usp","")})
+        for c in competitors:
+            c_price = price_map.get(c.get("price_position","중"), "25,000~40,000원")
+            sd.append({"브랜드":f"{c['company']} {c['brand']}","프리미엄":c.get("premium_score",5),"가격포지션":c.get("price_score",5),"유형":"경쟁사","가격대":c_price,"USP":c.get("usp","")})
 
-            brand_names = [f"종근당 {product['brand']}"] + [f"{c['company']} {c['brand']}" for c in competitors]
-            brand_channels = [ckd.get("channels",[])] + [c.get("channels",[]) for c in competitors]
-
-            heatmap_z = []
-            for chs in brand_channels:
-                heatmap_z.append([1 if ch in chs else 0 for ch in all_channels])
-
-            fig2 = go.Figure(data=go.Heatmap(
-                z=heatmap_z, x=all_channels, y=brand_names,
-                colorscale=[[0,"#f1f5f9"],[1,"#2563eb"]],
-                showscale=False,
-                hovertemplate="<b>%{y}</b><br>%{x}: %{customdata}<extra></extra>",
-                customdata=[["활용 중" if v==1 else "미활용" for v in row] for row in heatmap_z],
-            ))
-            for i, row in enumerate(heatmap_z):
-                for j, val in enumerate(row):
-                    fig2.add_annotation(
-                        x=all_channels[j], y=brand_names[i],
-                        text="●" if val else "—",
-                        showarrow=False,
-                        font=dict(size=16, color="white" if val else "#cbd5e1"),
-                    )
-            fig2.update_layout(
-                height=340, margin=dict(t=20,b=20,l=20,r=20),
-                xaxis=dict(side="top", tickfont=dict(size=11)),
-                yaxis=dict(tickfont=dict(size=11), autorange="reversed"),
-                paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-            )
-            st.plotly_chart(fig2, use_container_width=True)
+        df_scatter = pd.DataFrame(sd)
+        fig = px.scatter(
+            df_scatter, x="프리미엄", y="가격포지션", text="브랜드", color="유형",
+            color_discrete_map={"자사":"#2563eb","경쟁사":"#ef4444"},
+            hover_data={"가격대":True,"USP":True,"프리미엄":True,"가격포지션":True,"유형":False,"브랜드":False},
+        )
+        fig.update_traces(textposition="top center", marker=dict(size=18, line=dict(width=2, color="white")))
+        fig.update_layout(
+            height=380, margin=dict(t=20,b=20,l=20,r=20),
+            xaxis=dict(range=[0,10],title="프리미엄 이미지 →",gridcolor="#f1f5f9"),
+            yaxis=dict(range=[0,10],title="가격대 →",gridcolor="#f1f5f9"),
+            paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+            showlegend=True, legend=dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right",x=1),
+            hoverlabel=dict(bgcolor="white",font_size=13),
+        )
+        st.plotly_chart(fig, use_container_width=True)
 
     st.markdown('<div class="s-header">💡 자사 차별화 포인트</div>', unsafe_allow_html=True)
     for i, pt in enumerate(cat_data.get("differentiation",[])):
