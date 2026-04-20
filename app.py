@@ -3,6 +3,16 @@ CKD Insight Radar — 사이드바 내비게이션 대시보드
 실행: streamlit run app.py
 """
 
+import os
+from pathlib import Path as _P
+# .env 파일이 있으면 로드 (로컬 개발용)
+_env_path = _P(__file__).parent / ".env"
+if _env_path.exists():
+    for line in _env_path.read_text().strip().split("\n"):
+        if "=" in line and not line.startswith("#"):
+            k, v = line.split("=", 1)
+            os.environ.setdefault(k.strip(), v.strip())
+
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -918,6 +928,80 @@ def page_data_collection():
             fig.update_layout(height=260,margin=dict(t=10,b=20,l=20,r=20),legend=dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right",x=1),paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",yaxis=dict(gridcolor="#f1f5f9"))
             st.plotly_chart(fig, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
+
+    # ── AI 인사이트 요약 ──
+    st.markdown(f'<div class="s-header">🤖 "{sel_ing["name_kr"]}" 수집 데이터 AI 인사이트</div>', unsafe_allow_html=True)
+
+    ai_cache_key = f"ai_summary_{sel_ing['name_kr']}"
+
+    # 요약 데이터 준비
+    def _build_summary_prompt():
+        parts = []
+        # 논문
+        articles = st.session_state.get(cache_key, [])
+        if articles:
+            parts.append("## PubMed 논문")
+            for a in articles[:5]:
+                parts.append(f"- {a['title']} ({a.get('journal','')}, {a.get('pub_date','')})")
+        # 뉴스
+        tv_cached = st.session_state.get(f"tv_news_{sel_ing['name_kr']}", {})
+        tv_items = tv_cached.get("data", []) if tv_cached else []
+        if tv_items and tv_cached.get("source") == "api":
+            parts.append("\n## TV·건강 뉴스")
+            for n in tv_items[:5]:
+                parts.append(f"- {n['title']}")
+        # 식약처
+        mfds_items = st.session_state.get(f"mfds_{sel_ing['name_kr']}", [])
+        if mfds_items:
+            parts.append("\n## 식약처 기능성 인정 현황")
+            for m in mfds_items[:5]:
+                parts.append(f"- {m['name']} ({m['company']}): {m['functionality'][:80]}")
+        return "\n".join(parts)
+
+    if ai_cache_key in st.session_state:
+        st.markdown(
+            f'<div class="g-card">'
+            f'<div class="g-card-header">🧠 AI 분석 결과 <span class="g-card-badge g-badge-blue">Claude</span></div>'
+            f'<div style="font-size:0.9rem; line-height:1.7; color:#1e293b">{st.session_state[ai_cache_key]}</div>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+    else:
+        _, btn_col, _ = st.columns([2, 2, 2])
+        with btn_col:
+            if st.button("🤖 AI 인사이트 분석 실행", key="ai_summary_btn", type="primary", use_container_width=True):
+                summary_text = _build_summary_prompt()
+                if not summary_text.strip():
+                    st.warning("분석할 데이터가 없습니다.")
+                else:
+                    try:
+                        import anthropic
+                        client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY", ""))
+                        with st.spinner("AI가 수집 데이터를 분석하고 있습니다..."):
+                            msg = client.messages.create(
+                                model="claude-haiku-4-5-20251001",
+                                max_tokens=1000,
+                                messages=[{"role": "user", "content": f"""당신은 건강기능식품 마케팅 전문 분석가입니다. 아래 "{sel_ing['name_kr']}" 성분에 대해 수집된 데이터를 분석하고, 마케팅 관점에서 핵심 인사이트를 요약해주세요.
+
+{summary_text}
+
+다음 항목으로 정리해주세요:
+1. **논문 트렌드 요약** (최신 연구 동향 2-3줄)
+2. **미디어 동향** (TV/뉴스에서 어떻게 다뤄지고 있는지 1-2줄)
+3. **규제 현황** (식약처 인정 현황 1-2줄)
+4. **마케팅 활용 포인트** (이 데이터로 활용 가능한 마케팅 메시지 2-3개)
+
+한국어로 간결하게 작성해주세요. 식약처 광고 심의 기준을 준수하여 "치료", "완치" 등의 표현은 피해주세요."""}]
+                            )
+                            result = msg.content[0].text
+                            st.session_state[ai_cache_key] = result
+                            st.rerun()
+                    except Exception as e:
+                        err_msg = str(e)
+                        if "credit balance" in err_msg.lower():
+                            st.warning("Anthropic API 크레딧이 부족합니다. 콘솔에서 크레딧을 충전해주세요.")
+                        else:
+                            st.error(f"AI 분석 실패: {err_msg}")
 
 
 # ═══════════════════════════════════════════

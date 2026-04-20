@@ -1,15 +1,14 @@
 """네이버 API 클라이언트 — 데이터랩(검색 트렌드) + 뉴스 검색(TV 방송)"""
 
+import os
 import requests
 from datetime import datetime, timedelta
 
-# 데이터랩 API 키
-DATALAB_CLIENT_ID = "tb4OjXskE3YsQlZGOizW"
-DATALAB_CLIENT_SECRET = "PT49R7jgJ2"
-
-# 검색 API 키
-SEARCH_CLIENT_ID = "XD2DNizdSkR3an6vV6hZ"
-SEARCH_CLIENT_SECRET = "gDsSKV4Ye0"
+# 환경변수에서 API 키 로드
+DATALAB_CLIENT_ID = os.environ.get("NAVER_DATALAB_ID", "")
+DATALAB_CLIENT_SECRET = os.environ.get("NAVER_DATALAB_SECRET", "")
+SEARCH_CLIENT_ID = os.environ.get("NAVER_SEARCH_ID", "")
+SEARCH_CLIENT_SECRET = os.environ.get("NAVER_SEARCH_SECRET", "")
 
 DATALAB_HEADERS = {
     "X-Naver-Client-Id": DATALAB_CLIENT_ID,
