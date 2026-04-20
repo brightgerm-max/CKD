@@ -1284,10 +1284,10 @@ def page_competitor():
         with st.spinner("네이버 쇼핑에서 실시간 가격을 조회하고 있습니다..."):
             prices = {}
             # 자사
-            prices["ckd"] = search_product_prices(f"종근당 {product['brand']}")
-            # 경쟁사
+            prices["ckd"] = search_product_prices(f"종근당 {product['brand']}", brand_keywords=["종근당","종근당건강","ckd","ckdmall"])
+            # 경쟁사 — 각 회사명을 자사몰 키워드로
             for c in competitors:
-                prices[c["brand"]] = search_product_prices(f"{c['brand']} {c['company']}")
+                prices[c["brand"]] = search_product_prices(f"{c['brand']} {c['company']}", brand_keywords=[c["company"], c["brand"]])
             st.session_state[comp_price_key] = prices
 
     prices = st.session_state[comp_price_key]
@@ -1297,6 +1297,8 @@ def page_competitor():
         nv = price_data["naver"][0] if price_data["naver"] else None
         cp = price_data["coupang"][0] if price_data["coupang"] else None
         br = price_data["brand"][0] if price_data["brand"] else None
+        cp_url = price_data.get("coupang_search_url", "#")
+        br_url = price_data.get("brand_search_url", "#")
         parts = []
         if nv:
             parts.append(f'<a href="{nv["link"]}" target="_blank" style="text-decoration:none">'
@@ -1309,13 +1311,17 @@ def page_competitor():
                          f'<span style="background:#ef4444;color:#fff;padding:3px 8px;border-radius:6px;font-size:0.75rem;font-weight:700">쿠팡</span>'
                          f'<span style="font-weight:700;margin-left:4px;font-size:0.88rem">{cp["price"]:,}원</span></a>')
         else:
-            parts.append('<span style="color:#cbd5e1;font-size:0.78rem">쿠팡 —</span>')
+            parts.append(f'<a href="{cp_url}" target="_blank" style="text-decoration:none">'
+                         f'<span style="background:#ef4444;color:#fff;padding:3px 8px;border-radius:6px;font-size:0.75rem;font-weight:700">쿠팡</span>'
+                         f'<span style="color:#94a3b8;margin-left:4px;font-size:0.78rem">검색 →</span></a>')
         if br:
             parts.append(f'<a href="{br["link"]}" target="_blank" style="text-decoration:none">'
                          f'<span style="background:#2563eb;color:#fff;padding:3px 8px;border-radius:6px;font-size:0.75rem;font-weight:700">자사몰</span>'
                          f'<span style="font-weight:700;margin-left:4px;font-size:0.88rem">{br["price"]:,}원</span></a>')
         else:
-            parts.append('<span style="color:#cbd5e1;font-size:0.78rem">자사몰 —</span>')
+            parts.append(f'<a href="{br_url}" target="_blank" style="text-decoration:none">'
+                         f'<span style="background:#2563eb;color:#fff;padding:3px 8px;border-radius:6px;font-size:0.75rem;font-weight:700">자사몰</span>'
+                         f'<span style="color:#94a3b8;margin-left:4px;font-size:0.78rem">검색 →</span></a>')
         return '<div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:8px">' + ''.join(f'<div>{p}</div>' for p in parts) + '</div>'
 
     # 자사 USP 카드 + 가격
