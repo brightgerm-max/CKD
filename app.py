@@ -28,6 +28,7 @@ from matching_engine import load_product_db, match_article_to_products, TARGET_S
 from usp_generator import generate_usp_with_ai, generate_usp_template
 from naver_client import fetch_search_trend, search_tv_health_news
 from mfds_client import search_health_food
+from clinicaltrials_client import search_clinical_trials
 
 # ─── 경로 & 데이터 ───
 DATA_DIR = Path(__file__).parent / "data"
@@ -483,7 +484,7 @@ with st.sidebar:
         '<hr class="sidebar-hr"><div class="sidebar-label">모니터링 소스</div>',
         unsafe_allow_html=True,
     )
-    for name, on in [("PubMed",True),("ClinicalTrials.gov",False),("식약처 공지",True),("TV 건강 프로그램",True),("네이버 데이터랩",True)]:
+    for name, on in [("PubMed",True),("ClinicalTrials.gov",True),("식약처 공지",True),("TV 건강 프로그램",True),("네이버 데이터랩",True)]:
         dot = "sidebar-dot sidebar-dot-on" if on else "sidebar-dot sidebar-dot-off"
         st.markdown(f'<div class="sidebar-src"><span class="{dot}"></span> {name}</div>', unsafe_allow_html=True)
 
@@ -779,62 +780,114 @@ def page_data_collection():
 
     sel_ing = all_ingredients[st.session_state["dc_ingredient"]]
 
-    # 데이터 수집 실행 버튼 (PubMed 미검색 시)
+    # 통합 캐시키 (성분 + 기간)
+    dc_key = f"dc_{sel_ing['name_kr']}_{days_back}"
     query = find_query_for_ingredient(sel_ing)
-    cache_key = f"pubmed_{sel_ing['name_kr']}_{days_back}"
 
-    if cache_key not in st.session_state:
+    if dc_key not in st.session_state:
         _, btn_col, _ = st.columns([2, 2, 2])
         with btn_col:
-            if st.button(f"🔍 \"{sel_ing['name_kr']}\" 데이터 수집 실행", key="search_pubmed_btn", type="primary", use_container_width=True):
-                with st.spinner("PubMed 논문 + TV 방송 + 식약처 + 트렌드 데이터를 수집하고 있습니다..."):
+            if st.button(f"🔍 \"{sel_ing['name_kr']}\" 데이터 수집 실행", key="search_all_btn", type="primary", use_container_width=True):
+                with st.spinner("PubMed + 임상시험 + TV 뉴스 + 식약처 + 트렌드 데이터를 수집하고 있습니다..."):
+                    collected = {}
+                    # 1) PubMed
                     try:
-                        pmids = search_pubmed(query, max_results=10, days_back=days_back)
+                        pmids = search_pubmed(query, max_results=15, days_back=days_back)
                         time.sleep(0.4)
-                        articles = fetch_article_details(pmids)
-                        st.session_state[cache_key] = articles
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"검색 실패: {e}")
+                        collected["pubmed"] = fetch_article_details(pmids)
+                    except Exception:
+                        collected["pubmed"] = []
+                    # 2) ClinicalTrials.gov
+                    try:
+                        en_kws = sel_ing["keywords_en"][:2]
+                        ct_query = " ".join(en_kws) + " supplement"
+                        collected["clinical"] = search_clinical_trials(ct_query, max_results=8)
+                    except Exception:
+                        collected["clinical"] = []
+                    # 3) TV·건강 뉴스
+                    try:
+                        news = search_tv_health_news(sel_ing["name_kr"], display=5)
+                        if news:
+                            collected["tv"] = {"source": "api", "data": news}
+                        else:
+                            collected["tv"] = {"source": "sample", "data": get_tv_data_for_ingredient(tv_data, sel_ing)}
+                    except Exception:
+                        collected["tv"] = {"source": "sample", "data": get_tv_data_for_ingredient(tv_data, sel_ing)}
+                    # 4) 식약처
+                    try:
+                        mfds_results = []
+                        for kw in sel_ing["keywords_en"][:2] + sel_ing["keywords_kr"][:1]:
+                            found = search_health_food(kw, max_results=5)
+                            for item in found:
+                                if not any(r["report_no"] == item["report_no"] for r in mfds_results):
+                                    mfds_results.append(item)
+                                if len(mfds_results) >= 5:
+                                    break
+                            if len(mfds_results) >= 5:
+                                break
+                        collected["mfds"] = mfds_results
+                    except Exception:
+                        collected["mfds"] = []
+                    # 5) 검색 트렌드
+                    try:
+                        trend_data = fetch_search_trend(sel_ing["keywords_kr"][:3], months_back=max(days_back//30, 6))
+                        collected["trend"] = {"source": "api", "data": trend_data} if trend_data else {"source": "sample", "data": None}
+                    except Exception:
+                        collected["trend"] = {"source": "sample", "data": None}
+
+                    st.session_state[dc_key] = collected
+                    st.rerun()
         return
 
+    dc = st.session_state[dc_key]
     st.markdown(f'<div class="s-header">🔎 "{sel_ing["name_kr"]}" 수집 데이터</div>', unsafe_allow_html=True)
 
-    # 4분할 대시보드
+    # ── Row 1: PubMed + ClinicalTrials ──
     col_l, col_r = st.columns(2)
 
     with col_l:
-        badge = f'<span class="g-card-badge g-badge-blue">{len(st.session_state.get(cache_key,[]))}건</span>'
+        articles = dc.get("pubmed", [])
+        badge = f'<span class="g-card-badge g-badge-blue">{len(articles)}건</span>'
         st.markdown(f'<div class="g-card"><div class="g-card-header">📰 PubMed 논문 {badge}</div>', unsafe_allow_html=True)
-        for a in st.session_state[cache_key][:8]:
+        for a in articles[:8]:
             st.markdown(
                 f'<div class="d-item">'
                 f'<div class="d-title">{a["title"][:90]}</div>'
                 f'<div class="d-meta">{a.get("journal","N/A")} · {a.get("pub_date","")}'
                 f' · <a href="{a.get("url","#")}" target="_blank" class="d-link">원문 →</a></div>'
                 f'</div>', unsafe_allow_html=True)
+        if not articles:
+            st.caption("관련 논문 없음")
         st.markdown('</div>', unsafe_allow_html=True)
 
     with col_r:
-        # 네이버 뉴스 API로 TV/건강 방송 관련 기사 검색
-        tv_cache_key = f"tv_news_{sel_ing['name_kr']}"
-        if tv_cache_key not in st.session_state:
-            news = search_tv_health_news(sel_ing["name_kr"], display=5)
-            # API 결과가 없으면 샘플 데이터 폴백
-            if news:
-                st.session_state[tv_cache_key] = {"source": "api", "data": news}
-            else:
-                fallback = get_tv_data_for_ingredient(tv_data, sel_ing)
-                st.session_state[tv_cache_key] = {"source": "sample", "data": fallback}
+        trials = dc.get("clinical", [])
+        badge = f'<span class="g-card-badge g-badge-blue">{len(trials)}건</span>' if trials else ""
+        st.markdown(f'<div class="g-card"><div class="g-card-header">🏥 ClinicalTrials.gov {badge}</div>', unsafe_allow_html=True)
+        if trials:
+            for t in trials[:6]:
+                status_color = {"RECRUITING":"#059669","COMPLETED":"#2563eb","ACTIVE_NOT_RECRUITING":"#d97706"}.get(t["status"],"#64748b")
+                st.markdown(
+                    f'<div class="d-item">'
+                    f'<div class="d-title">{t["title"][:90]}</div>'
+                    f'<div class="d-meta"><span style="color:{status_color};font-weight:600">{t["status"]}</span>'
+                    f' · Phase {t["phase"]} · {t.get("start_date","")}'
+                    f' · <a href="{t["url"]}" target="_blank" class="d-link">원문 →</a></div>'
+                    f'</div>', unsafe_allow_html=True)
+        else:
+            st.caption("관련 임상시험 없음")
+        st.markdown('</div>', unsafe_allow_html=True)
 
-        tv_cached = st.session_state[tv_cache_key]
-        tv_source = tv_cached["source"]
-        tv_items = tv_cached["data"]
+    # ── Row 2: TV 뉴스 + 식약처 ──
+    col_l2, col_r2 = st.columns(2)
 
+    with col_l2:
+        tv_cached = dc.get("tv", {})
+        tv_source = tv_cached.get("source", "sample")
+        tv_items = tv_cached.get("data", [])
         source_label = "" if tv_source == "api" else ' <span class="g-card-badge g-badge-gray">샘플</span>'
         badge = f'<span class="g-card-badge g-badge-green">{len(tv_items)}건</span>' if tv_items else ""
         st.markdown(f'<div class="g-card"><div class="g-card-header">📺 TV·건강 뉴스 {badge}{source_label}</div>', unsafe_allow_html=True)
-
         if tv_items and tv_source == "api":
             for item in tv_items:
                 st.markdown(
@@ -844,41 +897,24 @@ def page_data_collection():
                     f' · <a href="{item["link"]}" target="_blank" class="d-link">원문 →</a></div>'
                     f'<div style="font-size:0.8rem;color:#64748b;margin-top:4px">{item.get("description","")[:120]}</div>'
                     f'</div>', unsafe_allow_html=True)
-        elif tv_items and tv_source == "sample":
+        elif tv_items:
             for tv in tv_items:
                 st.markdown(
                     f'<div class="d-item">'
                     f'<div class="d-title">{tv["title"]}</div>'
                     f'<div class="d-meta">{tv["program"]} ({tv["channel"]}) · {tv["date"]}</div>'
-                    f'<div style="font-size:0.8rem;color:#64748b;margin-top:4px">{tv["summary"]}</div>'
                     f'</div>', unsafe_allow_html=True)
         else:
             st.caption("관련 뉴스 없음")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    col_l2, col_r2 = st.columns(2)
-
-    with col_l2:
-        # 식약처 건강기능식품 DB 실제 API
-        mfds_cache_key = f"mfds_{sel_ing['name_kr']}"
-        if mfds_cache_key not in st.session_state:
-            # 영문 키워드로 검색 (원료명이 영문인 경우가 많음)
-            mfds_results = []
-            for kw in sel_ing["keywords_en"][:2] + sel_ing["keywords_kr"][:1]:
-                found = search_health_food(kw, max_results=5)
-                for item in found:
-                    if not any(r["report_no"] == item["report_no"] for r in mfds_results):
-                        mfds_results.append(item)
-                if len(mfds_results) >= 5:
-                    break
-            st.session_state[mfds_cache_key] = mfds_results
-
-        mfds_items = st.session_state[mfds_cache_key]
+    with col_r2:
+        mfds_items = dc.get("mfds", [])
         badge = f'<span class="g-card-badge g-badge-yellow">{len(mfds_items)}건</span>' if mfds_items else ""
         st.markdown(f'<div class="g-card"><div class="g-card-header">🏛️ 식약처 기능성 인정 현황 {badge}</div>', unsafe_allow_html=True)
         if mfds_items:
             for item in mfds_items[:5]:
-                fnclty = item["functionality"].replace("\r\n", " ").replace("\n", " ")[:100]
+                fnclty = item["functionality"].replace("\r\n"," ").replace("\n"," ")[:100]
                 st.markdown(
                     f'<div class="d-item">'
                     f'<div class="d-title">{item["name"]}</div>'
@@ -890,44 +926,27 @@ def page_data_collection():
             st.caption("관련 식약처 데이터 없음")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    with col_r2:
-        # 네이버 데이터랩 실제 API로 검색 트렌드
-        trend_cache_key = f"trend_{sel_ing['name_kr']}"
-        if trend_cache_key not in st.session_state:
-            trend_data = fetch_search_trend(sel_ing["keywords_kr"][:3], months_back=12)
-            if trend_data:
-                st.session_state[trend_cache_key] = {"source": "api", "data": trend_data}
-            else:
-                st.session_state[trend_cache_key] = {"source": "sample", "data": None}
-
-        trend_cached = st.session_state[trend_cache_key]
-        source_label = "" if trend_cached["source"] == "api" else ' <span class="g-card-badge g-badge-gray">샘플</span>'
-        st.markdown(f'<div class="g-card"><div class="g-card-header">📈 검색 트렌드 (네이버){source_label}</div>', unsafe_allow_html=True)
-
-        if trend_cached["source"] == "api" and trend_cached["data"]:
-            td = trend_cached["data"]
-            trend_df = pd.DataFrame(td)
-            trend_df.columns = ["월", "검색량"]
-            trend_df["월"] = trend_df["월"].str[:7]
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(
-                x=trend_df["월"], y=trend_df["검색량"], name="네이버 검색량",
-                line=dict(color="#03c75a", width=2.5),
-                fill="tozeroy", fillcolor="rgba(3,199,90,0.06)",
-            ))
-            fig.update_layout(height=260, margin=dict(t=10,b=20,l=20,r=20),
-                              legend=dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right",x=1),
-                              paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-                              yaxis=dict(gridcolor="#f1f5f9", title="상대 검색량"))
-            st.plotly_chart(fig, use_container_width=True)
-        else:
-            trend_df = generate_trend_data(sel_ing["name_kr"])
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(x=trend_df["월"],y=trend_df["네이버"],name="네이버",line=dict(color="#03c75a",width=2.5),fill="tozeroy",fillcolor="rgba(3,199,90,0.06)"))
-            fig.add_trace(go.Scatter(x=trend_df["월"],y=trend_df["구글"],name="구글",line=dict(color="#4285f4",width=2.5),fill="tozeroy",fillcolor="rgba(66,133,244,0.06)"))
-            fig.update_layout(height=260,margin=dict(t=10,b=20,l=20,r=20),legend=dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right",x=1),paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",yaxis=dict(gridcolor="#f1f5f9"))
-            st.plotly_chart(fig, use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+    # ── Row 3: 검색 트렌드 (풀 폭) ──
+    trend_cached = dc.get("trend", {})
+    source_label = "" if trend_cached.get("source") == "api" else ' <span class="g-card-badge g-badge-gray">샘플</span>'
+    st.markdown(f'<div class="g-card"><div class="g-card-header">📈 검색 트렌드 (네이버){source_label}</div>', unsafe_allow_html=True)
+    if trend_cached.get("source") == "api" and trend_cached.get("data"):
+        td = trend_cached["data"]
+        trend_df = pd.DataFrame(td)
+        trend_df.columns = ["월", "검색량"]
+        trend_df["월"] = trend_df["월"].str[:7]
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=trend_df["월"],y=trend_df["검색량"],name="네이버 검색량",line=dict(color="#03c75a",width=2.5),fill="tozeroy",fillcolor="rgba(3,199,90,0.06)"))
+        fig.update_layout(height=260,margin=dict(t=10,b=20,l=20,r=20),legend=dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right",x=1),paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",yaxis=dict(gridcolor="#f1f5f9",title="상대 검색량"))
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        trend_df = generate_trend_data(sel_ing["name_kr"])
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=trend_df["월"],y=trend_df["네이버"],name="네이버",line=dict(color="#03c75a",width=2.5),fill="tozeroy",fillcolor="rgba(3,199,90,0.06)"))
+        fig.add_trace(go.Scatter(x=trend_df["월"],y=trend_df["구글"],name="구글",line=dict(color="#4285f4",width=2.5),fill="tozeroy",fillcolor="rgba(66,133,244,0.06)"))
+        fig.update_layout(height=260,margin=dict(t=10,b=20,l=20,r=20),legend=dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right",x=1),paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",yaxis=dict(gridcolor="#f1f5f9"))
+        st.plotly_chart(fig, use_container_width=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
     # ── AI 인사이트 요약 ──
     st.markdown(f'<div class="s-header">🤖 "{sel_ing["name_kr"]}" 수집 데이터 AI 인사이트</div>', unsafe_allow_html=True)
@@ -938,20 +957,26 @@ def page_data_collection():
     def _build_summary_prompt():
         parts = []
         # 논문
-        articles = st.session_state.get(cache_key, [])
+        articles = dc.get("pubmed", [])
         if articles:
             parts.append("## PubMed 논문")
             for a in articles[:5]:
                 parts.append(f"- {a['title']} ({a.get('journal','')}, {a.get('pub_date','')})")
+        # 임상시험
+        trials = dc.get("clinical", [])
+        if trials:
+            parts.append("\n## 임상시험 (ClinicalTrials.gov)")
+            for t in trials[:5]:
+                parts.append(f"- [{t['status']}] {t['title']} (Phase {t['phase']})")
         # 뉴스
-        tv_cached = st.session_state.get(f"tv_news_{sel_ing['name_kr']}", {})
+        tv_cached = dc.get("tv", {})
         tv_items = tv_cached.get("data", []) if tv_cached else []
         if tv_items and tv_cached.get("source") == "api":
             parts.append("\n## TV·건강 뉴스")
             for n in tv_items[:5]:
                 parts.append(f"- {n['title']}")
         # 식약처
-        mfds_items = st.session_state.get(f"mfds_{sel_ing['name_kr']}", [])
+        mfds_items = dc.get("mfds", [])
         if mfds_items:
             parts.append("\n## 식약처 기능성 인정 현황")
             for m in mfds_items[:5]:
