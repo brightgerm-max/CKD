@@ -18,7 +18,7 @@ from matching_engine import load_product_db, match_article_to_products, TARGET_S
 from usp_generator import generate_usp_with_ai, generate_usp_template
 
 # ─── 경로 & 데이터 ───
-DATA_DIR = Path(__file__).parent / "data"
+DATA_DIR = Path(__file__).parent.parent / "data"
 
 def load_json(filename):
     with open(DATA_DIR / filename, "r", encoding="utf-8") as f:
@@ -156,25 +156,24 @@ section[data-testid="stSidebar"] .stButton > button[kind="primary"] {
 .p-card:hover { border-color: #93c5fd; box-shadow: 0 8px 24px rgba(37,99,235,0.12); transform: translateY(-3px); }
 .p-card:hover::before { background: linear-gradient(90deg, #60a5fa, #2563eb); }
 .p-card-sel {
-    background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
-    border: 2px solid #1d4ed8; border-radius: 16px;
+    background: linear-gradient(160deg, #eff6ff 0%, #dbeafe 100%);
+    border: 2px solid #2563eb; border-radius: 16px;
     padding: 22px 14px 18px; text-align: center; min-height: 110px;
     display: flex; flex-direction: column; justify-content: center; align-items: center;
-    box-shadow: 0 8px 24px rgba(37,99,235,0.3);
-    position: relative; overflow: hidden; color: #ffffff;
+    box-shadow: 0 8px 24px rgba(37,99,235,0.18);
+    position: relative; overflow: hidden;
 }
 .p-card-sel::before {
     content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px;
-    background: linear-gradient(90deg, #60a5fa, #93c5fd);
+    background: linear-gradient(90deg, #2563eb, #60a5fa);
     border-radius: 16px 16px 0 0;
 }
-.p-card-sel .p-brand { color: #ffffff; }
 .p-brand { font-size: 1rem; font-weight: 700; color: #1e293b; margin-bottom: 6px; }
 .p-cat {
     font-size: 0.75rem; color: #64748b; background: #e8edf3;
     padding: 3px 12px; border-radius: 20px; display: inline-block; font-weight: 500;
 }
-.p-card-sel .p-cat { background: rgba(255,255,255,0.2); color: #ffffff; }
+.p-card-sel .p-cat { background: rgba(37,99,235,0.12); color: #1d4ed8; }
 
 /* ── 미니 메트릭 ── */
 .m-card {
@@ -264,15 +263,15 @@ section[data-testid="stSidebar"] .stButton > button[kind="primary"] {
 .ing-pill:hover { border-color: #93c5fd; box-shadow: 0 6px 16px rgba(37,99,235,0.12); transform: translateY(-2px); }
 .ing-pill:hover::before { background: linear-gradient(90deg, #60a5fa, #2563eb); }
 .ing-pill-sel {
-    background: linear-gradient(135deg, #2563eb, #3b82f6);
-    border: 1.5px solid #2563eb; border-radius: 14px;
+    background: linear-gradient(160deg, #eff6ff 0%, #dbeafe 100%);
+    border: 2px solid #2563eb; border-radius: 14px;
     padding: 14px 10px; text-align: center; min-height: 70px;
-    color: #ffffff; box-shadow: 0 8px 20px rgba(37,99,235,0.3);
+    color: #1e293b; box-shadow: 0 8px 20px rgba(37,99,235,0.18);
     position: relative; overflow: hidden;
 }
 .ing-pill-sel::before {
     content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-    background: linear-gradient(90deg, #60a5fa, #93c5fd);
+    background: linear-gradient(90deg, #2563eb, #60a5fa);
 }
 .ing-nm { font-size: 0.92rem; font-weight: 700; }
 .ing-en { font-size: 0.68rem; opacity: 0.55; margin-top: 2px; }
