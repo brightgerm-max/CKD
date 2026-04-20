@@ -1374,65 +1374,85 @@ def page_competitor():
     # ── 네이버 쇼핑 상위 경쟁 브랜드 ──
     if scanned:
         st.markdown(f'<div class="s-header">🛒 네이버 쇼핑 상위 경쟁 브랜드 ({len(scanned[:10])}개)</div>', unsafe_allow_html=True)
+
+        chart_prices = [{"브랜드": f"종근당 {product['brand']}", "가격": scanned[0]["price"] if scanned else 0, "유형": "자사"}] if scanned else []
+
         for si, sc in enumerate(scanned[:10]):
-            price_str = f"{sc['price']:,}원" if sc['price'] > 0 else ""
+            price_str = f"{sc['price']:,}원" if sc['price'] > 0 else "가격 미확인"
             diff = compare_ingredients(ckd_ingredient_names, sc["ingredients"])
 
-            # 자사에도 있는 성분 / 자사에 없는 성분
             in_ckd = diff["common"]
             not_in_ckd = diff["competitor_only"]
+            ckd_only = diff["ckd_only"]
+
+            # 주요 성분 뱃지
+            all_ings = sc["ingredients"]
+            ings_html = "".join(f'<span style="background:#f1f5f9;color:#475569;padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:600;margin:2px">{s}</span>' for s in all_ings) if all_ings else '<span style="color:#cbd5e1;font-size:0.75rem">성분 정보 없음</span>'
+
+            # 성분 비교
             in_ckd_html = "".join(f'<span style="background:#dcfce7;color:#15803d;padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:600;margin:2px">✅ {s}</span>' for s in in_ckd) if in_ckd else '<span style="color:#cbd5e1;font-size:0.75rem">—</span>'
             not_in_ckd_html = "".join(f'<span style="background:#fef2f2;color:#dc2626;padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:600;margin:2px">⚠️ {s}</span>' for s in not_in_ckd) if not_in_ckd else '<span style="color:#cbd5e1;font-size:0.75rem">—</span>'
+            ckd_only_html = "".join(f'<span style="background:#dbeafe;color:#2563eb;padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:600;margin:2px">💪 {s}</span>' for s in ckd_only) if ckd_only else '<span style="color:#cbd5e1;font-size:0.75rem">—</span>'
 
-            # USP/마케팅 포인트 (상품명에서 추출)
-            usp_points = []
-            name_lower = sc["product_name"].lower()
-            if any(kw in name_lower for kw in ["프리미엄","고함량","고순도"]): usp_points.append("프리미엄/고함량 소구")
-            if any(kw in name_lower for kw in ["특허","독자"]): usp_points.append("특허 기술력 강조")
-            if any(kw in name_lower for kw in ["생유산균","생존","살아있는"]): usp_points.append("생균 생존력 소구")
-            if any(kw in name_lower for kw in ["다이어트","슬림","체지방"]): usp_points.append("다이어트 특화")
-            if any(kw in name_lower for kw in ["아이","키즈","베이비","아기"]): usp_points.append("영유아/키즈 타겟")
-            if any(kw in name_lower for kw in ["여성","질","임산부"]): usp_points.append("여성 건강 특화")
-            if any(kw in name_lower for kw in ["시니어","50대","관절"]): usp_points.append("시니어 타겟")
-            if any(kw in name_lower for kw in ["1+1","기획","세트","대용량"]): usp_points.append("가성비/대용량 소구")
-            if not usp_points: usp_points.append("일반 건강기능식품")
-            usp_html = " ".join(f'<span style="background:#eff6ff;color:#2563eb;padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:600;margin:2px">{u}</span>' for u in usp_points)
-
-            # 타겟 추정
-            target = "전 연령"
-            if any(kw in name_lower for kw in ["아이","키즈","베이비"]): target = "영유아/어린이"
-            elif any(kw in name_lower for kw in ["여성","질","임산부"]): target = "여성"
-            elif any(kw in name_lower for kw in ["남성","전립선"]): target = "남성"
-            elif any(kw in name_lower for kw in ["시니어","50대","60대"]): target = "시니어"
+            # 쿠팡/자사몰 검색 링크
+            import urllib.parse
+            enc_name = urllib.parse.quote(sc["product_name"][:30])
+            cp_link = f"https://www.coupang.com/np/search?q={enc_name}"
 
             st.markdown(
                 f'<div style="background:linear-gradient(160deg,#ffffff,#f8fafd);border:1px solid #e2e8f0;border-radius:16px;padding:18px 20px;margin-bottom:10px">'
-                # 브랜드 + 가격
-                f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
+                # 브랜드
+                f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
                 f'<div><span style="font-size:0.95rem;font-weight:700;color:#1e293b">{sc["brand"]}</span>'
-                f'<span style="background:#fff7ed;color:#ea580c;padding:2px 8px;border-radius:20px;font-size:0.68rem;font-weight:600;margin-left:8px">쇼핑 상위</span>'
-                f'<span style="color:#94a3b8;font-size:0.78rem;margin-left:8px">{price_str}</span></div>'
+                f'<span style="background:#fff7ed;color:#ea580c;padding:2px 8px;border-radius:20px;font-size:0.68rem;font-weight:600;margin-left:8px">쇼핑 상위</span></div>'
                 f'<a href="{sc["link"]}" target="_blank" class="d-link" style="font-size:0.75rem">상품 보기 →</a></div>'
-                # 상품명
-                f'<div style="font-size:0.82rem;color:#475569;margin-bottom:12px;padding:8px 12px;background:#f8fafc;border-radius:8px">{sc["product_name"]}</div>'
-                # USP & 마케팅 포인트
-                f'<div style="margin-bottom:10px">'
-                f'<div style="font-size:0.72rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">USP & 마케팅 포인트</div>'
-                f'<div style="display:flex;flex-wrap:wrap;gap:3px">{usp_html}</div></div>'
-                # 메인 타겟
-                f'<div style="margin-bottom:10px">'
-                f'<div style="font-size:0.72rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">메인 타겟</div>'
-                f'<span style="font-size:0.85rem;color:#1e293b;font-weight:600">🎯 {target}</span></div>'
-                # 상품 성분 — 자사 기준 비교
-                f'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+                # 제품명
+                f'<div style="font-size:0.72rem;font-weight:700;color:#94a3b8;margin-bottom:2px">제품명</div>'
+                f'<div style="font-size:0.85rem;color:#475569;margin-bottom:12px;padding:8px 12px;background:#f8fafc;border-radius:8px">{sc["product_name"]}</div>'
+                # 가격
+                f'<div style="font-size:0.72rem;font-weight:700;color:#94a3b8;margin-bottom:4px">가격</div>'
+                f'<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">'
+                f'<a href="{sc["link"]}" target="_blank" style="text-decoration:none"><span style="background:#03c75a;color:#fff;padding:4px 10px;border-radius:8px;font-size:0.75rem;font-weight:700">네이버</span> <span style="font-weight:700;font-size:0.88rem">{price_str}</span></a>'
+                f'<a href="{cp_link}" target="_blank" style="text-decoration:none"><span style="background:#ef4444;color:#fff;padding:4px 10px;border-radius:8px;font-size:0.75rem;font-weight:700">쿠팡</span> <span style="color:#94a3b8;font-size:0.78rem">검색 →</span></a>'
+                f'</div>'
+                # 주요 성분
+                f'<div style="font-size:0.72rem;font-weight:700;color:#94a3b8;margin-bottom:4px">주요 성분</div>'
+                f'<div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:12px">{ings_html}</div>'
+                # 성분 분석 — 3열
+                f'<div style="font-size:0.72rem;font-weight:700;color:#94a3b8;margin-bottom:6px">성분 분석 (자사 상품 기준)</div>'
+                f'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">'
+                f'<div style="background:#dbeafe;border-radius:10px;padding:10px 12px">'
+                f'<div style="font-size:0.72rem;font-weight:700;color:#2563eb;margin-bottom:4px">💪 자사에만 있어요!</div>'
+                f'<div style="display:flex;flex-wrap:wrap;gap:3px">{ckd_only_html}</div></div>'
                 f'<div style="background:#f0fdf4;border-radius:10px;padding:10px 12px">'
-                f'<div style="font-size:0.72rem;font-weight:700;color:#15803d;margin-bottom:4px">자사 상품에도 있는 성분</div>'
+                f'<div style="font-size:0.72rem;font-weight:700;color:#15803d;margin-bottom:4px">✅ 자사에도 있어요!</div>'
                 f'<div style="display:flex;flex-wrap:wrap;gap:3px">{in_ckd_html}</div></div>'
                 f'<div style="background:#fef2f2;border-radius:10px;padding:10px 12px">'
-                f'<div style="font-size:0.72rem;font-weight:700;color:#dc2626;margin-bottom:4px">자사 상품에 없는 성분</div>'
+                f'<div style="font-size:0.72rem;font-weight:700;color:#dc2626;margin-bottom:4px">⚠️ 자사에는 없어요!</div>'
                 f'<div style="display:flex;flex-wrap:wrap;gap:3px">{not_in_ckd_html}</div></div>'
                 f'</div>'
                 f'</div>', unsafe_allow_html=True)
+
+            if sc["price"] > 0:
+                chart_prices.append({"브랜드": sc["brand"][:8], "가격": sc["price"], "유형": "경쟁사"})
+
+    # ── 가격 포지셔닝 맵 ──
+    if scanned and chart_prices:
+        with st.container(border=True):
+            st.markdown("**💰 가격 포지셔닝 맵** _(네이버 쇼핑 기준)_")
+            df_prices = pd.DataFrame(chart_prices)
+            fig_pos = px.scatter(
+                df_prices, x="브랜드", y="가격", color="유형", size_max=18,
+                color_discrete_map={"자사": "#2563eb", "경쟁사": "#ef4444"},
+            )
+            fig_pos.update_traces(marker=dict(size=16, line=dict(width=2, color="white")))
+            fig_pos.update_layout(
+                height=350, margin=dict(t=20,b=20,l=20,r=20),
+                yaxis=dict(title="가격 (원)", gridcolor="#f1f5f9"),
+                paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                showlegend=True, legend=dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right",x=1),
+            )
+            st.plotly_chart(fig_pos, use_container_width=True)
 
     # ── 차별화 포인트 ──
     st.markdown('<div class="s-header">💡 자사 차별화 포인트</div>', unsafe_allow_html=True)
