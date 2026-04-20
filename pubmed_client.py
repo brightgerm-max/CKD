@@ -122,6 +122,30 @@ INGREDIENT_QUERIES = {
         '("collagen"[tiab] AND "supplement"[tiab]) '
         'AND ("skin"[tiab] OR "wrinkle"[tiab] OR "derma*"[tiab])'
     ),
+    "칼슘 비타민D (Calcium Vitamin D)": (
+        '("calcium"[tiab] OR "Calcium"[MeSH]) AND ("vitamin D"[tiab] OR "Vitamin D"[MeSH]) '
+        'AND ("supplement"[tiab] OR "bone"[tiab] OR "osteoporosis"[tiab])'
+    ),
+    "홍국 (Red Yeast Rice)": (
+        '("red yeast rice"[tiab] OR "monacolin"[tiab] OR "Monascus"[tiab]) '
+        'AND ("cholesterol"[tiab] OR "lipid"[tiab] OR "supplement"[tiab])'
+    ),
+    "비타민C (Vitamin C)": (
+        '("vitamin C"[tiab] OR "ascorbic acid"[tiab] OR "Ascorbic Acid"[MeSH]) '
+        'AND ("supplement"[tiab] OR "immune"[tiab] OR "antioxidant"[tiab])'
+    ),
+    "쏘팔메토 (Saw Palmetto)": (
+        '("saw palmetto"[tiab] OR "Serenoa"[MeSH]) '
+        'AND ("prostate"[tiab] OR "BPH"[tiab] OR "urinary"[tiab] OR "supplement"[tiab])'
+    ),
+    "크랜베리 (Cranberry)": (
+        '("cranberry"[tiab] OR "Vaccinium macrocarpon"[tiab] OR "proanthocyanidin"[tiab]) '
+        'AND ("urinary"[tiab] OR "UTI"[tiab] OR "supplement"[tiab])'
+    ),
+    "가르시니아 (Garcinia)": (
+        '("garcinia"[tiab] OR "hydroxycitric acid"[tiab] OR "HCA"[tiab]) '
+        'AND ("weight"[tiab] OR "body fat"[tiab] OR "obesity"[tiab] OR "supplement"[tiab])'
+    ),
 }
 
 

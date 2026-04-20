@@ -17,8 +17,8 @@ def search_health_food(keyword: str, max_results: int = 10) -> list[dict]:
     page_size = 100
     keyword_lower = keyword.lower()
 
-    # 여러 페이지 순회하며 키워드 매칭 (최대 1000건 탐색)
-    for start in range(1, 1001, page_size):
+    # 여러 페이지 순회하며 키워드 매칭 (최대 2000건 탐색)
+    for start in range(1, 2001, page_size):
         end = start + page_size - 1
         try:
             resp = requests.get(
