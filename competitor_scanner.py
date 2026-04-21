@@ -4,8 +4,8 @@ import os
 import re
 import requests
 
-SEARCH_CLIENT_ID = os.environ.get("NAVER_SEARCH_ID", "")
-SEARCH_CLIENT_SECRET = os.environ.get("NAVER_SEARCH_SECRET", "")
+def _get_search_creds():
+    return os.environ.get("NAVER_SEARCH_ID", ""), os.environ.get("NAVER_SEARCH_SECRET", "")
 
 # 건강기능식품 주요 성분 키워드
 INGREDIENT_KEYWORDS = {
@@ -58,6 +58,7 @@ def scan_competitors(
         "mall": 판매처,
     }, ...]
     """
+    SEARCH_CLIENT_ID, SEARCH_CLIENT_SECRET = _get_search_creds()
     if not SEARCH_CLIENT_ID:
         return []
 

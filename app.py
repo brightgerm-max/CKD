@@ -14,6 +14,14 @@ if _env_path.exists():
             os.environ.setdefault(k.strip(), v.strip())
 
 import streamlit as st
+
+# Streamlit Cloud Secrets → 환경변수 매핑
+try:
+    for key in st.secrets:
+        if isinstance(st.secrets[key], str):
+            os.environ.setdefault(key, st.secrets[key])
+except Exception:
+    pass
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go

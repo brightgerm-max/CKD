@@ -4,21 +4,17 @@ import os
 import requests
 from datetime import datetime, timedelta
 
-# 환경변수에서 API 키 로드
-DATALAB_CLIENT_ID = os.environ.get("NAVER_DATALAB_ID", "")
-DATALAB_CLIENT_SECRET = os.environ.get("NAVER_DATALAB_SECRET", "")
-SEARCH_CLIENT_ID = os.environ.get("NAVER_SEARCH_ID", "")
-SEARCH_CLIENT_SECRET = os.environ.get("NAVER_SEARCH_SECRET", "")
+def _get_datalab_headers():
+    return {
+        "X-Naver-Client-Id": os.environ.get("NAVER_DATALAB_ID", ""),
+        "X-Naver-Client-Secret": os.environ.get("NAVER_DATALAB_SECRET", ""),
+    }
 
-DATALAB_HEADERS = {
-    "X-Naver-Client-Id": DATALAB_CLIENT_ID,
-    "X-Naver-Client-Secret": DATALAB_CLIENT_SECRET,
-}
-
-SEARCH_HEADERS = {
-    "X-Naver-Client-Id": SEARCH_CLIENT_ID,
-    "X-Naver-Client-Secret": SEARCH_CLIENT_SECRET,
-}
+def _get_search_headers():
+    return {
+        "X-Naver-Client-Id": os.environ.get("NAVER_SEARCH_ID", ""),
+        "X-Naver-Client-Secret": os.environ.get("NAVER_SEARCH_SECRET", ""),
+    }
 
 
 # ─── 데이터랩: 검색 트렌드 ───
@@ -42,7 +38,7 @@ def fetch_search_trend(keywords_kr: list[str], months_back: int = 12) -> list[di
     try:
         resp = requests.post(
             "https://openapi.naver.com/v1/datalab/search",
-            headers={**DATALAB_HEADERS, "Content-Type": "application/json"},
+            headers={**_get_datalab_headers(), "Content-Type": "application/json"},
             json=body,
             timeout=10,
         )
@@ -77,7 +73,7 @@ def search_tv_health_news(ingredient_kr: str, display: int = 5) -> list[dict]:
         try:
             resp = requests.get(
                 "https://openapi.naver.com/v1/search/news.json",
-                headers=SEARCH_HEADERS,
+                headers=_get_search_headers(),
                 params={"query": query, "display": display, "sort": "date"},
                 timeout=10,
             )

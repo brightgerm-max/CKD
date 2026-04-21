@@ -5,8 +5,8 @@ import re
 import urllib.parse
 import requests
 
-SEARCH_CLIENT_ID = os.environ.get("NAVER_SEARCH_ID", "")
-SEARCH_CLIENT_SECRET = os.environ.get("NAVER_SEARCH_SECRET", "")
+def _get_search_creds():
+    return os.environ.get("NAVER_SEARCH_ID", ""), os.environ.get("NAVER_SEARCH_SECRET", "")
 
 
 def _parse_quantity(title: str) -> dict:
@@ -49,6 +49,7 @@ def search_product_prices(product_name: str, display: int = 20, brand_keywords: 
     result = {"naver": [], "coupang": [], "brand": [], "lowest": None,
               "coupang_search_url": "", "brand_search_url": ""}
 
+    SEARCH_CLIENT_ID, SEARCH_CLIENT_SECRET = _get_search_creds()
     if not SEARCH_CLIENT_ID:
         return result
 
