@@ -1586,11 +1586,23 @@ def page_trend():
         # 우측: 체크박스 필터
         with filter_col:
             st.markdown(f"**{kw_label}**")
-            select_all = st.checkbox("전체 선택/해제", value=True, key="trend_all")
+
+            def _toggle_all():
+                val = st.session_state.get("trend_all", True)
+                for kw in all_keywords:
+                    st.session_state[f"trend_kw_{kw}"] = val
+
+            st.checkbox("전체 선택/해제", value=True, key="trend_all", on_change=_toggle_all)
+
+            # 개별 체크박스 초기값 설정
+            for kw in all_keywords:
+                if f"trend_kw_{kw}" not in st.session_state:
+                    st.session_state[f"trend_kw_{kw}"] = True
+
             selected_kws = []
             for kw in all_keywords:
                 has_data = bool(result.get(kw))
-                checked = st.checkbox(kw, value=select_all, key=f"trend_kw_{kw}", disabled=not has_data)
+                checked = st.checkbox(kw, key=f"trend_kw_{kw}", disabled=not has_data)
                 if checked and has_data:
                     selected_kws.append(kw)
 
