@@ -1527,7 +1527,7 @@ def page_trend():
     # 상단: 카테고리 + 기간 설정
     cat_col, d1_col, d2_col, unit_col, btn_col = st.columns([1.5, 1.2, 1.2, 1, 0.8])
     with cat_col:
-        category = st.selectbox("카테고리", ["자사", "경쟁사", "제품"], key="trend_cat")
+        category = st.selectbox("카테고리", ["자사", "경쟁사", "제품", "시즌"], key="trend_cat")
     with d1_col:
         from datetime import datetime as _dt, timedelta as _td
         start_date = st.date_input("시작일", value=_dt.now() - _td(days=365), key="trend_start")
@@ -1550,9 +1550,11 @@ def page_trend():
     elif category == "경쟁사":
         all_keywords = trend_kw.get("경쟁사", [])
         kw_label = "경쟁사 키워드"
+    elif category == "시즌":
+        all_keywords = trend_kw.get("시즌", [])
+        kw_label = "시즌 키워드"
     else:  # 제품
         product_kws = trend_kw.get("제품", {})
-        # 제품 선택
         product_names = list(product_kws.keys())
         if not product_names:
             st.info("제품 키워드가 없습니다.")
