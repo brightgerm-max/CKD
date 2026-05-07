@@ -1565,7 +1565,7 @@ def page_trend():
         st.info("키워드가 없습니다. 아래에서 추가해주세요.")
 
     # 조회 실행
-    trend_cache_key = f"trend_multi_{category}_{start_date}_{end_date}_{time_unit}_{'_'.join(all_keywords[:5])}"
+    trend_cache_key = f"trend_vol_{category}_{start_date}_{end_date}_{time_unit}_{'_'.join(all_keywords[:5])}"
 
     if search_btn and all_keywords:
         with st.spinner(f"{len(all_keywords)}개 키워드 추정 검색량을 산출하고 있습니다..."):

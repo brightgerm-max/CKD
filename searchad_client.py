@@ -40,14 +40,12 @@ def fetch_keyword_search_volume(keywords: list[str]) -> dict:
         return {}
 
     result = {}
-    batch_size = 5
+    import urllib.parse
 
-    for i in range(0, len(keywords), batch_size):
-        batch = keywords[i:i + batch_size]
+    for kw in keywords:
         path = "/keywordstool"
-        method = "GET"
         timestamp = str(int(time.time() * 1000))
-        signature = _make_signature(timestamp, method, path, creds["secret_key"])
+        signature = _make_signature(timestamp, "GET", path, creds["secret_key"])
 
         headers = {
             "X-Timestamp": timestamp,
@@ -57,26 +55,37 @@ def fetch_keyword_search_volume(keywords: list[str]) -> dict:
             "Content-Type": "application/json",
         }
 
-        params = f"?hintKeywords={','.join(batch)}&showDetail=1"
+        # 공백 제거한 키워드로도 시도
+        search_kw = kw.replace(" ", "")
+        encoded = urllib.parse.quote(search_kw)
+        url = f"https://api.searchad.naver.com{path}?hintKeywords={encoded}&showDetail=1"
+
         try:
-            resp = requests.get(
-                f"https://api.searchad.naver.com{path}{params}",
-                headers=headers, timeout=15,
-            )
-            if resp.status_code == 200:
-                data = resp.json()
-                kw_lower_set = {kw.lower() for kw in batch}
-                for item in data.get("keywordList", []):
-                    rel_kw = item.get("relKeyword", "")
-                    if rel_kw.lower() in kw_lower_set:
-                        pc = _parse_count(item.get("monthlyPcQcCnt", 0))
-                        mo = _parse_count(item.get("monthlyMobileQcCnt", 0))
-                        result[rel_kw] = {"pc": pc, "mo": mo, "total": pc + mo}
+            resp = requests.get(url, headers=headers, timeout=15)
+            if resp.status_code != 200:
+                continue
+
+            data = resp.json()
+            kw_list = data.get("keywordList", [])
+
+            # 원본 키워드 또는 공백 제거 키워드와 매칭
+            kw_lower = kw.lower()
+            kw_nospace = search_kw.lower()
+
+            for item in kw_list:
+                rel = item.get("relKeyword", "")
+                rel_lower = rel.lower()
+                rel_nospace = rel.replace(" ", "").lower()
+
+                if rel_lower == kw_lower or rel_nospace == kw_nospace or rel_lower == kw_nospace:
+                    pc = _parse_count(item.get("monthlyPcQcCnt", 0))
+                    mo = _parse_count(item.get("monthlyMobileQcCnt", 0))
+                    result[kw] = {"pc": pc, "mo": mo, "total": pc + mo}
+                    break
         except Exception:
             pass
 
-        if i + batch_size < len(keywords):
-            time.sleep(0.5)
+        time.sleep(0.3)
 
     # 검색 결과에 없는 키워드는 0으로 채움
     for kw in keywords:
