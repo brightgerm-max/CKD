@@ -1657,19 +1657,27 @@ def page_trend():
     add_col, del_col = st.columns(2)
     with add_col:
         with st.form(f"add_trend_kw_{category}"):
-            new_kw = st.text_input("추가할 키워드")
+            new_kws = st.text_area("추가할 키워드 (쉼표 또는 줄바꿈으로 구분)", height=80, placeholder="키워드1, 키워드2, 키워드3")
             if st.form_submit_button("추가", type="primary"):
-                if new_kw and new_kw.strip():
+                if new_kws and new_kws.strip():
+                    import re
+                    parsed = [k.strip() for k in re.split(r"[,\n]", new_kws) if k.strip()]
+                    added = 0
                     if category == "제품":
-                        if new_kw.strip() not in trend_kw["제품"].get(selected_product, []):
-                            trend_kw["제품"].setdefault(selected_product, []).append(new_kw.strip())
-                            save_trend_keywords(trend_kw)
-                            st.rerun()
+                        existing = trend_kw["제품"].setdefault(selected_product, [])
+                        for kw in parsed:
+                            if kw not in existing:
+                                existing.append(kw)
+                                added += 1
                     else:
-                        if new_kw.strip() not in trend_kw[category]:
-                            trend_kw[category].append(new_kw.strip())
-                            save_trend_keywords(trend_kw)
-                            st.rerun()
+                        existing = trend_kw.setdefault(category, [])
+                        for kw in parsed:
+                            if kw not in existing:
+                                existing.append(kw)
+                                added += 1
+                    if added > 0:
+                        save_trend_keywords(trend_kw)
+                        st.rerun()
     with del_col:
         with st.form(f"del_trend_kw_{category}"):
             del_kw = st.selectbox("삭제할 키워드", all_keywords if all_keywords else ["(없음)"])
