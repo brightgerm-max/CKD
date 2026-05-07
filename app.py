@@ -1680,19 +1680,20 @@ def page_trend():
                         st.rerun()
     with del_col:
         with st.form(f"del_trend_kw_{category}"):
-            del_kw = st.selectbox("삭제할 키워드", all_keywords if all_keywords else ["(없음)"])
-            if st.form_submit_button("삭제"):
-                if del_kw and del_kw != "(없음)":
+            st.markdown("삭제할 키워드 선택")
+            del_checks = {}
+            for kw in all_keywords:
+                del_checks[kw] = st.checkbox(kw, key=f"del_kw_{category}_{kw}")
+            if st.form_submit_button("선택 삭제"):
+                to_delete = [kw for kw, checked in del_checks.items() if checked]
+                if to_delete:
                     if category == "제품":
-                        if del_kw in trend_kw["제품"].get(selected_product, []):
-                            trend_kw["제품"][selected_product].remove(del_kw)
-                            save_trend_keywords(trend_kw)
-                            st.rerun()
+                        existing = trend_kw["제품"].get(selected_product, [])
+                        trend_kw["제품"][selected_product] = [k for k in existing if k not in to_delete]
                     else:
-                        if del_kw in trend_kw[category]:
-                            trend_kw[category].remove(del_kw)
-                            save_trend_keywords(trend_kw)
-                            st.rerun()
+                        trend_kw[category] = [k for k in trend_kw.get(category, []) if k not in to_delete]
+                    save_trend_keywords(trend_kw)
+                    st.rerun()
 
 
 # ═══════════════════════════════════════════
