@@ -4,17 +4,21 @@ import os
 import requests
 from datetime import datetime, timedelta
 
-def _get_datalab_headers():
-    return {
-        "X-Naver-Client-Id": os.environ.get("NAVER_DATALAB_ID", ""),
-        "X-Naver-Client-Secret": os.environ.get("NAVER_DATALAB_SECRET", ""),
-    }
+# 환경변수에서 API 키 로드
+DATALAB_CLIENT_ID = os.environ.get("NAVER_DATALAB_ID", "")
+DATALAB_CLIENT_SECRET = os.environ.get("NAVER_DATALAB_SECRET", "")
+SEARCH_CLIENT_ID = os.environ.get("NAVER_SEARCH_ID", "")
+SEARCH_CLIENT_SECRET = os.environ.get("NAVER_SEARCH_SECRET", "")
 
-def _get_search_headers():
-    return {
-        "X-Naver-Client-Id": os.environ.get("NAVER_SEARCH_ID", ""),
-        "X-Naver-Client-Secret": os.environ.get("NAVER_SEARCH_SECRET", ""),
-    }
+DATALAB_HEADERS = {
+    "X-Naver-Client-Id": DATALAB_CLIENT_ID,
+    "X-Naver-Client-Secret": DATALAB_CLIENT_SECRET,
+}
+
+SEARCH_HEADERS = {
+    "X-Naver-Client-Id": SEARCH_CLIENT_ID,
+    "X-Naver-Client-Secret": SEARCH_CLIENT_SECRET,
+}
 
 
 # ─── 데이터랩: 검색 트렌드 ───
@@ -38,7 +42,7 @@ def fetch_search_trend(keywords_kr: list[str], months_back: int = 12) -> list[di
     try:
         resp = requests.post(
             "https://openapi.naver.com/v1/datalab/search",
-            headers={**_get_datalab_headers(), "Content-Type": "application/json"},
+            headers={**DATALAB_HEADERS, "Content-Type": "application/json"},
             json=body,
             timeout=10,
         )
@@ -50,6 +54,55 @@ def fetch_search_trend(keywords_kr: list[str], months_back: int = 12) -> list[di
     except Exception:
         pass
     return []
+
+
+def fetch_multi_keyword_trend(
+    keywords: list[str],
+    start_date: str,
+    end_date: str,
+    time_unit: str = "month",
+) -> dict[str, list[dict]]:
+    """
+    여러 키워드의 검색 트렌드를 배치로 조회 (5개씩 분할).
+    반환: {"키워드1": [{"period","ratio"}, ...], "키워드2": [...], ...}
+    """
+    results = {}
+    batch_size = 5
+
+    for i in range(0, len(keywords), batch_size):
+        batch = keywords[i:i + batch_size]
+        keyword_groups = [
+            {"groupName": kw, "keywords": [kw]}
+            for kw in batch
+        ]
+
+        body = {
+            "startDate": start_date,
+            "endDate": end_date,
+            "timeUnit": time_unit,
+            "keywordGroups": keyword_groups,
+        }
+
+        try:
+            resp = requests.post(
+                "https://openapi.naver.com/v1/datalab/search",
+                headers={**_get_datalab_headers(), "Content-Type": "application/json"},
+                json=body,
+                timeout=15,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            for item in data.get("results", []):
+                kw_name = item.get("title", "")
+                results[kw_name] = item.get("data", [])
+        except Exception:
+            for kw in batch:
+                results[kw] = []
+
+        import time as _time
+        _time.sleep(0.3)
+
+    return results
 
 
 # ─── 뉴스 검색: TV 건강 프로그램 관련 기사 ───
@@ -73,7 +126,7 @@ def search_tv_health_news(ingredient_kr: str, display: int = 5) -> list[dict]:
         try:
             resp = requests.get(
                 "https://openapi.naver.com/v1/search/news.json",
-                headers=_get_search_headers(),
+                headers=SEARCH_HEADERS,
                 params={"query": query, "display": display, "sort": "date"},
                 timeout=10,
             )

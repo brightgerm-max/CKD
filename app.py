@@ -14,14 +14,6 @@ if _env_path.exists():
             os.environ.setdefault(k.strip(), v.strip())
 
 import streamlit as st
-
-# Streamlit Cloud Secrets → 환경변수 매핑
-try:
-    for key in st.secrets:
-        if isinstance(st.secrets[key], str):
-            os.environ.setdefault(key, st.secrets[key])
-except Exception:
-    pass
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -34,7 +26,7 @@ from pathlib import Path
 from pubmed_client import search_pubmed, fetch_article_details, INGREDIENT_QUERIES
 from matching_engine import load_product_db, match_article_to_products, TARGET_SEGMENTS
 from usp_generator import generate_usp_with_ai, generate_usp_template
-from naver_client import fetch_search_trend, search_tv_health_news
+from naver_client import fetch_search_trend, search_tv_health_news, fetch_multi_keyword_trend
 from mfds_client import search_health_food
 from clinicaltrials_client import search_clinical_trials
 from price_client import search_product_prices
@@ -60,6 +52,13 @@ def load_products():
 
 def load_competitor_db():
     return load_json("competitor_db.json")
+
+def load_trend_keywords():
+    return load_json("trend_keywords.json")
+
+def save_trend_keywords(data):
+    with open(DATA_DIR / "trend_keywords.json", "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
 
 def load_tv_data():
     return load_json("sample_tv_data.json")
@@ -471,6 +470,8 @@ MENU_ITEMS = [
     {"key": "data",       "icon": "📡", "label": "데이터 수집"},
     {"key": "usp",        "icon": "🎯", "label": "상품 USP 도출"},
     {"key": "competitor", "icon": "🔍", "label": "경쟁사 모니터링"},
+    {"key": "trend",      "icon": "📊", "label": "검색 트렌드"},
+    {"key": "adbanner",   "icon": "🎨", "label": "광고배너"},
 ]
 
 if "current_page" not in st.session_state:
@@ -1513,10 +1514,181 @@ def page_competitor():
 # ═══════════════════════════════════════════
 # 라우팅
 # ═══════════════════════════════════════════
+
+# ═══════════════════════════════════════════
+# 페이지 5: 검색 트렌드
+# ═══════════════════════════════════════════
+def page_trend():
+    render_page_header("📊","검색 트렌드","네이버 데이터랩 기반 키워드별 검색량 추이를 조회합니다","blue")
+
+    trend_kw = load_trend_keywords()
+
+    # 상단: 카테고리 + 기간 설정
+    cat_col, d1_col, d2_col, unit_col, btn_col = st.columns([1.5, 1.2, 1.2, 1, 0.8])
+    with cat_col:
+        category = st.selectbox("카테고리", ["자사", "경쟁사", "제품"], key="trend_cat")
+    with d1_col:
+        from datetime import datetime as _dt, timedelta as _td
+        start_date = st.date_input("시작일", value=_dt.now() - _td(days=365), key="trend_start")
+    with d2_col:
+        end_date = st.date_input("종료일", value=_dt.now(), key="trend_end")
+    with unit_col:
+        time_unit_map = {"일별":"date","월별":"month","연도별":"year"}
+        time_unit_label = st.selectbox("단위", list(time_unit_map.keys()), index=1, key="trend_unit")
+        time_unit = time_unit_map[time_unit_label]
+    with btn_col:
+        st.markdown("")
+        search_btn = st.button("🔍 조회", type="primary", use_container_width=True, key="trend_search")
+
+    st.markdown("---")
+
+    # 카테고리별 키워드 결정
+    if category == "자사":
+        all_keywords = trend_kw.get("자사", [])
+        kw_label = "자사 키워드"
+    elif category == "경쟁사":
+        all_keywords = trend_kw.get("경쟁사", [])
+        kw_label = "경쟁사 키워드"
+    else:  # 제품
+        product_kws = trend_kw.get("제품", {})
+        # 제품 선택
+        product_names = list(product_kws.keys())
+        if not product_names:
+            st.info("제품 키워드가 없습니다.")
+            return
+        selected_product = st.selectbox("제품 카테고리 선택", product_names, key="trend_product")
+        all_keywords = product_kws.get(selected_product, [])
+        kw_label = f"'{selected_product}' 키워드"
+
+    if not all_keywords:
+        st.info("키워드가 없습니다. 아래에서 추가해주세요.")
+
+    # 조회 실행
+    trend_cache_key = f"trend_multi_{category}_{start_date}_{end_date}_{time_unit}_{'_'.join(all_keywords[:5])}"
+
+    if search_btn and all_keywords:
+        with st.spinner(f"{len(all_keywords)}개 키워드 검색 트렌드를 조회하고 있습니다..."):
+            result = fetch_multi_keyword_trend(
+                all_keywords,
+                start_date.strftime("%Y-%m-%d"),
+                end_date.strftime("%Y-%m-%d"),
+                time_unit,
+            )
+            st.session_state[trend_cache_key] = result
+
+    # 결과 표시
+    if trend_cache_key in st.session_state:
+        result = st.session_state[trend_cache_key]
+
+        graph_col, filter_col = st.columns([3, 1])
+
+        # 우측: 체크박스 필터
+        with filter_col:
+            st.markdown(f"**{kw_label}**")
+            select_all = st.checkbox("전체 선택/해제", value=True, key="trend_all")
+            selected_kws = []
+            for kw in all_keywords:
+                has_data = bool(result.get(kw))
+                checked = st.checkbox(kw, value=select_all, key=f"trend_kw_{kw}", disabled=not has_data)
+                if checked and has_data:
+                    selected_kws.append(kw)
+
+        # 좌측: 그래프
+        with graph_col:
+            if selected_kws:
+                fig = go.Figure()
+                colors = ['#03C75A','#185ADB','#FF6B6B','#FFC947','#A259FF','#00BCD4','#FF5722','#795548','#607D8B','#E91E63']
+                for idx, kw in enumerate(selected_kws):
+                    data_points = result.get(kw, [])
+                    if data_points:
+                        periods = [d["period"][:10] for d in data_points]
+                        ratios = [d["ratio"] for d in data_points]
+                        fig.add_trace(go.Scatter(
+                            x=periods, y=ratios, name=kw,
+                            line=dict(color=colors[idx % len(colors)], width=2.5),
+                            mode="lines+markers", marker=dict(size=4),
+                        ))
+                fig.update_layout(
+                    height=450, margin=dict(t=20,b=40,l=40,r=20),
+                    xaxis=dict(title="날짜", gridcolor="#f1f5f9", tickangle=-45),
+                    yaxis=dict(title="검색 트렌드 지수 (0~100)", gridcolor="#f1f5f9", rangemode="tozero"),
+                    paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                    legend=dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right",x=1),
+                    hovermode="x unified",
+                )
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info("표시할 키워드를 선택해주세요.")
+
+        # 데이터 테이블
+        if selected_kws:
+            with st.expander("📋 데이터 테이블 보기"):
+                table_data = {}
+                for kw in selected_kws:
+                    for d in result.get(kw, []):
+                        period = d["period"][:10]
+                        if period not in table_data:
+                            table_data[period] = {"날짜": period}
+                        table_data[period][kw] = round(d["ratio"], 2)
+                if table_data:
+                    df_table = pd.DataFrame(list(table_data.values())).sort_values("날짜")
+                    st.dataframe(df_table, use_container_width=True, hide_index=True)
+
+    elif all_keywords:
+        st.info("🔍 조회 버튼을 클릭하면 검색 트렌드가 표시됩니다.")
+
+    # 키워드 관리
+    st.markdown(f'<div class="s-header">⚙️ {kw_label} 관리</div>', unsafe_allow_html=True)
+    add_col, del_col = st.columns(2)
+    with add_col:
+        with st.form(f"add_trend_kw_{category}"):
+            new_kw = st.text_input("추가할 키워드")
+            if st.form_submit_button("추가", type="primary"):
+                if new_kw and new_kw.strip():
+                    if category == "제품":
+                        if new_kw.strip() not in trend_kw["제품"].get(selected_product, []):
+                            trend_kw["제품"].setdefault(selected_product, []).append(new_kw.strip())
+                            save_trend_keywords(trend_kw)
+                            st.rerun()
+                    else:
+                        if new_kw.strip() not in trend_kw[category]:
+                            trend_kw[category].append(new_kw.strip())
+                            save_trend_keywords(trend_kw)
+                            st.rerun()
+    with del_col:
+        with st.form(f"del_trend_kw_{category}"):
+            del_kw = st.selectbox("삭제할 키워드", all_keywords if all_keywords else ["(없음)"])
+            if st.form_submit_button("삭제"):
+                if del_kw and del_kw != "(없음)":
+                    if category == "제품":
+                        if del_kw in trend_kw["제품"].get(selected_product, []):
+                            trend_kw["제품"][selected_product].remove(del_kw)
+                            save_trend_keywords(trend_kw)
+                            st.rerun()
+                    else:
+                        if del_kw in trend_kw[category]:
+                            trend_kw[category].remove(del_kw)
+                            save_trend_keywords(trend_kw)
+                            st.rerun()
+
+
+# ═══════════════════════════════════════════
+# 페이지 6: 광고배너 (플레이스홀더)
+# ═══════════════════════════════════════════
+def page_adbanner():
+    render_page_header("🎨","광고배너","광고 배너 관리 기능 (준비 중)","orange")
+    st.info("광고배너 기능은 준비 중입니다.")
+
+
+# ═══════════════════════════════════════════
+# 라우팅
+# ═══════════════════════════════════════════
 pg = st.session_state["current_page"]
 if pg=="products": page_product_management()
 elif pg=="data": page_data_collection()
 elif pg=="usp": page_usp()
 elif pg=="competitor": page_competitor()
+elif pg=="trend": page_trend()
+elif pg=="adbanner": page_adbanner()
 
 st.markdown('<div class="footer">CKD Insight Radar v1.0 — 성분 기반 트렌드 선점 마케팅 솔루션 · 종근당건강</div>', unsafe_allow_html=True)
