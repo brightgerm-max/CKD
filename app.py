@@ -27,6 +27,7 @@ from pubmed_client import search_pubmed, fetch_article_details, INGREDIENT_QUERI
 from matching_engine import load_product_db, match_article_to_products, TARGET_SEGMENTS
 from usp_generator import generate_usp_with_ai, generate_usp_template
 from naver_client import fetch_search_trend, search_tv_health_news, fetch_multi_keyword_trend
+from searchad_client import estimate_search_volume
 from mfds_client import search_health_food
 from clinicaltrials_client import search_clinical_trials
 from price_client import search_product_prices
@@ -1567,8 +1568,8 @@ def page_trend():
     trend_cache_key = f"trend_multi_{category}_{start_date}_{end_date}_{time_unit}_{'_'.join(all_keywords[:5])}"
 
     if search_btn and all_keywords:
-        with st.spinner(f"{len(all_keywords)}개 키워드 검색 트렌드를 조회하고 있습니다..."):
-            result = fetch_multi_keyword_trend(
+        with st.spinner(f"{len(all_keywords)}개 키워드 추정 검색량을 산출하고 있습니다..."):
+            result = estimate_search_volume(
                 all_keywords,
                 start_date.strftime("%Y-%m-%d"),
                 end_date.strftime("%Y-%m-%d"),
@@ -1602,16 +1603,16 @@ def page_trend():
                     data_points = result.get(kw, [])
                     if data_points:
                         periods = [d["period"][:10] for d in data_points]
-                        ratios = [d["ratio"] for d in data_points]
+                        volumes = [d["volume"] for d in data_points]
                         fig.add_trace(go.Scatter(
-                            x=periods, y=ratios, name=kw,
+                            x=periods, y=volumes, name=kw,
                             line=dict(color=colors[idx % len(colors)], width=2.5),
                             mode="lines+markers", marker=dict(size=4),
                         ))
                 fig.update_layout(
                     height=450, margin=dict(t=20,b=40,l=40,r=20),
                     xaxis=dict(title="날짜", gridcolor="#f1f5f9", tickangle=-45),
-                    yaxis=dict(title="검색 트렌드 지수 (0~100)", gridcolor="#f1f5f9", rangemode="tozero"),
+                    yaxis=dict(title="추정 검색량", gridcolor="#f1f5f9", rangemode="tozero"),
                     paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
                     legend=dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right",x=1),
                     hovermode="x unified",
@@ -1629,7 +1630,7 @@ def page_trend():
                         period = d["period"][:10]
                         if period not in table_data:
                             table_data[period] = {"날짜": period}
-                        table_data[period][kw] = round(d["ratio"], 2)
+                        table_data[period][kw] = f'{d["volume"]:,}' if isinstance(d["volume"], int) else d["volume"]
                 if table_data:
                     df_table = pd.DataFrame(list(table_data.values())).sort_values("날짜")
                     st.dataframe(df_table, use_container_width=True, hide_index=True)
