@@ -100,13 +100,22 @@ section[data-testid="stSidebar"] .stButton > button:hover {
     background: rgba(255,255,255,0.06) !important;
     color: #cdd9e5 !important;
 }
-section[data-testid="stSidebar"] .stButton > button[kind="primary"] {
+section[data-testid="stSidebar"] .stButton > button[kind="primary"],
+section[data-testid="stSidebar"] .stButton > button[data-testid="stBaseButton-primary"],
+section[data-testid="stSidebar"] button[kind="primary"],
+section[data-testid="stSidebar"] button[data-testid="stBaseButton-primary"] {
     background: transparent !important;
+    background-image: none !important;
     border: none !important;
     box-shadow: none !important;
     color: #60a5fa !important;
     font-weight: 700 !important;
     text-shadow: none !important;
+}
+section[data-testid="stSidebar"] .stButton > button[kind="primary"]:hover,
+section[data-testid="stSidebar"] button[data-testid="stBaseButton-primary"]:hover {
+    background: rgba(96,165,250,0.1) !important;
+    color: #93c5fd !important;
 }
 .sidebar-brand {
     padding: 20px 16px 6px; display: flex; align-items: center; gap: 10px;
