@@ -100,7 +100,34 @@ section[data-testid="stSidebar"] .stButton > button:hover {
     background: rgba(255,255,255,0.06) !important;
     color: #cdd9e5 !important;
 }
-/* 사이드바에서는 primary 버튼 사용하지 않음 (선택 메뉴는 HTML로 표시) */
+/* 사이드바 라디오 (상세 메뉴) */
+section[data-testid="stSidebar"] .stRadio > div {
+    gap: 0 !important;
+}
+section[data-testid="stSidebar"] .stRadio > div > label {
+    background: transparent !important;
+    color: #7a94af !important;
+    font-size: 0.88rem !important;
+    font-weight: 500 !important;
+    padding: 7px 16px !important;
+    margin: 0 !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    transition: all 0.15s !important;
+}
+section[data-testid="stSidebar"] .stRadio > div > label:hover {
+    background: rgba(255,255,255,0.06) !important;
+    color: #cdd9e5 !important;
+}
+section[data-testid="stSidebar"] .stRadio > div > label[data-checked="true"],
+section[data-testid="stSidebar"] .stRadio > div > label:has(input:checked) {
+    color: #3b82f6 !important;
+    font-weight: 700 !important;
+    background: rgba(59,130,246,0.08) !important;
+}
+section[data-testid="stSidebar"] .stRadio > div > label > div:first-child {
+    display: none !important;
+}
 .sidebar-brand {
     padding: 20px 16px 6px; display: flex; align-items: center; gap: 10px;
 }
@@ -550,21 +577,31 @@ with st.sidebar:
 
     for section in MENU_SECTIONS:
         with st.expander(section["section"], expanded=False):
-            for item in section["items"]:
-                is_active = st.session_state["current_page"] == item["key"]
-                if is_active:
-                    st.markdown(
-                        '<style>.active-nav-next + div .stButton button '
-                        '{color:#3b82f6 !important; font-weight:800 !important; '
-                        'background:transparent !important; border:none !important; '
-                        'box-shadow:none !important; background-image:none !important;}'
-                        '</style><div class="active-nav-next"></div>',
-                        unsafe_allow_html=True,
-                    )
-                if st.button(item["label"], key=f"nav_{item['key']}", use_container_width=True):
-                    if not is_active:
-                        st.session_state["current_page"] = item["key"]
-                        st.rerun()
+            labels = [item["label"] for item in section["items"]]
+            keys = [item["key"] for item in section["items"]]
+
+            # 현재 선택된 메뉴가 이 섹션에 있으면 해당 인덱스, 없으면 None
+            current = st.session_state.get("current_page", "")
+            default_idx = keys.index(current) if current in keys else None
+
+            if default_idx is not None:
+                selected = st.radio(
+                    "ㅤ", labels, index=default_idx,
+                    key=f"radio_{section['section'][:2]}",
+                    label_visibility="collapsed",
+                )
+            else:
+                selected = st.radio(
+                    "ㅤ", labels, index=None,
+                    key=f"radio_{section['section'][:2]}",
+                    label_visibility="collapsed",
+                )
+
+            if selected and selected in labels:
+                sel_key = keys[labels.index(selected)]
+                if st.session_state["current_page"] != sel_key:
+                    st.session_state["current_page"] = sel_key
+                    st.rerun()
 
     st.markdown(
         '<hr class="sidebar-hr"><div class="sidebar-label">모니터링 소스</div>',
