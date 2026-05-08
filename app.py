@@ -117,8 +117,8 @@ section[data-testid="stSidebar"] .stButton > button[kind="primary"] {
 }
 .sidebar-brand-text { font-size: 1.1rem !important; font-weight: 800 !important; color: #ffffff !important; letter-spacing: -0.3px; }
 .sidebar-brand-sub  { font-size: 0.65rem !important; color: #4a6580 !important; text-transform: uppercase; letter-spacing: 2px; padding: 0 16px; margin-bottom: 4px; }
-.sidebar-hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 12px 16px; }
-.sidebar-label { font-size: 0.68rem !important; font-weight: 700 !important; color: #3d5a73 !important; text-transform: uppercase; letter-spacing: 1.5px; padding: 8px 16px 4px; }
+.sidebar-hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 6px 16px; }
+.sidebar-label { font-size: 0.92rem !important; font-weight: 600 !important; color: #8ba3bd !important; letter-spacing: 0; padding: 4px 16px 2px; cursor: pointer; }
 .sidebar-src { display: flex; align-items: center; gap: 8px; padding: 3px 16px; font-size: 0.78rem !important; }
 .sidebar-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
 .sidebar-dot-on  { background: #22c55e; box-shadow: 0 0 6px rgba(34,197,94,0.5); }
@@ -477,24 +477,24 @@ div[data-testid="stVerticalBlock"] > div[data-testid="stVerticalBlockBorderWrapp
 # ─── 사이드바 ───
 MENU_SECTIONS = [
     {"section": "🛡️ 심의", "items": [
-        {"key": "ai_review",        "icon": "📋", "label": "AI 사전검토"},
-        {"key": "review_dashboard", "icon": "📊", "label": "심의현황 대시보드"},
+        {"key": "ai_review",        "label": "AI 사전검토"},
+        {"key": "review_dashboard", "label": "심의현황 대시보드"},
     ]},
     {"section": "📈 EASY 리포팅", "items": [
-        {"key": "creative_report",  "icon": "🎯", "label": "소재 실적관리"},
-        {"key": "label_report",     "icon": "🏷️", "label": "라벨링 리포트"},
+        {"key": "creative_report",  "label": "소재 실적관리"},
+        {"key": "label_report",     "label": "라벨링 리포트"},
     ]},
     {"section": "🔍 시장조사", "items": [
-        {"key": "search_query",     "icon": "📊", "label": "검색쿼리 분석"},
-        {"key": "ad_research",      "icon": "🎨", "label": "광고배너 조사"},
-        {"key": "competitor",       "icon": "🔍", "label": "경쟁사 모니터링"},
+        {"key": "search_query",     "label": "검색쿼리 분석"},
+        {"key": "ad_research",      "label": "광고배너 조사"},
+        {"key": "competitor",       "label": "경쟁사 모니터링"},
     ]},
     {"section": "⚙️ 설정", "items": [
-        {"key": "products",         "icon": "📦", "label": "자사 상품관리"},
-        {"key": "api_keys",         "icon": "🔑", "label": "API 키 관리"},
-        {"key": "competitor_db",    "icon": "🏢", "label": "경쟁사 DB 관리"},
-        {"key": "keyword_mgmt",     "icon": "🔤", "label": "검색 키워드 관리"},
-        {"key": "account",          "icon": "👤", "label": "계정 설정"},
+        {"key": "products",         "label": "자사 상품관리"},
+        {"key": "api_keys",         "label": "API 키 관리"},
+        {"key": "competitor_db",    "label": "경쟁사 DB 관리"},
+        {"key": "keyword_mgmt",     "label": "검색 키워드 관리"},
+        {"key": "account",          "label": "계정 설정"},
     ]},
 ]
 
@@ -521,18 +521,26 @@ with st.sidebar:
     )
 
     for section in MENU_SECTIONS:
-        st.markdown(
-            f'<hr class="sidebar-hr">'
-            f'<div class="sidebar-label">{section["section"]}</div>',
-            unsafe_allow_html=True,
-        )
-        for item in section["items"]:
-            is_active = st.session_state["current_page"] == item["key"]
-            btn_label = f'{item["icon"]}  {item["label"]}'
-            if st.button(btn_label, key=f"nav_{item['key']}", use_container_width=True,
-                         type="primary" if is_active else "secondary"):
-                st.session_state["current_page"] = item["key"]
-                st.rerun()
+        section_key = f"sidebar_section_{section['section']}"
+        if section_key not in st.session_state:
+            st.session_state[section_key] = False  # 디폴트 접힘
+
+        st.markdown(f'<hr class="sidebar-hr">', unsafe_allow_html=True)
+
+        # 섹션 토글 버튼
+        arrow = "▼" if st.session_state[section_key] else "▶"
+        if st.button(f"{arrow}  {section['section']}", key=f"toggle_{section_key}", use_container_width=True):
+            st.session_state[section_key] = not st.session_state[section_key]
+            st.rerun()
+
+        # 섹션 펼쳐져 있을 때만 하위 메뉴 표시
+        if st.session_state[section_key]:
+            for item in section["items"]:
+                is_active = st.session_state["current_page"] == item["key"]
+                if st.button(item["label"], key=f"nav_{item['key']}", use_container_width=True,
+                             type="primary" if is_active else "secondary"):
+                    st.session_state["current_page"] = item["key"]
+                    st.rerun()
 
     st.markdown(
         '<hr class="sidebar-hr"><div class="sidebar-label">모니터링 소스</div>',
@@ -1565,7 +1573,7 @@ def page_trend():
         time_unit_label = st.selectbox("단위", list(time_unit_map.keys()), index=1, key="trend_unit")
         time_unit = time_unit_map[time_unit_label]
     with btn_col:
-        st.selectbox("ㅤ", [""], key="_spacer", disabled=True, label_visibility="hidden")
+        st.markdown('<div style="height:28px"></div>', unsafe_allow_html=True)
         search_btn = st.button("🔍 조회", type="primary", use_container_width=True, key="trend_search")
 
     st.markdown("---")
@@ -1679,48 +1687,7 @@ def page_trend():
     elif all_keywords:
         st.info("🔍 조회 버튼을 클릭하면 검색 트렌드가 표시됩니다.")
 
-    # 키워드 관리
-    st.markdown(f'<div class="s-header">⚙️ {kw_label} 관리</div>', unsafe_allow_html=True)
-    add_col, del_col = st.columns(2)
-    with add_col:
-        with st.form(f"add_trend_kw_{category}"):
-            new_kws = st.text_area("추가할 키워드 (쉼표 또는 줄바꿈으로 구분)", height=80, placeholder="키워드1, 키워드2, 키워드3")
-            if st.form_submit_button("추가", type="primary"):
-                if new_kws and new_kws.strip():
-                    import re
-                    parsed = [k.strip() for k in re.split(r"[,\n]", new_kws) if k.strip()]
-                    added = 0
-                    if category == "제품":
-                        existing = trend_kw["제품"].setdefault(selected_product, [])
-                        for kw in parsed:
-                            if kw not in existing:
-                                existing.append(kw)
-                                added += 1
-                    else:
-                        existing = trend_kw.setdefault(category, [])
-                        for kw in parsed:
-                            if kw not in existing:
-                                existing.append(kw)
-                                added += 1
-                    if added > 0:
-                        save_trend_keywords(trend_kw)
-                        st.rerun()
-    with del_col:
-        with st.form(f"del_trend_kw_{category}"):
-            st.markdown("삭제할 키워드 선택")
-            del_checks = {}
-            for kw in all_keywords:
-                del_checks[kw] = st.checkbox(kw, key=f"del_kw_{category}_{kw}")
-            if st.form_submit_button("선택 삭제"):
-                to_delete = [kw for kw, checked in del_checks.items() if checked]
-                if to_delete:
-                    if category == "제품":
-                        existing = trend_kw["제품"].get(selected_product, [])
-                        trend_kw["제품"][selected_product] = [k for k in existing if k not in to_delete]
-                    else:
-                        trend_kw[category] = [k for k in trend_kw.get(category, []) if k not in to_delete]
-                    save_trend_keywords(trend_kw)
-                    st.rerun()
+    st.caption("키워드 관리는 ⚙️ 설정 > 🔤 검색 키워드 관리에서 가능합니다.")
 
 
 # ═══════════════════════════════════════════
