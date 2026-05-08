@@ -100,34 +100,7 @@ section[data-testid="stSidebar"] .stButton > button:hover {
     background: rgba(255,255,255,0.06) !important;
     color: #cdd9e5 !important;
 }
-/* 사이드바 라디오 (상세 메뉴) */
-section[data-testid="stSidebar"] .stRadio > div {
-    gap: 0 !important;
-}
-section[data-testid="stSidebar"] .stRadio > div > label {
-    background: transparent !important;
-    color: #7a94af !important;
-    font-size: 0.88rem !important;
-    font-weight: 500 !important;
-    padding: 7px 16px !important;
-    margin: 0 !important;
-    border-radius: 8px !important;
-    cursor: pointer !important;
-    transition: all 0.15s !important;
-}
-section[data-testid="stSidebar"] .stRadio > div > label:hover {
-    background: rgba(255,255,255,0.06) !important;
-    color: #cdd9e5 !important;
-}
-section[data-testid="stSidebar"] .stRadio > div > label[data-checked="true"],
-section[data-testid="stSidebar"] .stRadio > div > label:has(input:checked) {
-    color: #3b82f6 !important;
-    font-weight: 700 !important;
-    background: rgba(59,130,246,0.08) !important;
-}
-section[data-testid="stSidebar"] .stRadio > div > label > div:first-child {
-    display: none !important;
-}
+/* (사이드바 메뉴는 st.button 방식) */
 .sidebar-brand {
     padding: 20px 16px 6px; display: flex; align-items: center; gap: 10px;
 }
@@ -576,31 +549,16 @@ with st.sidebar:
     )
 
     for section in MENU_SECTIONS:
-        with st.expander(section["section"], expanded=False):
-            labels = [item["label"] for item in section["items"]]
-            keys = [item["key"] for item in section["items"]]
+        # 현재 선택된 메뉴가 이 섹션에 있으면 자동 펼침
+        section_keys = [item["key"] for item in section["items"]]
+        is_section_active = st.session_state.get("current_page", "") in section_keys
 
-            # 현재 선택된 메뉴가 이 섹션에 있으면 해당 인덱스, 없으면 None
-            current = st.session_state.get("current_page", "")
-            default_idx = keys.index(current) if current in keys else None
-
-            if default_idx is not None:
-                selected = st.radio(
-                    "ㅤ", labels, index=default_idx,
-                    key=f"radio_{section['section'][:2]}",
-                    label_visibility="collapsed",
-                )
-            else:
-                selected = st.radio(
-                    "ㅤ", labels, index=None,
-                    key=f"radio_{section['section'][:2]}",
-                    label_visibility="collapsed",
-                )
-
-            if selected and selected in labels:
-                sel_key = keys[labels.index(selected)]
-                if st.session_state["current_page"] != sel_key:
-                    st.session_state["current_page"] = sel_key
+        with st.expander(section["section"], expanded=is_section_active):
+            for item in section["items"]:
+                is_active = st.session_state["current_page"] == item["key"]
+                label = f"▎{item['label']}" if is_active else item["label"]
+                if st.button(label, key=f"nav_{item['key']}", use_container_width=True):
+                    st.session_state["current_page"] = item["key"]
                     st.rerun()
 
     st.markdown(
