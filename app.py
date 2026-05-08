@@ -77,6 +77,10 @@ st.markdown("""
 .stApp { background: #f0f4f8; }
 .main .block-container { padding-top: 1.5rem; max-width: 1260px; }
 
+/* 사이드바 접기 버튼 숨김 */
+button[data-testid="stSidebarCollapseButton"],
+[data-testid="stSidebarCollapsedControl"] { display: none !important; }
+
 /* ── 사이드바 ── */
 section[data-testid="stSidebar"] {
     background: linear-gradient(180deg, #0c1929 0%, #142338 50%, #1a2d45 100%);
