@@ -101,10 +101,12 @@ section[data-testid="stSidebar"] .stButton > button:hover {
     color: #cdd9e5 !important;
 }
 section[data-testid="stSidebar"] .stButton > button[kind="primary"] {
-    background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%) !important;
-    color: #ffffff !important;
-    font-weight: 600 !important;
-    box-shadow: 0 4px 14px rgba(37,99,235,0.4) !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: #60a5fa !important;
+    font-weight: 700 !important;
+    text-shadow: none !important;
 }
 .sidebar-brand {
     padding: 20px 16px 6px; display: flex; align-items: center; gap: 10px;
@@ -120,16 +122,15 @@ section[data-testid="stSidebar"] .stButton > button[kind="primary"] {
 .sidebar-hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 3px 16px; }
 .sidebar-label { font-size: 0.92rem !important; font-weight: 600 !important; color: #8ba3bd !important; letter-spacing: 0; padding: 4px 16px 2px; cursor: pointer; }
 /* 사이드바 expander 스타일 */
-section[data-testid="stSidebar"] div[data-testid="stExpander"] {
+section[data-testid="stSidebar"] div[data-testid="stExpander"],
+section[data-testid="stSidebar"] div[data-testid="stExpander"] details,
+section[data-testid="stSidebar"] div[data-testid="stExpander"] > div {
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
     border-radius: 0 !important;
     margin-bottom: 0 !important;
-    border-top: 1px solid rgba(255,255,255,0.06) !important;
-}
-section[data-testid="stSidebar"] div[data-testid="stExpander"] details {
-    background: transparent !important;
+    outline: none !important;
 }
 section[data-testid="stSidebar"] div[data-testid="stExpander"] summary {
     color: #c8d6e5 !important;
@@ -151,15 +152,7 @@ section[data-testid="stSidebar"] div[data-testid="stExpander"] div[data-testid="
 }
 /* 사이드바 버튼 간격 */
 section[data-testid="stSidebar"] .stButton { margin-bottom: -6px !important; }
-/* 사이드바 선택된 메뉴: 파란 텍스트+bold (배경 제거) */
-section[data-testid="stSidebar"] .stButton > button[kind="primary"] {
-    background: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    color: #60a5fa !important;
-    font-weight: 700 !important;
-    text-shadow: none !important;
-}
+/* (primary 스타일은 위에서 통합 정의) */
 .sidebar-src { display: flex; align-items: center; gap: 8px; padding: 3px 16px; font-size: 0.78rem !important; }
 .sidebar-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
 .sidebar-dot-on  { background: #22c55e; box-shadow: 0 0 6px rgba(34,197,94,0.5); }
@@ -517,7 +510,7 @@ div[data-testid="stVerticalBlock"] > div[data-testid="stVerticalBlockBorderWrapp
 
 # ─── 사이드바 ───
 MENU_SECTIONS = [
-    {"section": "🛡️ 심의", "items": [
+    {"section": "🛡️ 광고심의", "items": [
         {"key": "ai_review",        "label": "AI 사전검토"},
         {"key": "review_dashboard", "label": "심의현황 대시보드"},
     ]},
