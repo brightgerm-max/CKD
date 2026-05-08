@@ -119,7 +119,32 @@ section[data-testid="stSidebar"] .stButton > button[kind="primary"] {
 .sidebar-brand-sub  { font-size: 0.65rem !important; color: #4a6580 !important; text-transform: uppercase; letter-spacing: 2px; padding: 0 16px; margin-bottom: 4px; }
 .sidebar-hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 3px 16px; }
 .sidebar-label { font-size: 0.92rem !important; font-weight: 600 !important; color: #8ba3bd !important; letter-spacing: 0; padding: 4px 16px 2px; cursor: pointer; }
-section[data-testid="stSidebar"] .stButton { margin-bottom: -8px !important; }
+/* 사이드바 expander 스타일 */
+section[data-testid="stSidebar"] div[data-testid="stExpander"] {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    margin-bottom: 0 !important;
+    border-top: 1px solid rgba(255,255,255,0.06) !important;
+}
+section[data-testid="stSidebar"] div[data-testid="stExpander"] summary {
+    color: #c8d6e5 !important;
+    font-size: 0.92rem !important;
+    font-weight: 700 !important;
+    padding: 8px 4px !important;
+}
+section[data-testid="stSidebar"] div[data-testid="stExpander"] summary:hover {
+    color: #ffffff !important;
+}
+section[data-testid="stSidebar"] div[data-testid="stExpander"] svg {
+    fill: #5a7a9a !important;
+}
+section[data-testid="stSidebar"] div[data-testid="stExpander"] div[data-testid="stExpanderDetails"] {
+    padding: 0 4px 4px !important;
+    border-top: none !important;
+}
+section[data-testid="stSidebar"] .stButton { margin-bottom: -6px !important; }
 .sidebar-src { display: flex; align-items: center; gap: 8px; padding: 3px 16px; font-size: 0.78rem !important; }
 .sidebar-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
 .sidebar-dot-on  { background: #22c55e; box-shadow: 0 0 6px rgba(34,197,94,0.5); }
@@ -517,27 +542,16 @@ with st.sidebar:
         f'<div style="text-align:center; padding:6px 16px 0">'
         f'<div class="sidebar-brand-text" style="text-align:center">CKD Insight Radar</div>'
         f'</div>'
-        f'<div class="sidebar-brand-sub" style="text-align:center">종근당건강 · Trend Marketing Platform</div>',
+        f'<div class="sidebar-brand-sub" style="text-align:center">종근당건강 · Trend Marketing Platform</div>'
+        f'<div style="height:14px"></div>',
         unsafe_allow_html=True,
     )
 
     for section in MENU_SECTIONS:
-        section_key = f"sec_{section['section'][:2]}"
-        if section_key not in st.session_state:
-            st.session_state[section_key] = False
-
-        is_open = st.session_state[section_key]
-        arrow = "▾" if is_open else "▸"
-
-        # 섹션 헤더 (토글)
-        if st.button(f"{arrow} {section['section']}", key=f"t_{section_key}", use_container_width=True):
-            st.session_state[section_key] = not is_open
-            st.rerun()
-
-        if is_open:
+        with st.expander(section["section"], expanded=False):
             for item in section["items"]:
                 is_active = st.session_state["current_page"] == item["key"]
-                if st.button(f"  {item['label']}", key=f"nav_{item['key']}", use_container_width=True,
+                if st.button(item["label"], key=f"nav_{item['key']}", use_container_width=True,
                              type="primary" if is_active else "secondary"):
                     st.session_state["current_page"] = item["key"]
                     st.rerun()
