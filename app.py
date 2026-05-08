@@ -1842,22 +1842,48 @@ def page_competitor_db_mgmt():
                         save_competitor_db(competitor_db)
                         st.rerun()
 
-            # 삭제 (체크박스 방식)
+            # 수정/삭제
             if comps:
-                with st.form(f"cdb_del_{cat_name}"):
-                    st.markdown("**경쟁사 삭제** (삭제할 경쟁사를 선택하세요)")
-                    del_checks = {}
-                    for cidx, c in enumerate(comps):
-                        usp = c.get("usp", {})
-                        hl = usp.get("headline", "") if isinstance(usp, dict) else str(usp)
-                        del_checks[cidx] = st.checkbox(
-                            f'{c.get("company","")} {c.get("brand","")} — {hl}',
-                            key=f"cdb_chk_{cat_name}_{cidx}")
-                    if st.form_submit_button("선택 삭제"):
-                        to_del = sorted([i for i, v in del_checks.items() if v], reverse=True)
-                        for i in to_del:
-                            comps.pop(i)
-                        if to_del:
+                st.markdown("**경쟁사 수정/삭제**")
+                edit_target = st.selectbox(
+                    "경쟁사 선택",
+                    [f'{c.get("company","")} {c.get("brand","")}' for c in comps],
+                    key=f"cdb_sel_{cat_name}")
+                sel_idx = next((i for i, c in enumerate(comps) if f'{c.get("company","")} {c.get("brand","")}' == edit_target), None)
+
+                if sel_idx is not None:
+                    c = comps[sel_idx]
+                    usp = c.get("usp", {})
+                    hl = usp.get("headline", "") if isinstance(usp, dict) else str(usp)
+                    sp = usp.get("selling_points", []) if isinstance(usp, dict) else []
+                    tgt = usp.get("target", "") if isinstance(usp, dict) else ""
+
+                    with st.form(f"cdb_edit_{cat_name}_{sel_idx}"):
+                        e1, e2 = st.columns(2)
+                        with e1:
+                            ed_company = st.text_input("회사명", value=c.get("company",""), key=f"cdb_eco_{cat_name}")
+                            ed_brand = st.text_input("브랜드명", value=c.get("brand",""), key=f"cdb_ebr_{cat_name}")
+                        with e2:
+                            ed_headline = st.text_input("USP 헤드라인", value=hl, key=f"cdb_ehl_{cat_name}")
+                            ed_sp = st.text_area("셀링포인트 (줄바꿈 구분)", value="\n".join(sp), height=60, key=f"cdb_esp_{cat_name}")
+                            ed_target = st.text_input("타겟 고객층", value=tgt, key=f"cdb_etg_{cat_name}")
+                        bc1, bc2, _ = st.columns([1, 1, 4])
+                        with bc1:
+                            save_btn = st.form_submit_button("저장", type="primary")
+                        with bc2:
+                            del_btn = st.form_submit_button("삭제")
+
+                        if save_btn:
+                            c["company"] = ed_company
+                            c["brand"] = ed_brand
+                            c["search_keyword"] = f"{ed_brand} {ed_company}"
+                            c["usp"] = {"headline": ed_headline,
+                                        "selling_points": [s.strip() for s in ed_sp.split("\n") if s.strip()],
+                                        "target": ed_target, "key_claim": ""}
+                            save_competitor_db(competitor_db)
+                            st.rerun()
+                        if del_btn:
+                            comps.pop(sel_idx)
                             save_competitor_db(competitor_db)
                             st.rerun()
 
