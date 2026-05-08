@@ -73,8 +73,37 @@ st.set_page_config(page_title="CKD Insight Radar", page_icon="🔬", layout="wid
 # ─── 글로벌 CSS ───
 st.markdown("""
 <style>
+/* ── CSS 변수 ── */
+:root {
+    --c-primary: #2563eb;
+    --c-primary-light: #eff6ff;
+    --c-primary-hover: #1d4ed8;
+    --c-success: #059669;
+    --c-success-light: #ecfdf5;
+    --c-warning: #d97706;
+    --c-warning-light: #fffbeb;
+    --c-danger: #dc2626;
+    --c-danger-light: #fef2f2;
+    --c-text: #1e293b;
+    --c-text-sub: #64748b;
+    --c-text-muted: #94a3b8;
+    --c-bg: #f1f5f9;
+    --c-card: #ffffff;
+    --c-border: #e2e8f0;
+    --c-border-light: #f1f5f9;
+    --radius: 12px;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,0.08);
+    --font-xs: 0.72rem;
+    --font-sm: 0.82rem;
+    --font-base: 0.92rem;
+    --font-lg: 1.1rem;
+    --font-xl: 1.5rem;
+}
+
 /* ── 전체 ── */
-.stApp { background: #f0f4f8; }
+.stApp { background: var(--c-bg); }
 .main .block-container { padding-top: 1.5rem; max-width: 1260px; }
 
 /* ── 사이드바 ── */
@@ -173,35 +202,29 @@ section[data-testid="stSidebar"] .stButton { margin-bottom: -6px !important; }
 .pg-icon-green  { background: linear-gradient(135deg,#059669,#34d399); }
 .pg-icon-purple { background: linear-gradient(135deg,#7c3aed,#a78bfa); }
 .pg-icon-orange { background: linear-gradient(135deg,#ea580c,#fb923c); }
-.pg-title { font-size: 1.5rem; font-weight: 800; color: #0f172a; }
-.pg-desc  { font-size: 0.88rem; color: #64748b; margin-top: 2px; }
+.pg-title { font-size: var(--font-xl); font-weight: 800; color: var(--c-text); }
+.pg-desc  { font-size: var(--font-sm); color: var(--c-text-sub); margin-top: 2px; }
 
 /* ── 카드 시스템 ── */
 .g-card {
-    background: linear-gradient(160deg, #ffffff 0%, #f8fafd 100%);
-    border: 1px solid #e2e8f0; border-radius: 16px;
-    padding: 22px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    transition: all 0.2s; position: relative; overflow: hidden;
+    background: var(--c-card); border: 1px solid var(--c-border);
+    border-radius: var(--radius); padding: 20px;
+    box-shadow: var(--shadow-sm); transition: box-shadow 0.2s;
 }
-.g-card::after {
-    content: ""; position: absolute; top: 0; right: 0; width: 120px; height: 120px;
-    background: radial-gradient(circle at top right, rgba(37,99,235,0.03) 0%, transparent 70%);
-    pointer-events: none;
-}
-.g-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.07); transform: translateY(-1px); }
+.g-card:hover { box-shadow: var(--shadow-md); }
 .g-card-header {
     display: flex; align-items: center; gap: 10px;
-    font-size: 0.95rem; font-weight: 700; color: #1e293b;
-    margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #eef2f7;
+    font-size: var(--font-base); font-weight: 700; color: var(--c-text);
+    margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--c-border-light);
 }
 .g-card-badge {
     margin-left: auto; font-size: 0.72rem; font-weight: 700;
     padding: 3px 10px; border-radius: 20px;
 }
-.g-badge-blue   { background: #eff6ff; color: #2563eb; }
-.g-badge-green  { background: #ecfdf5; color: #059669; }
-.g-badge-yellow { background: #fffbeb; color: #d97706; }
-.g-badge-gray   { background: #f1f5f9; color: #64748b; }
+.g-badge-blue   { background: var(--c-primary-light); color: var(--c-primary); }
+.g-badge-green  { background: var(--c-success-light); color: var(--c-success); }
+.g-badge-yellow { background: var(--c-warning-light); color: var(--c-warning); }
+.g-badge-gray   { background: var(--c-border-light); color: var(--c-text-sub); }
 
 /* ── 상품 카드 ── */
 .p-card {
@@ -217,7 +240,7 @@ section[data-testid="stSidebar"] .stButton { margin-bottom: -6px !important; }
     background: linear-gradient(90deg, #cbd5e1, #94a3b8);
     border-radius: 16px 16px 0 0;
 }
-.p-card:hover { border-color: #93c5fd; box-shadow: 0 8px 24px rgba(37,99,235,0.12); transform: translateY(-3px); }
+.p-card:hover { border-color: #93c5fd; box-shadow: var(--shadow-md); transform: translateY(-1px); }
 .p-card:hover::before { background: linear-gradient(90deg, #60a5fa, #2563eb); }
 .p-card-sel {
     background: linear-gradient(160deg, #eff6ff 0%, #dbeafe 100%);
@@ -241,46 +264,35 @@ section[data-testid="stSidebar"] .stButton { margin-bottom: -6px !important; }
 
 /* ── 미니 메트릭 ── */
 .m-card {
-    background: linear-gradient(160deg, #ffffff 0%, #f5f7fb 100%);
-    border: 1px solid #e2e8f0; border-radius: 14px;
-    padding: 20px 14px; text-align: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    position: relative; overflow: hidden;
+    background: var(--c-card); border: 1px solid var(--c-border);
+    border-radius: var(--radius); padding: 18px 14px; text-align: center;
+    box-shadow: var(--shadow-sm);
 }
-.m-card::before {
-    content: ""; position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
-    background: linear-gradient(90deg, #e2e8f0, #cbd5e1);
-}
-.m-card:nth-child(1)::before { background: linear-gradient(90deg, #1e293b, #475569); }
-.m-card:nth-child(2)::before { background: linear-gradient(90deg, #2563eb, #60a5fa); }
-.m-card:nth-child(3)::before { background: linear-gradient(90deg, #059669, #34d399); }
-.m-card:nth-child(4)::before { background: linear-gradient(90deg, #ea580c, #fb923c); }
-.m-val { font-size: 2rem; font-weight: 800; color: #0f172a; line-height: 1; }
-.m-lbl { font-size: 0.78rem; color: #94a3b8; margin-top: 6px; font-weight: 500; }
-.m-val-blue   { color: #2563eb; }
-.m-val-green  { color: #059669; }
+.m-val { font-size: var(--font-xl); font-weight: 800; color: var(--c-text); line-height: 1; }
+.m-lbl { font-size: var(--font-xs); color: var(--c-text-muted); margin-top: 6px; font-weight: 500; }
+.m-val-blue   { color: var(--c-primary); }
+.m-val-green  { color: var(--c-success); }
 .m-val-orange { color: #ea580c; }
 
 /* ── 데이터 아이템 ── */
 .d-item {
-    padding: 13px 16px; border-radius: 12px;
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    margin-bottom: 8px; border: 1px solid #eef2f7;
-    transition: all 0.15s; border-left: 3px solid #cbd5e1;
+    padding: 12px 14px; border-radius: 10px;
+    background: var(--c-border-light); margin-bottom: 6px;
+    border: 1px solid transparent; border-left: 3px solid var(--c-border);
+    transition: all 0.15s;
 }
-.d-item:hover { background: linear-gradient(135deg, #eef2f7 0%, #e8edf3 100%); border-left-color: #2563eb; }
-.d-title { font-size: 0.88rem; font-weight: 600; color: #1e293b; line-height: 1.4; margin-bottom: 3px; }
-.d-meta  { font-size: 0.76rem; color: #94a3b8; }
-.d-link  { font-size: 0.76rem; color: #2563eb; text-decoration: none; font-weight: 500; }
+.d-item:hover { background: #e8edf3; border-left-color: var(--c-primary); }
+.d-title { font-size: var(--font-sm); font-weight: 600; color: var(--c-text); line-height: 1.4; margin-bottom: 2px; }
+.d-meta  { font-size: var(--font-xs); color: var(--c-text-muted); }
+.d-link  { font-size: var(--font-xs); color: var(--c-primary); text-decoration: none; font-weight: 500; }
 .d-link:hover { text-decoration: underline; }
 
 /* ── 섹션 헤더 ── */
 .s-header {
-    font-size: 1.05rem; font-weight: 700; color: #0f172a;
-    padding: 14px 20px; margin: 24px 0 16px;
-    background: linear-gradient(90deg, #e0ecff 0%, #eff6ff 40%, transparent 100%);
-    border-left: 4px solid #2563eb; border-radius: 0 12px 12px 0;
-    box-shadow: 0 1px 4px rgba(37,99,235,0.06);
+    font-size: var(--font-lg); font-weight: 700; color: var(--c-text);
+    padding: 12px 16px; margin: 20px 0 14px;
+    border-left: 3px solid var(--c-primary); border-radius: 0 8px 8px 0;
+    background: var(--c-primary-light);
 }
 
 /* ── USP 카드 ── */
@@ -324,7 +336,7 @@ section[data-testid="stSidebar"] .stButton { margin-bottom: -6px !important; }
     content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px;
     background: linear-gradient(90deg, #cbd5e1, #94a3b8);
 }
-.ing-pill:hover { border-color: #93c5fd; box-shadow: 0 6px 16px rgba(37,99,235,0.12); transform: translateY(-2px); }
+.ing-pill:hover { border-color: #93c5fd; box-shadow: var(--shadow-md); transform: translateY(-1px); }
 .ing-pill:hover::before { background: linear-gradient(90deg, #60a5fa, #2563eb); }
 .ing-pill-sel {
     background: linear-gradient(160deg, #eff6ff 0%, #dbeafe 100%);
@@ -386,7 +398,7 @@ section[data-testid="stSidebar"] .stButton { margin-bottom: -6px !important; }
 .summary-lbl { font-size: 0.78rem; color: #94a3b8; margin-top: 4px; }
 
 /* ── 푸터 ── */
-.footer { text-align: center; color: #94a3b8; font-size: 0.78rem; padding: 30px 0 12px; }
+.footer { text-align: center; color: var(--c-text-muted); font-size: var(--font-xs); padding: 30px 0 12px; }
 
 /* ── Streamlit 기본 위젯 보정 ── */
 div[data-testid="stExpander"] {
