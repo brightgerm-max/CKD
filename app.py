@@ -556,7 +556,7 @@ with st.sidebar:
         with st.expander(section["section"], expanded=is_section_active):
             for item in section["items"]:
                 is_active = st.session_state["current_page"] == item["key"]
-                label = f"▎{item['label']}" if is_active else item["label"]
+                label = item["label"]
                 if st.button(label, key=f"nav_{item['key']}", use_container_width=True):
                     st.session_state["current_page"] = item["key"]
                     st.rerun()
