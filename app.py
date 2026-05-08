@@ -554,12 +554,15 @@ with st.sidebar:
                 is_active = st.session_state["current_page"] == item["key"]
                 if is_active:
                     st.markdown(
-                        f'<div style="color:#60a5fa; font-weight:700; font-size:0.92rem; '
-                        f'padding:8px 16px; cursor:default">● {item["label"]}</div>',
+                        '<style>.active-nav-next + div .stButton button '
+                        '{color:#3b82f6 !important; font-weight:800 !important; '
+                        'background:transparent !important; border:none !important; '
+                        'box-shadow:none !important; background-image:none !important;}'
+                        '</style><div class="active-nav-next"></div>',
                         unsafe_allow_html=True,
                     )
-                else:
-                    if st.button(item["label"], key=f"nav_{item['key']}", use_container_width=True):
+                if st.button(item["label"], key=f"nav_{item['key']}", use_container_width=True):
+                    if not is_active:
                         st.session_state["current_page"] = item["key"]
                         st.rerun()
 
