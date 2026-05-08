@@ -442,6 +442,15 @@ section[data-testid="stMainBlockContainer"] [data-testid="stLinkButton"] a:hover
     box-shadow: 0 4px 10px rgba(37,99,235,0.15) !important;
     transform: translateY(-1px) !important;
 }
+/* date_input 스타일 */
+.stDateInput > div > div {
+    border-radius: 10px !important;
+    background: linear-gradient(160deg, #ffffff 0%, #f0f4fa 100%) !important;
+    border: 1.5px solid #e2e8f0 !important;
+}
+.stDateInput > div > div:hover {
+    border-color: #93c5fd !important;
+}
 /* 차트 컨테이너 카드 스타일 */
 div[data-testid="stVerticalBlock"] > div[data-testid="stVerticalBlockBorderWrapper"] {
     border-radius: 16px !important;
@@ -466,17 +475,31 @@ div[data-testid="stVerticalBlock"] > div[data-testid="stVerticalBlockBorderWrapp
 """, unsafe_allow_html=True)
 
 # ─── 사이드바 ───
-MENU_ITEMS = [
-    {"key": "products",   "icon": "📦", "label": "자사 상품관리"},
-    {"key": "data",       "icon": "📡", "label": "데이터 수집"},
-    {"key": "usp",        "icon": "🎯", "label": "상품 USP 도출"},
-    {"key": "competitor", "icon": "🔍", "label": "경쟁사 모니터링"},
-    {"key": "trend",      "icon": "📊", "label": "검색 트렌드"},
-    {"key": "adbanner",   "icon": "🎨", "label": "광고배너"},
+MENU_SECTIONS = [
+    {"section": "🛡️ 심의", "items": [
+        {"key": "ai_review",        "icon": "📋", "label": "AI 사전검토"},
+        {"key": "review_dashboard", "icon": "📊", "label": "심의현황 대시보드"},
+    ]},
+    {"section": "📈 EASY 리포팅", "items": [
+        {"key": "creative_report",  "icon": "🎯", "label": "소재 실적관리"},
+        {"key": "label_report",     "icon": "🏷️", "label": "라벨링 리포트"},
+    ]},
+    {"section": "🔍 시장조사", "items": [
+        {"key": "search_query",     "icon": "📊", "label": "검색쿼리 분석"},
+        {"key": "ad_research",      "icon": "🎨", "label": "광고배너 조사"},
+        {"key": "competitor",       "icon": "🔍", "label": "경쟁사 모니터링"},
+    ]},
+    {"section": "⚙️ 설정", "items": [
+        {"key": "products",         "icon": "📦", "label": "자사 상품관리"},
+        {"key": "api_keys",         "icon": "🔑", "label": "API 키 관리"},
+        {"key": "competitor_db",    "icon": "🏢", "label": "경쟁사 DB 관리"},
+        {"key": "keyword_mgmt",     "icon": "🔤", "label": "검색 키워드 관리"},
+        {"key": "account",          "icon": "👤", "label": "계정 설정"},
+    ]},
 ]
 
 if "current_page" not in st.session_state:
-    st.session_state["current_page"] = "products"
+    st.session_state["current_page"] = "search_query"
 
 LOGO_PATH = Path(__file__).parent / "LOGO.webp"
 with open(LOGO_PATH, "rb") as _f:
@@ -493,19 +516,23 @@ with st.sidebar:
         f'<div style="text-align:center; padding:6px 16px 0">'
         f'<div class="sidebar-brand-text" style="text-align:center">CKD Insight Radar</div>'
         f'</div>'
-        f'<div class="sidebar-brand-sub" style="text-align:center">종근당건강 · Trend Marketing Platform</div>'
-        f'<hr class="sidebar-hr">'
-        f'<div class="sidebar-label">메뉴</div>',
+        f'<div class="sidebar-brand-sub" style="text-align:center">종근당건강 · Trend Marketing Platform</div>',
         unsafe_allow_html=True,
     )
 
-    for item in MENU_ITEMS:
-        is_active = st.session_state["current_page"] == item["key"]
-        btn_label = f'{item["icon"]}  {item["label"]}'
-        if st.button(btn_label, key=f"nav_{item['key']}", use_container_width=True,
-                     type="primary" if is_active else "secondary"):
-            st.session_state["current_page"] = item["key"]
-            st.rerun()
+    for section in MENU_SECTIONS:
+        st.markdown(
+            f'<hr class="sidebar-hr">'
+            f'<div class="sidebar-label">{section["section"]}</div>',
+            unsafe_allow_html=True,
+        )
+        for item in section["items"]:
+            is_active = st.session_state["current_page"] == item["key"]
+            btn_label = f'{item["icon"]}  {item["label"]}'
+            if st.button(btn_label, key=f"nav_{item['key']}", use_container_width=True,
+                         type="primary" if is_active else "secondary"):
+                st.session_state["current_page"] = item["key"]
+                st.rerun()
 
     st.markdown(
         '<hr class="sidebar-hr"><div class="sidebar-label">모니터링 소스</div>',
@@ -515,7 +542,7 @@ with st.sidebar:
         dot = "sidebar-dot sidebar-dot-on" if on else "sidebar-dot sidebar-dot-off"
         st.markdown(f'<div class="sidebar-src"><span class="{dot}"></span> {name}</div>', unsafe_allow_html=True)
 
-    st.markdown('<hr class="sidebar-hr"><div class="sidebar-ver">v1.0 — 종근당건강 제안용</div>', unsafe_allow_html=True)
+    st.markdown('<hr class="sidebar-hr"><div class="sidebar-ver">v2.0 — 종근당건강 제안용</div>', unsafe_allow_html=True)
 
 # ─── 유틸리티 ───
 def render_page_header(icon, title, desc, color="blue"):
@@ -1520,16 +1547,16 @@ def page_competitor():
 # 페이지 5: 검색 트렌드
 # ═══════════════════════════════════════════
 def page_trend():
-    render_page_header("📊","검색 트렌드","네이버 데이터랩 기반 키워드별 검색량 추이를 조회합니다","blue")
+    render_page_header("📊","검색쿼리 분석","네이버 검색광고 + 데이터랩 기반 키워드별 추정 검색량을 조회합니다","blue")
 
     trend_kw = load_trend_keywords()
 
     # 상단: 카테고리 + 기간 설정
-    cat_col, d1_col, d2_col, unit_col, btn_col = st.columns([1.5, 1.2, 1.2, 1, 0.8])
+    from datetime import datetime as _dt, timedelta as _td
+    cat_col, d1_col, d2_col, unit_col, btn_col = st.columns([1.5, 1.2, 1.2, 1, 1])
     with cat_col:
         category = st.selectbox("카테고리", ["자사", "경쟁사", "제품", "시즌"], key="trend_cat")
     with d1_col:
-        from datetime import datetime as _dt, timedelta as _td
         start_date = st.date_input("시작일", value=_dt.now() - _td(days=365), key="trend_start")
     with d2_col:
         end_date = st.date_input("종료일", value=_dt.now(), key="trend_end")
@@ -1538,7 +1565,7 @@ def page_trend():
         time_unit_label = st.selectbox("단위", list(time_unit_map.keys()), index=1, key="trend_unit")
         time_unit = time_unit_map[time_unit_label]
     with btn_col:
-        st.markdown("")
+        st.selectbox("ㅤ", [""], key="_spacer", disabled=True, label_visibility="hidden")
         search_btn = st.button("🔍 조회", type="primary", use_container_width=True, key="trend_search")
 
     st.markdown("---")
@@ -1700,19 +1727,183 @@ def page_trend():
 # 페이지 6: 광고배너 (플레이스홀더)
 # ═══════════════════════════════════════════
 def page_adbanner():
-    render_page_header("🎨","광고배너","광고 배너 관리 기능 (준비 중)","orange")
-    st.info("광고배너 기능은 준비 중입니다.")
+    render_page_header("🎨","광고배너 조사","META 광고 라이브러리 기반 경쟁사 광고 소재를 조사합니다","orange")
+    st.info("META 광고 라이브러리 크롤링 기반 광고배너 조사 기능은 준비 중입니다.")
+
+
+# ═══════════════════════════════════════════
+# 심의: AI 사전검토
+# ═══════════════════════════════════════════
+def page_ai_review():
+    render_page_header("📋","AI 사전검토","식약처/임상시험 데이터 기반 광고 심의 사전 검토 및 증빙자료를 생성합니다","blue")
+    st.info("AI 기반 사전검토 기능은 준비 중입니다.\n\n데이터 수집(PubMed/임상시험/식약처) 결과를 기반으로 광고 심의 증빙자료를 자동 생성하는 기능이 추가될 예정입니다.")
+
+
+# ═══════════════════════════════════════════
+# 심의: 심의현황 대시보드
+# ═══════════════════════════════════════════
+def page_review_dashboard():
+    render_page_header("📊","심의현황 대시보드","심의 요청/진행/완료 현황을 관리합니다","blue")
+    st.info("심의현황 대시보드 기능은 준비 중입니다.")
+
+
+# ═══════════════════════════════════════════
+# EASY 리포팅: 소재 실적관리
+# ═══════════════════════════════════════════
+def page_creative_report():
+    render_page_header("🎯","소재 실적관리","소재별 실적을 직관적으로 관리하고 ON/OFF를 제어합니다","green")
+    st.info("소재 실적관리 기능은 준비 중입니다.")
+
+
+# ═══════════════════════════════════════════
+# EASY 리포팅: 라벨링 리포트
+# ═══════════════════════════════════════════
+def page_label_report():
+    render_page_header("🏷️","라벨링 리포트","제품별/타겟별/퍼널별 라벨링 기반 리포트를 조회합니다","green")
+    st.info("라벨링 리포트 기능은 준비 중입니다.")
+
+
+# ═══════════════════════════════════════════
+# 설정: API 키 관리
+# ═══════════════════════════════════════════
+def page_api_keys():
+    render_page_header("🔑","API 키 관리","외부 API 인증 키를 관리합니다","orange")
+
+    st.markdown('<div class="s-header">현재 API 키 상태</div>', unsafe_allow_html=True)
+
+    api_list = [
+        ("네이버 데이터랩", "NAVER_DATALAB_ID", "NAVER_DATALAB_SECRET"),
+        ("네이버 검색", "NAVER_SEARCH_ID", "NAVER_SEARCH_SECRET"),
+        ("네이버 검색광고", "NAVER_AD_API_KEY", "NAVER_AD_SECRET_KEY"),
+        ("Anthropic (Claude)", "ANTHROPIC_API_KEY", None),
+    ]
+
+    for name, key1, key2 in api_list:
+        v1 = os.environ.get(key1, "")
+        status = "✅ 설정됨" if v1 else "❌ 미설정"
+        color = "#059669" if v1 else "#dc2626"
+        st.markdown(
+            f'<div class="d-item" style="display:flex;justify-content:space-between;align-items:center">'
+            f'<span style="font-weight:600">{name}</span>'
+            f'<span style="color:{color};font-weight:700;font-size:0.85rem">{status}</span>'
+            f'</div>', unsafe_allow_html=True)
+
+    st.markdown("")
+    st.caption("API 키는 `.env` 파일(로컬) 또는 Streamlit Cloud Secrets에서 관리합니다.")
+
+
+# ═══════════════════════════════════════════
+# 설정: 경쟁사 DB 관리
+# ═══════════════════════════════════════════
+def page_competitor_db_mgmt():
+    render_page_header("🏢","경쟁사 DB 관리","카테고리별 경쟁사 정보를 관리합니다","orange")
+
+    competitor_db = load_competitor_db()
+    categories = competitor_db.get("categories", {})
+
+    for cat_name, cat_data in categories.items():
+        with st.expander(f"📁 {cat_name} ({len(cat_data.get('competitors',[]))}개 경쟁사)", expanded=False):
+            for c in cat_data.get("competitors", []):
+                usp = c.get("usp", {})
+                headline = usp.get("headline", usp) if isinstance(usp, dict) else usp
+                st.markdown(f"- **{c.get('company','')}** {c.get('brand','')} — {headline}")
+
+    st.caption("경쟁사 추가/수정/삭제는 경쟁사 모니터링 메뉴에서 가능합니다.")
+
+
+# ═══════════════════════════════════════════
+# 설정: 검색 키워드 관리
+# ═══════════════════════════════════════════
+def page_keyword_mgmt():
+    render_page_header("🔤","검색 키워드 관리","자사/경쟁사/제품/시즌 키워드를 통합 관리합니다","orange")
+
+    trend_kw = load_trend_keywords()
+
+    for cat in ["자사", "경쟁사", "시즌"]:
+        keywords = trend_kw.get(cat, [])
+        with st.expander(f"📁 {cat} ({len(keywords)}개)", expanded=True):
+            # 현재 키워드 표시
+            if keywords:
+                st.markdown(" · ".join(f'`{kw}`' for kw in keywords))
+            else:
+                st.caption("키워드 없음")
+
+            # 추가
+            with st.form(f"kw_add_{cat}"):
+                new_kws = st.text_area("추가할 키워드 (쉼표/줄바꿈 구분)", height=60, key=f"kw_input_{cat}")
+                col_add, col_del = st.columns(2)
+                with col_add:
+                    if st.form_submit_button("추가", type="primary"):
+                        import re
+                        parsed = [k.strip() for k in re.split(r"[,\n]", new_kws) if k.strip()]
+                        for kw in parsed:
+                            if kw not in trend_kw[cat]:
+                                trend_kw[cat].append(kw)
+                        save_trend_keywords(trend_kw)
+                        st.rerun()
+
+            # 삭제
+            if keywords:
+                with st.form(f"kw_del_{cat}"):
+                    del_checks = {}
+                    for kw in keywords:
+                        del_checks[kw] = st.checkbox(kw, key=f"kwdel_{cat}_{kw}")
+                    if st.form_submit_button("선택 삭제"):
+                        to_del = [kw for kw, v in del_checks.items() if v]
+                        trend_kw[cat] = [k for k in trend_kw[cat] if k not in to_del]
+                        save_trend_keywords(trend_kw)
+                        st.rerun()
+
+    # 제품 카테고리
+    product_kws = trend_kw.get("제품", {})
+    for pname, pkws in product_kws.items():
+        with st.expander(f"📁 제품 > {pname} ({len(pkws)}개)", expanded=False):
+            if pkws:
+                st.markdown(" · ".join(f'`{kw}`' for kw in pkws))
+            with st.form(f"kw_add_prod_{pname}"):
+                new_kws = st.text_area("추가 (쉼표/줄바꿈)", height=60, key=f"kw_pinput_{pname}")
+                if st.form_submit_button("추가", type="primary"):
+                    import re
+                    parsed = [k.strip() for k in re.split(r"[,\n]", new_kws) if k.strip()]
+                    for kw in parsed:
+                        if kw not in pkws:
+                            pkws.append(kw)
+                    save_trend_keywords(trend_kw)
+                    st.rerun()
+
+
+# ═══════════════════════════════════════════
+# 설정: 계정 설정
+# ═══════════════════════════════════════════
+def page_account():
+    render_page_header("👤","계정 설정","사용자 정보 및 알림 설정을 관리합니다","orange")
+    st.info("계정 설정 기능은 준비 중입니다.")
 
 
 # ═══════════════════════════════════════════
 # 라우팅
 # ═══════════════════════════════════════════
 pg = st.session_state["current_page"]
-if pg=="products": page_product_management()
+# 심의
+if pg=="ai_review": page_ai_review()
+elif pg=="review_dashboard": page_review_dashboard()
+# EASY 리포팅
+elif pg=="creative_report": page_creative_report()
+elif pg=="label_report": page_label_report()
+# 시장조사
+elif pg=="search_query": page_trend()
+elif pg=="ad_research": page_adbanner()
+elif pg=="competitor": page_competitor()
+# 설정
+elif pg=="products": page_product_management()
+elif pg=="api_keys": page_api_keys()
+elif pg=="competitor_db": page_competitor_db_mgmt()
+elif pg=="keyword_mgmt": page_keyword_mgmt()
+elif pg=="account": page_account()
+# 하위 호환 (이전 key)
+elif pg=="trend": page_trend()
 elif pg=="data": page_data_collection()
 elif pg=="usp": page_usp()
-elif pg=="competitor": page_competitor()
-elif pg=="trend": page_trend()
 elif pg=="adbanner": page_adbanner()
 
 st.markdown('<div class="footer">CKD Insight Radar v1.0 — 성분 기반 트렌드 선점 마케팅 솔루션 · 종근당건강</div>', unsafe_allow_html=True)
