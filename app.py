@@ -1810,102 +1810,55 @@ def page_competitor_db_mgmt():
     competitor_db = load_competitor_db()
     categories = competitor_db.get("categories", {})
 
-    # 경쟁사 추가
-    st.markdown('<div class="s-header">경쟁사 추가</div>', unsafe_allow_html=True)
-    with st.form("add_comp_db"):
-        ac1, ac2 = st.columns(2)
-        with ac1:
-            add_cat = st.selectbox("카테고리", list(categories.keys()) if categories else ["(없음)"])
-            add_company = st.text_input("회사명 *")
-            add_brand = st.text_input("브랜드명 *")
-        with ac2:
-            add_headline = st.text_input("USP 헤드라인")
-            add_sp = st.text_area("셀링포인트 (줄바꿈 구분)", height=80)
-            add_target = st.text_input("타겟 고객층")
-        if st.form_submit_button("추가", type="primary"):
-            if add_company and add_brand and add_cat and add_cat != "(없음)":
-                import re as _re
-                new_comp = {
-                    "company": add_company, "brand": add_brand,
-                    "search_keyword": f"{add_brand} {add_company}",
-                    "usp": {
-                        "headline": add_headline or add_brand,
-                        "selling_points": [s.strip() for s in add_sp.split("\n") if s.strip()],
-                        "target": add_target, "key_claim": "",
-                    },
-                    "channels": [], "price_position": "중", "premium_score": 5, "price_score": 5,
-                }
-                categories[add_cat]["competitors"].append(new_comp)
-                save_competitor_db(competitor_db)
-                st.rerun()
-
-    # 카테고리별 경쟁사 조회/수정/삭제
-    st.markdown('<div class="s-header">등록된 경쟁사</div>', unsafe_allow_html=True)
-
     for cat_name, cat_data in categories.items():
         comps = cat_data.get("competitors", [])
         with st.expander(f"📁 {cat_name} ({len(comps)}개)", expanded=False):
-            if not comps:
+            # 현재 경쟁사 뱃지 표시
+            if comps:
+                st.markdown(" · ".join(f'`{c.get("company","")} {c.get("brand","")}`' for c in comps))
+            else:
                 st.caption("등록된 경쟁사 없음")
-                continue
 
-            for cidx, c in enumerate(comps):
-                usp = c.get("usp", {})
-                headline = usp.get("headline", usp) if isinstance(usp, dict) else usp
-                sp = usp.get("selling_points", []) if isinstance(usp, dict) else []
-                target = usp.get("target", "") if isinstance(usp, dict) else ""
+            # 추가 폼
+            with st.form(f"cdb_add_{cat_name}"):
+                st.markdown("**경쟁사 추가** (회사명, 브랜드, USP를 입력하세요)")
+                a1, a2 = st.columns(2)
+                with a1:
+                    add_company = st.text_input("회사명", key=f"cdb_co_{cat_name}")
+                    add_brand = st.text_input("브랜드명", key=f"cdb_br_{cat_name}")
+                with a2:
+                    add_headline = st.text_input("USP 헤드라인", key=f"cdb_hl_{cat_name}")
+                    add_sp = st.text_area("셀링포인트 (줄바꿈 구분)", height=60, key=f"cdb_sp_{cat_name}")
+                if st.form_submit_button("추가", type="primary"):
+                    if add_company and add_brand:
+                        comps.append({
+                            "company": add_company, "brand": add_brand,
+                            "search_keyword": f"{add_brand} {add_company}",
+                            "usp": {"headline": add_headline or add_brand,
+                                    "selling_points": [s.strip() for s in add_sp.split("\n") if s.strip()],
+                                    "target": "", "key_claim": ""},
+                            "channels": [], "price_position": "중", "premium_score": 5, "price_score": 5,
+                        })
+                        save_competitor_db(competitor_db)
+                        st.rerun()
 
-                st.markdown(
-                    f'<div class="d-item">'
-                    f'<div class="d-title">{c.get("company","")} — {c.get("brand","")}</div>'
-                    f'<div class="d-meta">USP: {headline}</div>'
-                    f'</div>', unsafe_allow_html=True)
-
-                b1, b2, _ = st.columns([1, 1, 8])
-                with b1:
-                    if st.button("수정", key=f"cdb_edit_{cat_name}_{cidx}"):
-                        st.session_state["cdb_edit"] = f"{cat_name}_{cidx}"
-                with b2:
-                    if st.button("삭제", key=f"cdb_del_{cat_name}_{cidx}"):
-                        st.session_state["cdb_del"] = f"{cat_name}_{cidx}"
-
-                # 삭제 확인
-                if st.session_state.get("cdb_del") == f"{cat_name}_{cidx}":
-                    st.warning(f"'{c.get('company','')} {c.get('brand','')}'를 삭제하시겠습니까?")
-                    d1, d2, _ = st.columns([1, 1, 8])
-                    with d1:
-                        if st.button("확인", key=f"cdb_delok_{cat_name}_{cidx}", type="primary"):
-                            comps.pop(cidx)
+            # 삭제 (체크박스 방식)
+            if comps:
+                with st.form(f"cdb_del_{cat_name}"):
+                    st.markdown("**경쟁사 삭제** (삭제할 경쟁사를 선택하세요)")
+                    del_checks = {}
+                    for cidx, c in enumerate(comps):
+                        usp = c.get("usp", {})
+                        hl = usp.get("headline", "") if isinstance(usp, dict) else str(usp)
+                        del_checks[cidx] = st.checkbox(
+                            f'{c.get("company","")} {c.get("brand","")} — {hl}',
+                            key=f"cdb_chk_{cat_name}_{cidx}")
+                    if st.form_submit_button("선택 삭제"):
+                        to_del = sorted([i for i, v in del_checks.items() if v], reverse=True)
+                        for i in to_del:
+                            comps.pop(i)
+                        if to_del:
                             save_competitor_db(competitor_db)
-                            st.session_state.pop("cdb_del", None)
-                            st.rerun()
-                    with d2:
-                        if st.button("취소", key=f"cdb_delno_{cat_name}_{cidx}"):
-                            st.session_state.pop("cdb_del", None)
-                            st.rerun()
-
-                # 수정 폼
-                if st.session_state.get("cdb_edit") == f"{cat_name}_{cidx}":
-                    with st.form(f"cdb_editform_{cat_name}_{cidx}"):
-                        e1, e2 = st.columns(2)
-                        with e1:
-                            ed_company = st.text_input("회사명", value=c.get("company",""))
-                            ed_brand = st.text_input("브랜드명", value=c.get("brand",""))
-                        with e2:
-                            ed_headline = st.text_input("USP 헤드라인", value=headline)
-                            ed_sp = st.text_area("셀링포인트", value="\n".join(sp))
-                            ed_target = st.text_input("타겟", value=target)
-                        if st.form_submit_button("저장", type="primary"):
-                            c["company"] = ed_company
-                            c["brand"] = ed_brand
-                            c["search_keyword"] = f"{ed_brand} {ed_company}"
-                            c["usp"] = {
-                                "headline": ed_headline,
-                                "selling_points": [s.strip() for s in ed_sp.split("\n") if s.strip()],
-                                "target": ed_target, "key_claim": "",
-                            }
-                            save_competitor_db(competitor_db)
-                            st.session_state.pop("cdb_edit", None)
                             st.rerun()
 
 
