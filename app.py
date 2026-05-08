@@ -86,21 +86,31 @@ section[data-testid="stSidebar"] * { color: #8ba3bd !important; }
 section[data-testid="stSidebar"] .stButton > button {
     background: transparent !important;
     border: none !important;
-    color: #7a94af !important;
+    color: #9ca3af !important;
     text-align: left !important;
-    font-size: 0.92rem !important;
+    font-size: 0.85rem !important;
     font-weight: 500 !important;
-    padding: 12px 16px !important;
-    border-radius: 10px !important;
+    padding: 8px 12px !important;
+    border-radius: 8px !important;
     margin: 1px 0 !important;
     transition: all 0.15s ease !important;
     width: 100% !important;
 }
 section[data-testid="stSidebar"] .stButton > button:hover {
-    background: rgba(255,255,255,0.06) !important;
-    color: #cdd9e5 !important;
+    background: rgba(255,255,255,0.08) !important;
+    color: #ffffff !important;
 }
-/* (사이드바 메뉴는 st.button 방식) */
+/* 선택된 메뉴: 파란 배경 + 흰 텍스트 */
+section[data-testid="stSidebar"] .stButton > button[kind="primary"],
+section[data-testid="stSidebar"] button[data-testid="stBaseButton-primary"] {
+    background: #2563eb !important;
+    background-image: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    text-shadow: none !important;
+}
 .sidebar-brand {
     padding: 20px 16px 6px; display: flex; align-items: center; gap: 10px;
 }
@@ -556,10 +566,11 @@ with st.sidebar:
         with st.expander(section["section"], expanded=is_section_active):
             for item in section["items"]:
                 is_active = st.session_state["current_page"] == item["key"]
-                label = item["label"]
-                if st.button(label, key=f"nav_{item['key']}", use_container_width=True):
-                    st.session_state["current_page"] = item["key"]
-                    st.rerun()
+                if st.button(item["label"], key=f"nav_{item['key']}", use_container_width=True,
+                             type="primary" if is_active else "secondary"):
+                    if not is_active:
+                        st.session_state["current_page"] = item["key"]
+                        st.rerun()
 
     st.markdown(
         '<hr class="sidebar-hr"><div class="sidebar-label">모니터링 소스</div>',
