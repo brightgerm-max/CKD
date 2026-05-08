@@ -566,7 +566,7 @@ with st.sidebar:
         f'<div class="sidebar-brand-text" style="text-align:center">CKD Insight Radar</div>'
         f'</div>'
         f'<div class="sidebar-brand-sub" style="text-align:center">종근당건강 · Trend Marketing Platform</div>'
-        f'<div style="height:14px"></div>',
+        f'<div style="height:24px"></div>',
         unsafe_allow_html=True,
     )
 
