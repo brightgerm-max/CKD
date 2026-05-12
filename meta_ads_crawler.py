@@ -49,21 +49,36 @@ def _crawl_internal(keyword: str, country: str = "KR", max_ads: int = 10) -> lis
             page.goto(url, timeout=30000)
             page.wait_for_timeout(8000)
 
-            # 스크롤하여 더 많은 광고 로딩
-            if max_ads > 20:
-                scroll_count = (max_ads - 20) // 10 + 1
-                for _ in range(min(scroll_count, 5)):
-                    page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
-                    page.wait_for_timeout(3000)
+            # 점진적 스크롤 — 이미지 lazy loading 대응
+            scroll_times = max(3, max_ads // 10)
+            for i in range(min(scroll_times, 8)):
+                page.evaluate(f"window.scrollTo(0, document.body.scrollHeight * {(i+1)/scroll_times})")
+                page.wait_for_timeout(2000)
+            # 맨 위로 돌아간 후 다시 전체 스크롤 (이미지 재로딩)
+            page.evaluate("window.scrollTo(0, 0)")
+            page.wait_for_timeout(1000)
+            page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+            page.wait_for_timeout(2000)
 
             # 광고 이미지 URL 추출
             ad_images = page.evaluate('''() => {
                 const results = [];
-                const imgs = document.querySelectorAll("img");
-                for (const img of imgs) {
-                    const src = img.src || "";
-                    if (src && (src.includes("scontent") || src.includes("fbcdn") || src.includes("cdninstagram")) && img.width > 100) {
-                        results.push(src);
+                const seen = new Set();
+                const media = document.querySelectorAll("img, video");
+                for (const el of media) {
+                    let src = "";
+                    if (el.tagName === "VIDEO") {
+                        src = el.poster || "";
+                    } else {
+                        src = el.src || el.dataset.src || "";
+                    }
+                    if (!src || seen.has(src)) continue;
+                    if ((src.includes("scontent") || src.includes("fbcdn") || src.includes("cdninstagram"))) {
+                        const rect = el.getBoundingClientRect();
+                        if (rect.width > 100 || rect.height > 100 || src.includes("s600x600") || src.includes("s1080x1080")) {
+                            seen.add(src);
+                            results.push(src);
+                        }
                     }
                 }
                 return results;
