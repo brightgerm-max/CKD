@@ -2214,54 +2214,30 @@ def page_competitor_db_mgmt():
     # 데이터 내보내기 / 가져오기
     with st.expander("데이터 내보내기 / 가져오기", expanded=False):
         products_data = load_products()
-        st.markdown("""<style>
-        [data-testid="stFileUploader"] {background:none !important; padding:0 !important; border:none !important;}
-        [data-testid="stFileUploader"] section {padding:0 !important;}
-        [data-testid="stFileUploader"] [data-testid="stFileUploaderDropzone"] {background:none !important; border:1px dashed var(--c-border) !important; padding:8px 12px !important; min-height:auto !important;}
-        [data-testid="stFileUploaderDropzone"] small,
-        [data-testid="stFileUploaderDropzone"] span[data-testid],
-        [data-testid="stFileUploaderDropzoneInstructions"] div:last-child,
-        [data-testid="stFileUploaderDropzone"] > div > div:last-child,
-        .uploadedFile {display:none !important;}
-        [data-testid="stFileUploaderDropzoneInstructions"] small {display:none !important;}
-        </style>""", unsafe_allow_html=True)
-        c1, c2, c3, c4 = st.columns([1.5, 2, 1.5, 2])
-        with c1:
-            st.caption("경쟁사 DB")
-            st.download_button("다운로드", data=json.dumps(competitor_db, ensure_ascii=False, indent=2),
+        d1, d2 = st.columns(2)
+        with d1:
+            st.download_button("경쟁사 DB 다운로드", data=json.dumps(competitor_db, ensure_ascii=False, indent=2),
                                file_name="competitor_db.json", mime="application/json", use_container_width=True)
-        with c2:
-            st.caption("　")
-            uploaded_comp = st.file_uploader("업로드", type=["json"], key="upload_comp_db", label_visibility="collapsed")
-            if uploaded_comp:
-                try:
-                    new_data = json.loads(uploaded_comp.read().decode("utf-8"))
-                    if "categories" in new_data:
-                        save_competitor_db(new_data)
-                        st.success("경쟁사 DB 업데이트 완료")
-                        st.rerun()
-                    else:
-                        st.error("올바른 형식이 아닙니다.")
-                except Exception as e:
-                    st.error(f"실패: {e}")
-        with c3:
-            st.caption("자사상품 DB")
-            st.download_button("다운로드", data=json.dumps(products_data, ensure_ascii=False, indent=2),
+        with d2:
+            st.download_button("자사상품 DB 다운로드", data=json.dumps(products_data, ensure_ascii=False, indent=2),
                                file_name="product_ingredient_db.json", mime="application/json", use_container_width=True, key="dl_prod")
-        with c4:
-            st.caption("　")
-            uploaded_prod = st.file_uploader("업로드", type=["json"], key="upload_prod_db", label_visibility="collapsed")
-            if uploaded_prod:
-                try:
-                    new_data = json.loads(uploaded_prod.read().decode("utf-8"))
-                    if "products" in new_data:
-                        save_product_db(new_data)
-                        st.success("자사상품 DB 업데이트 완료")
-                        st.rerun()
-                    else:
-                        st.error("올바른 형식이 아닙니다.")
-                except Exception as e:
-                    st.error(f"실패: {e}")
+        st.markdown("---")
+        uploaded = st.file_uploader("DB 파일 업로드 (JSON)", type=["json"], key="upload_db")
+        if uploaded:
+            try:
+                new_data = json.loads(uploaded.read().decode("utf-8"))
+                if "categories" in new_data:
+                    save_competitor_db(new_data)
+                    st.success("경쟁사 DB가 업데이트되었습니다.")
+                    st.rerun()
+                elif "products" in new_data:
+                    save_product_db(new_data)
+                    st.success("자사상품 DB가 업데이트되었습니다.")
+                    st.rerun()
+                else:
+                    st.error("올바른 DB 형식이 아닙니다. (categories 또는 products 키 필요)")
+            except Exception as e:
+                st.error(f"파일 읽기 실패: {e}")
 
     for cat_name, cat_data in categories.items():
         comps = cat_data.get("competitors", [])
