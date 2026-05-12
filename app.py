@@ -1787,7 +1787,14 @@ def page_ai_review():
     ad_text = st.text_area("광고 문구를 입력하세요", height=180, placeholder="예: 콘드로이친은 관절 건강에 도움을 줄 수 있는 건강기능식품입니다...")
     review_btn = st.button("사전 검토 실행", type="primary", use_container_width=True)
 
-    if not review_btn or not ad_text.strip():
+    # 검토 실행 → 세션에 저장
+    if review_btn and ad_text.strip():
+        result = review_ad_text(ad_text, category)
+        st.session_state["review_result"] = result
+        st.session_state["review_ad_text"] = ad_text
+        st.session_state["review_category"] = category
+
+    if "review_result" not in st.session_state:
         st.markdown("")
         st.markdown(
             '<div style="background:var(--c-card);border:1px solid var(--c-border);border-radius:var(--radius);padding:20px">'
@@ -1803,8 +1810,9 @@ def page_ai_review():
         )
         return
 
-    # 검토 실행
-    result = review_ad_text(ad_text, category)
+    result = st.session_state["review_result"]
+    ad_text = st.session_state.get("review_ad_text", ad_text)
+    category = st.session_state.get("review_category", category)
     violations = result["violations"]
     warnings = result["warnings"]
     score = result["score"]
