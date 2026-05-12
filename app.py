@@ -492,6 +492,16 @@ section[data-testid="stMainBlockContainer"] [data-testid="stLinkButton"] a:hover
     box-shadow: 0 4px 10px rgba(37,99,235,0.15) !important;
     transform: translateY(-1px) !important;
 }
+/* text_area 스타일 */
+.stTextArea textarea {
+    background: #ffffff !important;
+    border: 1.5px solid var(--c-border) !important;
+    border-radius: 10px !important;
+}
+.stTextArea textarea:focus {
+    border-color: var(--c-primary) !important;
+    box-shadow: 0 0 0 2px rgba(37,99,235,0.1) !important;
+}
 /* date_input 스타일 */
 .stDateInput > div > div {
     border-radius: 10px !important;
@@ -1747,42 +1757,46 @@ def page_adbanner():
 def page_ai_review():
     render_page_header("📋","AI 사전검토","광고 문구를 입력하면 심의 기준에 맞는지 사전 검토합니다","blue")
 
+    # 제품 선택 (3개만)
+    review_products = ["콘드로이친", "락토핏 골드", "포스파티딜세린"]
     products_data = load_products()
-    products = products_data["products"]
+    products = [p for p in products_data["products"] if p["brand"] in review_products]
 
-    # 상단: 제품 선택 + 광고 문구 입력
-    col_prod, col_text = st.columns([1, 3])
-    with col_prod:
+    sel_col, _ = st.columns([2, 3])
+    with sel_col:
         product_names = ["(제품 선택)"] + [p["brand"] for p in products]
         sel_product = st.selectbox("검토 대상 제품", product_names, key="review_product")
-        if sel_product != "(제품 선택)":
-            product = next(p for p in products if p["brand"] == sel_product)
-            category = product.get("category", "")
-            st.caption(f"카테고리: {category}")
-            # 허용 표현 표시
-            allowed = ALLOWED_CLAIMS.get(category, [])
-            if allowed:
-                st.markdown("**식약처 인정 기능성 표현:**")
-                for a in allowed:
-                    st.markdown(f'<span style="font-size:0.78rem;color:var(--c-success)">✅ {a}</span>', unsafe_allow_html=True)
-        else:
-            category = ""
 
-    with col_text:
-        ad_text = st.text_area("광고 문구를 입력하세요", height=150, placeholder="예: 락토핏 골드는 장 건강에 도움을 줄 수 있는 건강기능식품입니다...")
-        review_btn = st.button("🔍 사전 검토 실행", type="primary", use_container_width=True)
+    if sel_product != "(제품 선택)":
+        product = next(p for p in products if p["brand"] == sel_product)
+        category = product.get("category", "")
+    else:
+        category = ""
+
+    # 허용 표현 + 광고 문구 입력
+    if category:
+        allowed = ALLOWED_CLAIMS.get(category, [])
+        if allowed:
+            st.markdown(
+                '<div style="background:var(--c-success-light);border:1px solid #bbf7d0;border-radius:var(--radius);padding:14px 18px;margin-bottom:14px">'
+                '<div style="font-size:var(--font-sm);font-weight:700;color:var(--c-success);margin-bottom:8px">식약처 인정 기능성 표현</div>'
+                + "".join(f'<div style="font-size:var(--font-sm);color:#15803d;padding:2px 0">✅ {a}</div>' for a in allowed)
+                + '</div>', unsafe_allow_html=True)
+
+    ad_text = st.text_area("광고 문구를 입력하세요", height=180, placeholder="예: 콘드로이친은 관절 건강에 도움을 줄 수 있는 건강기능식품입니다...")
+    review_btn = st.button("사전 검토 실행", type="primary", use_container_width=True)
 
     if not review_btn or not ad_text.strip():
-        st.markdown("---")
+        st.markdown("")
         st.markdown(
-            '<div class="g-card">'
-            '<div class="g-card-header">📌 광고 심의 사전 검토 안내</div>'
+            '<div style="background:var(--c-card);border:1px solid var(--c-border);border-radius:var(--radius);padding:20px">'
+            '<div style="font-size:var(--font-base);font-weight:700;color:var(--c-text);margin-bottom:10px">광고 심의 사전 검토 안내</div>'
             '<div style="font-size:var(--font-sm);color:var(--c-text-sub);line-height:1.8">'
             '1. 검토 대상 <b>제품을 선택</b>하면 해당 제품의 식약처 인정 기능성 표현을 확인할 수 있습니다.<br>'
             '2. <b>광고 문구를 입력</b>하고 검토 실행을 클릭하면 금지 표현을 자동 감지합니다.<br>'
             '3. 검토 결과는 참고용이며, <b>공식 심의를 대체하지 않습니다</b>.<br><br>'
-            '<b>검토 기준:</b> 식품 등의 표시·광고에 관한 법률 제8조 (부당 표시·광고 금지 10가지)<br>'
-            '<b>심의 기관:</b> 한국건강기능식품협회 (<a href="https://ad.khff.or.kr" target="_blank">ad.khff.or.kr</a>)'
+            '<span style="color:var(--c-text-muted)">검토 기준: 식품 등의 표시·광고에 관한 법률 제8조<br>'
+            '심의 기관: 한국건강기능식품협회 (ad.khff.or.kr)</span>'
             '</div></div>',
             unsafe_allow_html=True,
         )
