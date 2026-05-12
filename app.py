@@ -1759,8 +1759,58 @@ def page_trend():
 # 페이지 6: 광고배너 (플레이스홀더)
 # ═══════════════════════════════════════════
 def page_adbanner():
-    render_page_header("🎨","광고배너 조사","META 광고 라이브러리 기반 경쟁사 광고 소재를 조사합니다","orange")
-    st.info("META 광고 라이브러리 크롤링 기반 광고배너 조사 기능은 준비 중입니다.")
+    render_page_header("🎨","광고배너 조사","META 광고 라이브러리에서 경쟁사 광고 소재를 조사합니다","orange")
+
+    import urllib.parse as _urlparse
+
+    # 검색 설정
+    col_kw, col_country, col_media, col_btn = st.columns([3, 1, 1, 1])
+    with col_kw:
+        search_kw = st.text_input("검색 키워드", value="유산균", placeholder="예: 유산균, 관절건강, 콘드로이친...")
+    with col_country:
+        country = st.selectbox("국가", ["KR", "US", "JP", "ALL"], index=0)
+    with col_media:
+        media = st.selectbox("미디어", ["전체", "이미지", "영상"], index=0)
+    with col_btn:
+        st.markdown('<div style="height:28px"></div>', unsafe_allow_html=True)
+        search_btn = st.button("검색", type="primary", use_container_width=True)
+
+    # 빠른 검색 버튼
+    st.markdown("**빠른 검색**")
+    quick_cols = st.columns(6)
+    quick_keywords = ["유산균", "관절건강", "루테인", "콜라겐", "오메가3", "다이어트"]
+    for i, qk in enumerate(quick_keywords):
+        with quick_cols[i]:
+            if st.button(qk, key=f"quick_{qk}", use_container_width=True):
+                search_kw = qk
+                search_btn = True
+
+    st.markdown("---")
+
+    if search_kw:
+        # Meta Ad Library URL 생성
+        media_map = {"전체": "all", "이미지": "image", "영상": "video"}
+        encoded_kw = _urlparse.quote(search_kw)
+        ad_url = (
+            f"https://www.facebook.com/ads/library/"
+            f"?active_status=active&ad_type=all&country={country}"
+            f"&is_targeted_country=false&media_type={media_map.get(media,'all')}"
+            f"&q={encoded_kw}&search_type=keyword_unordered"
+            f"&sort_data[direction]=desc&sort_data[mode]=total_impressions"
+        )
+
+        # iframe 임베드 시도
+        st.markdown(
+            f'<div style="background:var(--c-card);border:1px solid var(--c-border);border-radius:var(--radius);'
+            f'padding:14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">'
+            f'<div style="font-size:var(--font-sm);color:var(--c-text)">검색어: <b>{search_kw}</b> · 국가: {country} · 미디어: {media}</div>'
+            f'<a href="{ad_url}" target="_blank" style="font-size:var(--font-sm);color:var(--c-primary);font-weight:600;text-decoration:none">새 탭에서 열기 →</a>'
+            f'</div>', unsafe_allow_html=True)
+
+        import streamlit.components.v1 as components
+        components.iframe(ad_url, height=800, scrolling=True)
+
+        st.caption("위 영역이 표시되지 않는 경우 '새 탭에서 열기'를 클릭하세요. Meta가 iframe 임베드를 차단할 수 있습니다.")
 
 
 # ═══════════════════════════════════════════
