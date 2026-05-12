@@ -503,6 +503,12 @@ textarea[type="textarea"]:active,
 textarea[type="textarea"]:focus-visible {
     border: 1.5px solid var(--c-border) !important;
 }
+/* container 내 AI 응답 텍스트 크기 제한 */
+div[data-testid="stVerticalBlockBorderWrapper"] h1 { font-size: var(--font-lg) !important; }
+div[data-testid="stVerticalBlockBorderWrapper"] h2 { font-size: var(--font-base) !important; }
+div[data-testid="stVerticalBlockBorderWrapper"] h3 { font-size: var(--font-sm) !important; }
+div[data-testid="stVerticalBlockBorderWrapper"] p,
+div[data-testid="stVerticalBlockBorderWrapper"] li { font-size: var(--font-sm) !important; line-height: 1.7 !important; }
 /* date_input 스타일 */
 .stDateInput > div > div {
     border-radius: 10px !important;
@@ -1933,7 +1939,8 @@ def page_ai_review():
 - 이 광고에서 주장하는 효능을 뒷받침할 수 있는 과학적 근거 유형 제안
 - PubMed에서 검색할 수 있는 관련 키워드 3~5개 제안
 
-한국어로 작성해주세요. 식약처 광고 심의 기준을 엄격히 적용해주세요."""
+한국어로 간결하게 작성해주세요. 식약처 광고 심의 기준을 엄격히 적용해주세요.
+중요: 마크다운 헤딩(#, ##, ###)은 사용하지 마세요. 볼드(**텍스트**)와 리스트(-)만 사용하세요. 표는 간단하게만 사용하세요."""
 
                         msg = client.messages.create(
                             model="claude-haiku-4-5-20251001",
