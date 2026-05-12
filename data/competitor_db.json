@@ -4,17 +4,33 @@
       "ckd_brand": "콘드로이친",
       "competitors": [
         {
-          "search_keyword": "주영엔에스 콘드로이친 1200",
-          "ingredients": [],
-          "health_claims": [],
+          "search_keyword": "뮤코다당 단백 콘드로이친 1200플러스 주영엔에스",
+          "ingredients": [
+            "콘드로이친 1200mg"
+          ],
+          "health_claims": [
+            "관절 통증에 도움",
+            "관절 기능에 도움",
+            "보행능 개선에 도움",
+            "아침 경직 완화에 도움"
+          ],
           "product_urls": {
-            "naver": "",
-            "coupang": "",
+            "naver": "https://brand.naver.com/jyns/products/6576886971",
+            "coupang": "https://www.coupang.com/vp/products/9391861137?itemId=28067344696",
             "brand": ""
           },
           "usp": {
-            "headline": "뮤코다당 단백 콘드로이친",
-            "selling_points": [],
+            "headline": "1,200mg 고함량 소 유래 콘드로이친으로 연골 건강을 체계적으로 관리하는 관절 영양제",
+            "selling_points": [
+              "개별인정형 원료 콘드로이친(제2020-1호) 함유로 식약처 기능성 인정",
+              "소 유래 콘드로이친으로 인체 구조와 유사하여 흡수가 용이",
+              "1일 권장량 1,200mg을 하루 2정으로 간편하게 섭취",
+              "정제 크기가 부담스럽지 않아 복용 편의성 우수",
+              "매일 꾸준히 섭취 가능한 설계",
+              "60정씩 개별 포장으로 보관 및 휴대 편리",
+              "유통기한이 넉넉하게 제공",
+              "해당 인정 성분으로 관절 통증, 기능, 보행능, 아침 경직 등에 대한 인체적용시험 결과 보유"
+            ],
             "target": "",
             "key_claim": ""
           },
@@ -26,17 +42,29 @@
           "product_name": "뮤코다당 단백 콘드로이친 1200플러스"
         },
         {
-          "search_keyword": "뉴트리코어 콘드로이친 1200",
-          "ingredients": [],
-          "health_claims": [],
+          "search_keyword": "철갑상어 콘드로이친 1200 뉴트리코어",
+          "ingredients": [
+            "철갑상어 뮤코다당단백",
+            "콘드로이친K"
+          ],
+          "health_claims": [
+            "관절 건강에 도움"
+          ],
           "product_urls": {
-            "naver": "",
-            "coupang": "",
-            "brand": ""
+            "naver": "https://brand.naver.com/nutricore/products/9954000900",
+            "coupang": "https://www.coupang.com/vp/products/9391861137?itemId=28067344696",
+            "brand": "https://nutricore.co.kr/sopmal/goods/selectGoodsDtl?goodsInnb=1081"
           },
           "usp": {
-            "headline": "철갑상어 콘드로이친",
-            "selling_points": [],
+            "headline": "철갑상어 뮤코다당단백과 콘드로이친K로 관절 연골 건강을 지원하는 프리미엄 건강기능식품",
+            "selling_points": [
+              "철갑상어 뮤코다당단백 함유",
+              "콘드로이친K 포함",
+              "4.8/5.0 높은 만족도 (1,878건 리뷰)",
+              "유통기한 넉넉함",
+              "백화점 입점 신뢰성",
+              "꼼꼼한 포장"
+            ],
             "target": "",
             "key_claim": ""
           },
@@ -48,17 +76,35 @@
           "product_name": "철갑상어 콘드로이친 1200"
         },
         {
-          "search_keyword": "닥터린 콘드로이친 1200",
-          "ingredients": [],
-          "health_claims": [],
+          "search_keyword": "철갑상어 콘드로이친 1200맥스 저분자 뮤코다당단백 닥터린",
+          "ingredients": [
+            "콘드로이친",
+            "뮤코다당단백",
+            "철갑상어 연골",
+            "난각막분말"
+          ],
+          "health_claims": [
+            "관절 건강에 도움"
+          ],
           "product_urls": {
-            "naver": "",
-            "coupang": "",
-            "brand": ""
+            "naver": "https://brand.naver.com/dr_lean/products/7997787940",
+            "coupang": "https://www.coupang.com/vp/products/7676969728?itemId=22892961647",
+            "brand": "https://doctorlean.co.kr/sopmal/goods/selectGoodsDtl?goodsInnb=113"
           },
           "usp": {
-            "headline": "저분자 뮤코다당단백 콘드로이친",
-            "selling_points": [],
+            "headline": "저분자 콘드로이친 1200mg 함유, 철갑상어 연골 유래 뮤코다당단백으로 관절 건강을 지원하는 프리미엄 영양제",
+            "selling_points": [
+              "콘드로이친 1200mg 고함량 (1일 섭취량 기준)",
+              "저분자 가공으로 흡수력 강화",
+              "철갑상어 연골 유래 원료",
+              "360정 대용량 (약 6개월분)",
+              "배우 송중기 광고 제품",
+              "빠른 배송 (네이버 내일배송)",
+              "포장이 알찬 구성 (사은품 포함)",
+              "유통기한 넉넉함 (1년 이상)",
+              "4.8점 높은 만족도 (27,043건 리뷰)",
+              "57% 할인 (234,000원 → 99,000원)"
+            ],
             "target": "",
             "key_claim": ""
           },
@@ -87,17 +133,34 @@
       "ckd_brand": "비피더스 유산균",
       "competitors": [
         {
-          "search_keyword": "덴프스 덴마크 유산균",
-          "ingredients": [],
-          "health_claims": [],
+          "search_keyword": "덴마크 유산균 이야기 덴프스",
+          "ingredients": [
+            "프로바이오틱스 (LGG",
+            "BB-12 균주)",
+            "유산균 (100억 CFU/캡슐)"
+          ],
+          "health_claims": [
+            "장 건강에 도움",
+            "배변활동 개선에 도움",
+            "유산균 증식 및 유해균 억제"
+          ],
           "product_urls": {
-            "naver": "",
-            "coupang": "",
-            "brand": ""
+            "naver": "https://brand.naver.com/denps/products/8950954958",
+            "coupang": "https://www.coupang.com/vp/products/6063894601?itemId=18741626520",
+            "brand": "https://denpsmall.com/product/%ED%8A%B9%EB%B3%84%ED%98%9C%ED%83%9D-%EB%8D%B4%EB%A7%88%ED%81%AC-%EC%9C%A0%EC%82%B0%EA%B7%A0%EC%9D%B4%EC%95%BC%EA%B8%B0-%ED%94%84%EB%A1%9C-2%EB%B0%95%EC%8A%A44%EA%B0%9C%EC%9B%94%EB%B6%84/2880/category/61/display/1/"
           },
           "usp": {
-            "headline": "덴마크 유산균 이야기",
-            "selling_points": [],
+            "headline": "덴마크 프리미엄 유산균, 실온 보관 가능한 100억 CFU 보장 캡슐형",
+            "selling_points": [
+              "덴마크 직수입 프리미엄 균주 (LGG, BB-12 등 안정성 높은 균주)",
+              "1캡슐당 100억 CFU 유산균 보장",
+              "실온 보관 가능 (냉장 불필요)",
+              "초소형 캡슐로 목 넘김 편함",
+              "무향으로 거부감 없음",
+              "1일 1캡슐로 간편한 복용",
+              "여행 시 휴대 용이한 소형 패키지",
+              "최소 첨가물로 안정성 우수"
+            ],
             "target": "",
             "key_claim": ""
           },
@@ -109,17 +172,27 @@
           "product_name": "덴마크 유산균 이야기"
         },
         {
-          "search_keyword": "비피젠 비피더스",
-          "ingredients": [],
-          "health_claims": [],
+          "search_keyword": "퓨어 비피더스 프리미엄 비피젠",
+          "ingredients": [
+            "비피더스균 4종",
+            "프리바이오틱스"
+          ],
+          "health_claims": [
+            "장 건강에 도움"
+          ],
           "product_urls": {
             "naver": "",
-            "coupang": "",
-            "brand": ""
+            "coupang": "https://www.coupang.com/vp/products/8616879557",
+            "brand": "https://bifigen.com/product/detail.html?product_no=12&cate_no=24"
           },
           "usp": {
-            "headline": "퓨어 비피더스 프리미엄",
-            "selling_points": [],
+            "headline": "노화로 약해진 장 건강에 도움을 주는 프로바이오틱스",
+            "selling_points": [
+              "100% 비피더스균 4종으로 100억 CFU 보장",
+              "프리바이오틱스가 함유된 신바이오틱스",
+              "생존성 향상을 위한 장용성 캡슐",
+              "생산부터 배송까지 전 과정 콜드체인 시스템"
+            ],
             "target": "",
             "key_claim": ""
           },
@@ -131,17 +204,30 @@
           "product_name": "퓨어 비피더스 프리미엄"
         },
         {
-          "search_keyword": "레디웰 비피더스",
-          "ingredients": [],
-          "health_claims": [],
+          "search_keyword": "프로바이오틱스밸런스 레디웰 비피더스유산균 레디웰",
+          "ingredients": [
+            "비피도박테리움 (비피더스균)",
+            "락토바실러스"
+          ],
+          "health_claims": [
+            "장 건강에 도움"
+          ],
           "product_urls": {
-            "naver": "",
+            "naver": "https://brand.naver.com/radiwell/products/12010487182",
             "coupang": "",
-            "brand": ""
+            "brand": "https://www.radiwell.com/shop/detail.php?pno=66808E327DC79D135BA18E051673D906"
           },
           "usp": {
-            "headline": "프로바이오틱스밸런스 비피더스유산균",
-            "selling_points": [],
+            "headline": "100억 CFU 비피더스균 함유로 배변활동 개선 및 장 건강을 돕는 프로바이오틱스",
+            "selling_points": [
+              "100억 CFU 고함량 프로바이오틱스",
+              "캡슐형으로 휴대 및 복용 편의성",
+              "냉장보관 생유산균",
+              "4.83점 높은 평점 (리뷰 5,963건)",
+              "재구매율 높음",
+              "빠른 배송 (모레 도착 확률 92%)",
+              "1개월분 30캡슐"
+            ],
             "target": "",
             "key_claim": ""
           },
@@ -170,17 +256,32 @@
       "ckd_brand": "포스파티딜세린",
       "competitors": [
         {
-          "search_keyword": "뉴트리원 포스파티딜세린",
-          "ingredients": [],
-          "health_claims": [],
+          "search_keyword": "인지력 개선엔 포스파티딜세린 뉴트리원",
+          "ingredients": [
+            "포스파티딜세린 (800mg)",
+            "비타민E"
+          ],
+          "health_claims": [
+            "인지력 개선에 도움"
+          ],
           "product_urls": {
-            "naver": "",
-            "coupang": "",
-            "brand": ""
+            "naver": "https://brand.naver.com/nutrione/products/7911152292",
+            "coupang": "https://www.coupang.com/vp/products/7637369656?itemId=12276933484",
+            "brand": "https://www.nutrione.co.kr/item/dtl/1000329450"
           },
           "usp": {
-            "headline": "인지력 개선엔 포스파티딜세린",
-            "selling_points": [],
+            "headline": "포스파티딜세린과 비타민E로 두뇌 인지력 개선을 돕는 기억력 영양제",
+            "selling_points": [
+              "하루 1캡슐 간편한 섭취 (1회 2알)",
+              "캡슐 크기가 작아 목 넘김이 편함",
+              "낱개 PTP 포장으로 위생적이고 휴대 편함",
+              "유통기한 넉넉함",
+              "대량 구매 시 낮은 단가 (1캡슐당 약 528~550원)",
+              "포스파티딜세린 + 비타민E 투투 기능 (항산화 관리)",
+              "4.83/5.0 높은 평점 (19,622건 리뷰)",
+              "내일 배송 가능 (네이버 내일배송)",
+              "무료배송 및 무료교환반품"
+            ],
             "target": "",
             "key_claim": ""
           },
@@ -192,17 +293,36 @@
           "product_name": "인지력 개선엔 포스파티딜세린"
         },
         {
-          "search_keyword": "뉴트리코어 포스파티딜세린",
-          "ingredients": [],
-          "health_claims": [],
+          "search_keyword": "포스파티딜세린 PS 뉴트리코어",
+          "ingredients": [
+            "포스파티딜세린",
+            "비타민B2",
+            "비타민B6",
+            "엽산",
+            "비타민B12",
+            "아연",
+            "셀렌",
+            "망간"
+          ],
+          "health_claims": [
+            "인지 기능 유지에 도움"
+          ],
           "product_urls": {
-            "naver": "",
-            "coupang": "",
-            "brand": ""
+            "naver": "https://brand.naver.com/nutricore/products/4875867439",
+            "coupang": "https://www.coupang.com/vp/products/8298063256?itemId=2575306258",
+            "brand": "https://nutricore.co.kr/sopmal/goods/selectGoodsDtl?goodsInnb=671"
           },
           "usp": {
-            "headline": "포스파티딜세린 PS",
-            "selling_points": [],
+            "headline": "국내 최고 순도 85% 포스파티딜세린, WCS 독자적 물 추출 공법으로 만든 뇌건강 영양제",
+            "selling_points": [
+              "순도 85% (경쟁사 대비 70% 수준)",
+              "2정당 300mg 포스파티딜세린 함유",
+              "WCS 독자적 물 추출 공법",
+              "비타민B군 및 미네랄(아연, 셀렌, 망간) 복합 함유",
+              "개별 자외선차단 포장",
+              "네이버 내일배송 지원",
+              "4.77점 높은 평점 (19,899건 리뷰)"
+            ],
             "target": "",
             "key_claim": ""
           },
