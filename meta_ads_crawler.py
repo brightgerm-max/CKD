@@ -128,16 +128,17 @@ def _crawl_internal(keyword: str, country: str = "KR", max_ads: int = 28) -> lis
                 meta = ad_meta_list[idx]
                 content = ad_content_list[idx] if idx < len(ad_content_list) else []
 
-                # content 파싱: [0]=본문, [1]=랜딩URL, [2]=CTA설명, ...
+                # content 파싱: [0]=본문, 나머지=랜딩URL/CTA설명
                 body_text = content[0] if len(content) > 0 else ""
                 landing_url = ""
-                cta_desc = ""
+                cta_desc_parts = []
 
                 for c in content[1:]:
-                    if re.match(r"^[A-Z0-9\-]+\.(COM|CO\.KR|KR|NET|IO)$", c, re.IGNORECASE):
+                    if re.match(r"^[A-Z0-9\-\.]+\.(COM|CO\.KR|KR|NET|IO)$", c, re.IGNORECASE):
                         landing_url = c
-                    elif c and c != "\u200b":
-                        cta_desc = c
+                    elif c and c != "\u200b" and len(c) > 1:
+                        cta_desc_parts.append(c)
+                cta_desc = "\n".join(cta_desc_parts)
 
                 # CTA 버튼 필터링
                 valid_ctas = ["더 알아보기","지금 구매하기","Shop Now","자세히 알아보기",
