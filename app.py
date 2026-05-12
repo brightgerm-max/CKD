@@ -1457,17 +1457,32 @@ def page_competitor():
                 if mp:
                     c_urls = comp.get("product_urls", {})
                     qty_raw = mp.get("quantity", "")
+                    # 수량에서 일수 파싱
+                    days = 0
+                    import re as _re
+                    dm = _re.search(r"(\d+)\s*일\s*분", qty_raw)
+                    if dm:
+                        days = int(dm.group(1))
+                    else:
+                        dm = _re.search(r"(\d+)\s*개월\s*분", qty_raw)
+                        if dm:
+                            days = int(dm.group(1)) * 30
+                        else:
+                            dm = _re.search(r"(\d+)\s*(?:포|정|캡슐|입)", qty_raw)
+                            if dm:
+                                days = int(dm.group(1))
                     for ch in ["naver", "coupang", "brand"]:
                         manual_p = mp.get(ch, 0)
                         if manual_p > 0:
+                            dp = round(manual_p / days) if days > 0 else 0
                             api_prices[ch] = [{
                                 "name": comp.get("product_name", ""),
                                 "price": manual_p,
                                 "link": c_urls.get(ch, ""),
                                 "mall": "",
                                 "quantity": qty_raw,
-                                "days": 0,
-                                "daily_price": 0,
+                                "days": days,
+                                "daily_price": dp,
                             }]
                 all_prices[c_brand] = api_prices
             st.session_state[price_cache_key] = all_prices
