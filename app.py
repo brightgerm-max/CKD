@@ -75,6 +75,10 @@ st.set_page_config(page_title="CKD Insight Radar", page_icon="🔬", layout="wid
 # ─── 글로벌 CSS ───
 st.markdown("""
 <style>
+/* ── Streamlit 기본 UI 숨김 ── */
+#MainMenu {visibility: hidden;}
+header {visibility: hidden;}
+footer {visibility: hidden;}
 /* ── CSS 변수 ── */
 :root {
     --c-primary: #2563eb;
