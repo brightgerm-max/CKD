@@ -21,5 +21,8 @@ RUN playwright install chromium
 # 앱 코드 복사
 COPY . .
 
-# 실행 (Railway의 PORT 환경변수 사용)
-CMD streamlit run app.py --server.port=${PORT:-8501} --server.address=0.0.0.0 --server.headless=true
+# Streamlit 포트
+EXPOSE 8501
+
+# 실행
+CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0", "--server.headless=true"]
