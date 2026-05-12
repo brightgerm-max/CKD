@@ -492,6 +492,12 @@ section[data-testid="stMainBlockContainer"] [data-testid="stLinkButton"] a:hover
     box-shadow: 0 4px 10px rgba(37,99,235,0.15) !important;
     transform: translateY(-1px) !important;
 }
+/* text_input 스타일 */
+input[type="text"] {
+    background: #ffffff !important;
+    border: 1.5px solid var(--c-border) !important;
+    border-radius: 10px !important;
+}
 /* text_area 스타일 */
 textarea[type="textarea"] {
     background: #ffffff !important;
