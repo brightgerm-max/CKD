@@ -497,15 +497,11 @@ textarea[type="textarea"] {
     background: #ffffff !important;
     border: 1.5px solid var(--c-border) !important;
     border-radius: 10px !important;
-    outline: none !important;
-    box-shadow: none !important;
 }
 textarea[type="textarea"]:focus,
 textarea[type="textarea"]:active,
 textarea[type="textarea"]:focus-visible {
-    border: 1.5px solid var(--c-primary) !important;
-    outline: none !important;
-    box-shadow: none !important;
+    border: 1.5px solid var(--c-border) !important;
 }
 /* date_input 스타일 */
 .stDateInput > div > div {
