@@ -39,6 +39,10 @@ def _crawl_internal(keyword: str, country: str = "KR", max_ads: int = 28) -> lis
     )
 
     ads = []
+    ad_meta_list = []
+    ad_content_list = []
+    ad_images = []
+    lines = []
 
     try:
         with sync_playwright() as p:
@@ -166,8 +170,12 @@ def _crawl_internal(keyword: str, country: str = "KR", max_ads: int = 28) -> lis
                 })
 
     except Exception as e:
-        import sys as _sys
-        _sys.stderr.write(f"[meta_crawler] Error: {e}\n")
+        import traceback
+        ads = [{"_error": f"{e}", "_traceback": traceback.format_exc()[:300]}]
+
+    # 디버그: 결과가 없으면 상태 정보 반환
+    if not ads:
+        ads = [{"_error": f"No ads found. meta_count={len(ad_meta_list)}, content_count={len(ad_content_list)}, img_count={len(ad_images)}, lines={len(lines)}"}]
 
     return ads
 
