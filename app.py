@@ -1826,92 +1826,67 @@ def page_ai_review():
 
     st.markdown("---")
 
-    # 점수 + 요약 (다크 카드)
+    # 점수 + 요약
     score_color = "#dc2626" if score < 40 else ("#d97706" if score < 70 else "#059669")
-    score_bg = "#fef2f2" if score < 40 else ("#fffbeb" if score < 70 else "#ecfdf5")
     score_label = "부적합 위험" if score < 40 else ("수정 필요" if score < 70 else "적합 가능")
-    bar_width = max(5, score)
+    score_icon = "🔴" if score < 40 else ("🟡" if score < 70 else "🟢")
 
     st.markdown(
-        f'<div style="background:linear-gradient(135deg,#1e293b,#334155);border-radius:var(--radius);padding:24px;margin-bottom:20px;color:#fff">'
-        f'<div style="display:flex;align-items:center;gap:24px">'
-        # 점수 원형
-        f'<div style="width:80px;height:80px;border-radius:50%;background:{score_bg};'
-        f'display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0">'
-        f'<div style="font-size:1.8rem;font-weight:800;color:{score_color};line-height:1">{score}</div>'
-        f'<div style="font-size:0.6rem;color:{score_color};font-weight:600">/ 100</div></div>'
-        # 정보
+        f'<div style="background:var(--c-card);border:1px solid var(--c-border);border-radius:var(--radius);padding:24px;margin-bottom:16px">'
+        f'<div style="display:flex;align-items:center;gap:20px">'
+        f'<div style="text-align:center">'
+        f'<div style="font-size:2.5rem;font-weight:800;color:{score_color}">{score}</div>'
+        f'<div style="font-size:var(--font-xs);color:var(--c-text-muted)">/ 100점</div></div>'
         f'<div style="flex:1">'
-        f'<div style="font-size:var(--font-lg);font-weight:800;color:#fff;margin-bottom:4px">{score_label}</div>'
-        f'<div style="font-size:var(--font-sm);color:#94a3b8;margin-bottom:10px">{summary}</div>'
-        # 진행바
-        f'<div style="background:rgba(255,255,255,0.1);border-radius:20px;height:6px;width:100%">'
-        f'<div style="background:{score_color};border-radius:20px;height:6px;width:{bar_width}%"></div></div>'
-        f'<div style="display:flex;gap:16px;margin-top:10px">'
-        f'<span style="font-size:var(--font-xs);color:#ef4444">위반 {len(violations)}건</span>'
-        f'<span style="font-size:var(--font-xs);color:#eab308">주의 {len(warnings)}건</span>'
-        f'</div></div></div></div>',
+        f'<div style="font-size:var(--font-lg);font-weight:700;color:var(--c-text)">{score_icon} {score_label}</div>'
+        f'<div style="font-size:var(--font-sm);color:var(--c-text-sub);margin-top:4px">{summary}</div>'
+        f'<div style="font-size:var(--font-xs);color:var(--c-text-muted);margin-top:8px">'
+        f'위반 {len(violations)}건 · 주의 {len(warnings)}건</div>'
+        f'</div></div></div>',
         unsafe_allow_html=True,
     )
 
-    # 메트릭 카드
-    mc1, mc2, mc3 = st.columns(3)
-    with mc1:
-        st.markdown(f'<div class="m-card"><div class="m-val" style="color:#ef4444">{len(violations)}</div><div class="m-lbl">위반 항목</div></div>', unsafe_allow_html=True)
-    with mc2:
-        st.markdown(f'<div class="m-card"><div class="m-val" style="color:#eab308">{len(warnings)}</div><div class="m-lbl">주의 항목</div></div>', unsafe_allow_html=True)
-    with mc3:
-        safe_count = len(ALLOWED_CLAIMS.get(category, []))
-        st.markdown(f'<div class="m-card"><div class="m-val" style="color:var(--c-success)">{safe_count}</div><div class="m-lbl">허용 표현</div></div>', unsafe_allow_html=True)
-
-    st.markdown("")
-
-    # 위반 + 주의 + 허용 탭으로 구분
+    # 위반 사항
     if violations:
         st.markdown('<div class="s-header">위반 감지 항목</div>', unsafe_allow_html=True)
-        for i, v in enumerate(violations):
+        for v in violations:
             level_color = "#dc2626" if v["level"] == "critical" else "#d97706"
             level_label = "치명적" if v["level"] == "critical" else "주요"
             st.markdown(
-                f'<div style="background:var(--c-card);border:1px solid var(--c-border);border-radius:var(--radius);'
-                f'padding:16px;margin-bottom:8px;position:relative;overflow:hidden">'
-                f'<div style="position:absolute;top:0;left:0;bottom:0;width:4px;background:{level_color}"></div>'
-                f'<div style="margin-left:12px">'
-                f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
+                f'<div style="background:var(--c-card);border:1px solid var(--c-border);border-left:4px solid {level_color};'
+                f'border-radius:0 var(--radius) var(--radius) 0;padding:14px 16px;margin-bottom:8px">'
+                f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
                 f'<span style="font-weight:700;color:var(--c-text);font-size:var(--font-sm)">{v["type"]}</span>'
-                f'<span style="background:{level_color};color:#fff;padding:3px 12px;border-radius:20px;'
+                f'<span style="background:{level_color};color:#fff;padding:2px 10px;border-radius:20px;'
                 f'font-size:var(--font-xs);font-weight:700">{level_label}</span></div>'
-                f'<div style="background:{level_color}10;border-radius:8px;padding:10px 12px;margin-bottom:8px">'
-                f'<span style="font-size:var(--font-sm);color:{level_color};font-weight:700">"{v["matched"]}"</span></div>'
-                f'<div style="font-size:var(--font-xs);color:var(--c-text-muted);line-height:1.6">'
-                f'{v["desc"]}<br>근거: <b>{v["law"]}</b></div>'
-                f'</div></div>', unsafe_allow_html=True)
+                f'<div style="font-size:var(--font-sm);color:var(--c-text-sub);margin-bottom:4px">'
+                f'감지된 표현: <b style="color:{level_color}">"{v["matched"]}"</b></div>'
+                f'<div style="font-size:var(--font-xs);color:var(--c-text-muted)">'
+                f'{v["desc"]}<br>근거: {v["law"]}</div>'
+                f'</div>', unsafe_allow_html=True)
 
+    # 주의 사항
     if warnings:
         st.markdown('<div class="s-header">주의 항목</div>', unsafe_allow_html=True)
         for w in warnings:
             st.markdown(
-                f'<div style="background:var(--c-card);border:1px solid var(--c-border);border-radius:var(--radius);'
-                f'padding:14px;margin-bottom:6px;position:relative;overflow:hidden">'
-                f'<div style="position:absolute;top:0;left:0;bottom:0;width:4px;background:#eab308"></div>'
-                f'<div style="margin-left:12px">'
+                f'<div style="background:var(--c-card);border:1px solid var(--c-border);border-left:4px solid #d97706;'
+                f'border-radius:0 var(--radius) var(--radius) 0;padding:12px 16px;margin-bottom:6px">'
                 f'<div style="font-weight:600;color:var(--c-text);font-size:var(--font-sm);margin-bottom:4px">'
-                f'{w["type"]} — <span style="color:#d97706;font-weight:700">"{w["matched"]}"</span></div>'
+                f'{w["type"]} — <b style="color:#d97706">"{w["matched"]}"</b></div>'
                 f'<div style="font-size:var(--font-xs);color:var(--c-text-muted)">{w["desc"]} ({w["law"]})</div>'
-                f'</div></div>', unsafe_allow_html=True)
+                f'</div>', unsafe_allow_html=True)
 
+    # 허용 표현 안내
     if category:
         allowed = ALLOWED_CLAIMS.get(category, [])
         if allowed:
             st.markdown('<div class="s-header">사용 가능한 표현 (식약처 인정)</div>', unsafe_allow_html=True)
-            st.markdown(
-                '<div style="background:var(--c-success-light);border:1px solid #bbf7d0;border-radius:var(--radius);padding:16px">',
-                unsafe_allow_html=True)
             for a in allowed:
                 st.markdown(
-                    f'<div style="font-size:var(--font-sm);color:#15803d;padding:4px 0;font-weight:500">✅ {a}</div>',
-                    unsafe_allow_html=True)
-            st.markdown('</div>', unsafe_allow_html=True)
+                    f'<div class="d-item" style="border-left-color:var(--c-success)">'
+                    f'<span style="font-size:var(--font-sm);color:var(--c-success);font-weight:600">✅ {a}</span>'
+                    f'</div>', unsafe_allow_html=True)
 
     # ── AI 심층 분석 + 증빙자료 ──
     st.markdown('<div class="s-header">AI 심층 분석 + 증빙자료</div>', unsafe_allow_html=True)
@@ -1933,39 +1908,52 @@ def page_ai_review():
                         violation_list = "\n".join(f"- [{v['level']}] \"{v['matched']}\" ({v['type']}, {v['law']})" for v in violations)
                         warning_list = "\n".join(f"- \"{w['matched']}\" ({w['type']})" for w in warnings)
 
-                        prompt = f"""당신은 건강기능식품 광고 심의 전문가입니다. 아래 광고 문구를 분석하고 3가지를 제공해주세요.
+                        prompt = f"""당신은 건강기능식품 광고 심의 전문 컨설턴트입니다. 아래 광고 문구를 분석하여 실무에 바로 활용할 수 있는 심의 사전검토 리포트를 작성해주세요.
 
-## 광고 문구
+[광고 문구]
 {ad_text}
 
-## 제품 카테고리
-{category or "미선택"}
+[제품 카테고리] {category or "미선택"}
 
-## 식약처 인정 기능성 표현 (이 범위 내에서만 광고 가능)
+[식약처 인정 기능성 표현]
 {allowed_list or "없음"}
 
-## 자동 감지된 위반 사항
-{violation_list or "없음"}
+[자동 감지된 위반] {violation_list or "없음"}
+[자동 감지된 주의] {warning_list or "없음"}
 
-## 자동 감지된 주의 사항
-{warning_list or "없음"}
+아래 형식으로 리포트를 작성해주세요:
 
-## 요청 사항
+---
 
-### 1. 문구 분석
-- 위반/주의 항목에 대해 왜 문제가 되는지 구체적으로 설명
-- 식약처 인정 기능성 범위를 초과하는 표현이 있는지 분석
+**1. 위반 분석**
 
-### 2. 수정 제안
-- 위반 표현을 식약처 기준에 맞게 수정한 대안 문구를 제시
-- 전체 광고 문구의 수정 버전을 작성
+각 위반/주의 항목에 대해:
+- 어떤 표현이 문제인지
+- 관련 법 조항 (식품 등의 표시·광고에 관한 법률 제8조)
+- 심의 시 부적합/수정적합 판정 가능성
+- 실제 심의 사례에서 유사 표현이 어떻게 판정되는지
 
-### 3. 증빙자료 추천
-- 이 광고에서 주장하는 효능을 뒷받침할 수 있는 과학적 근거 유형 제안
-- PubMed에서 검색할 수 있는 관련 키워드 3~5개 제안
+**2. 수정 문구 제안**
 
-한국어로 간결하게 작성해주세요. 식약처 광고 심의 기준을 엄격히 적용해주세요.
-중요: 마크다운 헤딩(#, ##, ###)은 사용하지 마세요. 볼드(**텍스트**)와 리스트(-)만 사용하세요. 표는 간단하게만 사용하세요."""
+| 원본 표현 | 수정 제안 | 수정 사유 |
+위반 표현을 식약처 인정 범위 내로 수정한 표를 작성하세요.
+
+그리고 전체 광고 문구의 **수정 버전(권장안)**을 작성하세요.
+
+**3. 증빙자료 가이드**
+
+심의 신청 시 함께 제출하면 적합 판정에 유리한 증빙자료:
+- 필요한 근거 유형 (임상시험, 논문, 식약처 고시 등)
+- PubMed 검색 추천 키워드 3~5개 (영문)
+- 각 키워드로 어떤 근거를 찾을 수 있는지 설명
+
+---
+
+작성 규칙:
+- 한국어로 작성
+- 마크다운 헤딩(#)은 사용하지 말고, **볼드**와 리스트(-)로 구조화
+- 실무 담당자가 바로 심의 신청에 활용할 수 있도록 구체적으로 작성
+- 표는 마크다운 표 형식으로 작성"""
 
                         msg = client.messages.create(
                             model="claude-haiku-4-5-20251001",
@@ -2006,11 +1994,7 @@ def page_ai_review():
         ai_data = st.session_state[ai_review_key]
 
         # AI 분석 결과
-        st.markdown(
-            '<div style="background:linear-gradient(135deg,#1e293b,#334155);border-radius:var(--radius);'
-            'padding:14px 18px;margin:20px 0 10px;color:#fff;font-size:var(--font-base);font-weight:700">'
-            'AI 심층 분석 리포트</div>',
-            unsafe_allow_html=True)
+        st.markdown('<div class="s-header">AI 심층 분석 리포트</div>', unsafe_allow_html=True)
         with st.container(border=True):
             st.markdown(ai_data["analysis"])
 
