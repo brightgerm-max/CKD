@@ -497,10 +497,12 @@ section[data-testid="stMainBlockContainer"] [data-testid="stLinkButton"] a:hover
     background: #ffffff !important;
     border: 1.5px solid var(--c-border) !important;
     border-radius: 10px !important;
+    outline: none !important;
 }
 .stTextArea textarea:focus {
     border-color: var(--c-primary) !important;
-    box-shadow: 0 0 0 2px rgba(37,99,235,0.1) !important;
+    box-shadow: none !important;
+    outline: none !important;
 }
 /* date_input 스타일 */
 .stDateInput > div > div {
