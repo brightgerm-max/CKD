@@ -59,19 +59,33 @@ def _crawl_internal(keyword: str, country: str = "KR", max_ads: int = 28) -> lis
             current_meta = None
 
             for i, line in enumerate(lines):
-                if "라이브러리 ID:" in line:
+                # 한국어 + 영문 패턴 모두 감지
+                if "라이브러리 ID:" in line or "Library ID:" in line:
                     if current_meta:
                         ad_meta_list.append(current_meta)
-                    lib_id = line.replace("라이브러리 ID:", "").strip()
+                    lib_id = line.replace("라이브러리 ID:", "").replace("Library ID:", "").strip()
                     current_meta = {"library_id": lib_id, "advertiser": "", "start_date": ""}
                 elif current_meta:
-                    if "게재 시작" in line:
+                    # 게재 시작일 (한국어/영문)
+                    if "게재 시작" in line or "Started running on" in line:
                         dm = re.search(r"(\d{4})\.\s*(\d{1,2})\.\s*(\d{1,2})", line)
+                        if not dm:
+                            dm = re.search(r"(\w+)\s+(\d{1,2}),\s*(\d{4})", line)  # "Jan 26, 2026"
                         if dm:
-                            current_meta["start_date"] = f"{dm.group(1)}-{dm.group(2).zfill(2)}-{dm.group(3).zfill(2)}"
-                    elif line == "광고" and i > 0:
+                            groups = dm.groups()
+                            if len(groups[0]) == 4:  # 한국어 날짜
+                                current_meta["start_date"] = f"{groups[0]}-{groups[1].zfill(2)}-{groups[2].zfill(2)}"
+                            else:  # 영문 날짜
+                                month_map = {"Jan":"01","Feb":"02","Mar":"03","Apr":"04","May":"05","Jun":"06",
+                                             "Jul":"07","Aug":"08","Sep":"09","Oct":"10","Nov":"11","Dec":"12"}
+                                m = month_map.get(groups[0][:3], "01")
+                                current_meta["start_date"] = f"{groups[2]}-{m}-{groups[1].zfill(2)}"
+                    # 광고주명 (한국어/영문)
+                    elif (line == "광고" or line == "Sponsored") and i > 0:
                         prev = lines[i-1].strip()
-                        if prev and prev not in ["광고 상세 정보 보기", "드롭다운 열기", "플랫폼", "\u200b"]:
+                        skip_words = ["광고 상세 정보 보기", "드롭다운 열기", "플랫폼",
+                                      "See ad details", "Platforms", "\u200b"]
+                        if prev and prev not in skip_words:
                             current_meta["advertiser"] = prev
             if current_meta:
                 ad_meta_list.append(current_meta)
@@ -84,7 +98,7 @@ def _crawl_internal(keyword: str, country: str = "KR", max_ads: int = 28) -> lis
 
                 for (const div of allDivs) {
                     const text = div.innerText.trim();
-                    if (text === "광고") {
+                    if (text === "광고" || text === "Sponsored") {
                         if (group.length > 0) results.push(group);
                         group = [];
                     } else if (text !== "") {
