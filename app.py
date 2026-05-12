@@ -1913,62 +1913,35 @@ def page_ai_review():
                         violation_list = "\n".join(f"- [{v['level']}] \"{v['matched']}\" ({v['type']}, {v['law']})" for v in violations)
                         warning_list = "\n".join(f"- \"{w['matched']}\" ({w['type']})" for w in warnings)
 
-                        prompt = f"""당신은 건강기능식품 광고 심의 전문 컨설턴트입니다. 아래 광고 문구를 분석하여 실무에 바로 활용할 수 있는 심의 사전검토 리포트를 작성해주세요.
+                        prompt = f"""건강기능식품 광고 심의 전문 컨설턴트로서 아래 광고 문구를 분석해주세요.
 
-[광고 문구]
-{ad_text}
-
+[광고 문구] {ad_text}
 [제품 카테고리] {category or "미선택"}
-
-[식약처 인정 기능성 표현]
-{allowed_list or "없음"}
-
+[식약처 인정 기능성 표현] {allowed_list or "없음"}
 [자동 감지된 위반] {violation_list or "없음"}
 [자동 감지된 주의] {warning_list or "없음"}
 
-아래 형식으로 리포트를 작성해주세요:
+반드시 아래 JSON 형식으로만 응답하세요. JSON 외의 텍스트는 절대 포함하지 마세요.
 
----
-
-**1. 위반 분석**
-
-각 위반/주의 항목에 대해:
-- 어떤 표현이 문제인지
-- 관련 법 조항 (식품 등의 표시·광고에 관한 법률 제8조)
-- 심의 시 부적합/수정적합 판정 가능성
-- 실제 심의 사례에서 유사 표현이 어떻게 판정되는지
-
-**2. 수정 문구 제안**
-
-| 원본 표현 | 수정 제안 | 수정 사유 |
-위반 표현을 식약처 인정 범위 내로 수정한 표를 작성하세요.
-
-그리고 전체 광고 문구의 **수정 버전(권장안)**을 작성하세요.
-
-**3. 증빙자료 가이드**
-
-심의 신청 시 함께 제출하면 적합 판정에 유리한 증빙자료:
-- 필요한 근거 유형 (임상시험, 논문, 식약처 고시 등)
-- PubMed 검색 추천 키워드 3~5개 (영문)
-- 각 키워드로 어떤 근거를 찾을 수 있는지 설명
-
----
-
-작성 규칙:
-- 한국어로 작성
-- 리포트 제목, 메타 정보(제품명, 카테고리, 검토일, 등급 등)는 작성하지 마세요. 바로 분석 내용부터 시작하세요.
-- 절대 마크다운 헤딩(#, ##, ###)을 사용하지 마세요
-- 섹션 구분은 **볼드 텍스트**로만 하세요 (예: **1. 위반 분석**)
-- 리스트(-)와 표(| |)를 적극 활용하세요
-- 표 제목도 볼드로 작성하세요
-- 실무 담당자가 바로 심의 신청에 활용할 수 있도록 구체적으로 작성"""
+{{"violations_analysis": [{{"expression": "문제가 되는 표현", "reason": "왜 문제인지 설명", "law": "관련 법 조항", "judgment": "예상 심의 판정 (부적합/수정적합)", "similar_case": "유사 심의 사례"}}], "corrections": [{{"original": "원본 표현", "suggested": "수정 제안", "reason": "수정 사유"}}], "corrected_full_text": "전체 광고 문구의 수정 권장안", "evidence_guide": [{{"type": "근거 유형 (임상시험/논문/식약처 고시 등)", "keyword": "PubMed 검색 키워드 (영문)", "description": "이 키워드로 찾을 수 있는 근거 설명"}}]}}"""
 
                         msg = client.messages.create(
                             model="claude-haiku-4-5-20251001",
-                            max_tokens=1500,
+                            max_tokens=2000,
                             messages=[{"role": "user", "content": prompt}],
                         )
-                        ai_result = msg.content[0].text
+                        ai_raw = msg.content[0].text
+                        # JSON 파싱
+                        try:
+                            import json as _json
+                            # JSON 블록 추출
+                            if "```json" in ai_raw:
+                                ai_raw = ai_raw.split("```json")[1].split("```")[0]
+                            elif "```" in ai_raw:
+                                ai_raw = ai_raw.split("```")[1].split("```")[0]
+                            ai_result = _json.loads(ai_raw.strip())
+                        except Exception:
+                            ai_result = {"raw": ai_raw}  # 파싱 실패 시 원본 저장
 
                         # PubMed 증빙자료 자동 검색
                         evidence = {}
@@ -2001,10 +1974,73 @@ def page_ai_review():
     if ai_review_key in st.session_state:
         ai_data = st.session_state[ai_review_key]
 
-        # AI 분석 결과
-        st.markdown('<div class="s-header">AI 심층 분석 리포트</div>', unsafe_allow_html=True)
-        with st.container(border=True):
-            st.markdown(ai_data["analysis"])
+        # AI 분석 결과 (구조화 렌더링)
+        analysis = ai_data["analysis"]
+
+        if isinstance(analysis, dict) and "raw" not in analysis:
+            # JSON 구조화 렌더링
+
+            # 1. 위반 분석
+            va_list = analysis.get("violations_analysis", [])
+            if va_list:
+                st.markdown('<div class="s-header">AI 위반 상세 분석</div>', unsafe_allow_html=True)
+                for va in va_list:
+                    jdg = va.get("judgment", "")
+                    jdg_color = "#dc2626" if "부적합" in jdg else "#d97706"
+                    st.markdown(
+                        f'<div style="background:var(--c-card);border:1px solid var(--c-border);border-radius:var(--radius);'
+                        f'padding:16px;margin-bottom:10px;border-left:4px solid {jdg_color}">'
+                        f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
+                        f'<span style="font-size:var(--font-sm);font-weight:700;color:var(--c-text)">"{va.get("expression","")}"</span>'
+                        f'<span style="background:{jdg_color};color:#fff;padding:3px 10px;border-radius:20px;font-size:var(--font-xs);font-weight:700">{jdg}</span></div>'
+                        f'<div style="font-size:var(--font-sm);color:var(--c-text-sub);line-height:1.7;margin-bottom:6px">{va.get("reason","")}</div>'
+                        f'<div style="display:flex;gap:12px;flex-wrap:wrap">'
+                        f'<span style="font-size:var(--font-xs);color:var(--c-text-muted)">근거: {va.get("law","")}</span>'
+                        f'<span style="font-size:var(--font-xs);color:var(--c-text-muted)">유사사례: {va.get("similar_case","")}</span>'
+                        f'</div></div>', unsafe_allow_html=True)
+
+            # 2. 수정 제안 표
+            corr_list = analysis.get("corrections", [])
+            if corr_list:
+                st.markdown('<div class="s-header">수정 문구 제안</div>', unsafe_allow_html=True)
+                tbl = '<table style="width:100%;border-collapse:collapse;font-size:var(--font-sm);margin-bottom:12px">'
+                tbl += '<tr><th style="background:var(--c-primary-light);color:var(--c-primary);padding:10px 14px;text-align:left;border:1px solid var(--c-border);font-weight:700">원본 표현</th>'
+                tbl += '<th style="background:var(--c-success-light);color:var(--c-success);padding:10px 14px;text-align:left;border:1px solid var(--c-border);font-weight:700">수정 제안</th>'
+                tbl += '<th style="background:var(--c-border-light);color:var(--c-text-sub);padding:10px 14px;text-align:left;border:1px solid var(--c-border);font-weight:700">수정 사유</th></tr>'
+                for c in corr_list:
+                    tbl += (f'<tr><td style="padding:10px 14px;border:1px solid var(--c-border-light);color:#dc2626;font-weight:600;text-decoration:line-through">{c.get("original","")}</td>'
+                            f'<td style="padding:10px 14px;border:1px solid var(--c-border-light);color:var(--c-success);font-weight:600">{c.get("suggested","")}</td>'
+                            f'<td style="padding:10px 14px;border:1px solid var(--c-border-light);color:var(--c-text-sub);font-size:var(--font-xs)">{c.get("reason","")}</td></tr>')
+                tbl += '</table>'
+                st.markdown(tbl, unsafe_allow_html=True)
+
+            # 수정 권장안
+            corrected = analysis.get("corrected_full_text", "")
+            if corrected:
+                st.markdown(
+                    f'<div style="background:var(--c-success-light);border:1px solid #bbf7d0;border-radius:var(--radius);padding:16px;margin-bottom:16px">'
+                    f'<div style="font-size:var(--font-xs);font-weight:700;color:var(--c-success);margin-bottom:6px">수정 권장안</div>'
+                    f'<div style="font-size:var(--font-sm);color:var(--c-text);line-height:1.8">{corrected}</div>'
+                    f'</div>', unsafe_allow_html=True)
+
+            # 3. 증빙자료 가이드
+            ev_list = analysis.get("evidence_guide", [])
+            if ev_list:
+                st.markdown('<div class="s-header">증빙자료 가이드</div>', unsafe_allow_html=True)
+                for ev in ev_list:
+                    st.markdown(
+                        f'<div class="d-item">'
+                        f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
+                        f'<span class="d-title">{ev.get("type","")}</span>'
+                        f'<code style="font-size:var(--font-xs);background:var(--c-primary-light);color:var(--c-primary);padding:2px 8px;border-radius:4px">{ev.get("keyword","")}</code></div>'
+                        f'<div class="d-meta">{ev.get("description","")}</div>'
+                        f'</div>', unsafe_allow_html=True)
+        else:
+            # JSON 파싱 실패 시 원본 텍스트 출력
+            st.markdown('<div class="s-header">AI 심층 분석 리포트</div>', unsafe_allow_html=True)
+            raw_text = analysis.get("raw", str(analysis)) if isinstance(analysis, dict) else str(analysis)
+            with st.container(border=True):
+                st.markdown(raw_text)
 
         # 증빙자료
         evidence = ai_data.get("evidence", {})
