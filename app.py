@@ -1437,7 +1437,13 @@ def page_competitor():
     st.markdown(f'<div class="s-header">"{product["brand"]}" 경쟁사 분석</div>', unsafe_allow_html=True)
 
     # ── 채널별 가격 수집 (네이버 쇼핑 API + 수동 가격 오버라이드) ──
-    price_cache_key = f"comp_prices_v6_{product['brand']}"
+    # 캐시 초기화 버튼
+    if st.button("가격 새로고침", key="refresh_prices"):
+        for k in list(st.session_state.keys()):
+            if k.startswith("comp_prices_"):
+                del st.session_state[k]
+        st.rerun()
+    price_cache_key = f"comp_prices_v7_{product['brand']}"
     if price_cache_key not in st.session_state:
         with st.spinner("자사 및 경쟁사 채널별 가격을 조회하고 있습니다..."):
             all_prices = {}
@@ -1475,19 +1481,20 @@ def page_competitor():
         for ch_key, ch_name, ch_color, fallback in [("naver","네이버","#03c75a",None),("coupang","쿠팡","#ef4444",f"https://www.coupang.com/np/search?q={enc}"),("brand","자사몰","#2563eb",None)]:
             items = pd_data.get(ch_key,[])
             db_url = (db_urls or {}).get(ch_key, "")
-            if items and items[0].get("daily_price",0) > 0:
+            if items and items[0].get("price",0) > 0:
                 it = items[0]
-                link = db_url or it["link"]
+                link = db_url or it.get("link","")
+                qty = it.get("quantity","")
+                dp = it.get("daily_price",0)
+                price_detail = ""
+                if dp > 0 and qty:
+                    price_detail = f' <span style="font-size:0.68rem;color:#94a3b8">({qty}, 1일 {dp:,}원)</span>'
+                elif qty:
+                    price_detail = f' <span style="font-size:0.68rem;color:#94a3b8">({qty})</span>'
                 html += (f'<a href="{link}" target="_blank" style="text-decoration:none">'
                          f'<span style="background:{ch_color};color:#fff;padding:3px 8px;border-radius:8px;font-size:0.72rem;font-weight:700">{ch_name}</span>'
                          f' <span style="font-weight:700;font-size:0.85rem">{it["price"]:,}원</span>'
-                         f' <span style="font-size:0.68rem;color:#94a3b8">({it["quantity"]}, 1일 {it["daily_price"]:,}원)</span></a>')
-            elif items:
-                it = items[0]
-                link = db_url or it["link"]
-                html += (f'<a href="{link}" target="_blank" style="text-decoration:none">'
-                         f'<span style="background:{ch_color};color:#fff;padding:3px 8px;border-radius:8px;font-size:0.72rem;font-weight:700">{ch_name}</span>'
-                         f' <span style="font-weight:700;font-size:0.85rem">{it["price"]:,}원</span></a>')
+                         f'{price_detail}</a>')
             elif db_url:
                 html += (f'<a href="{db_url}" target="_blank" style="text-decoration:none">'
                          f'<span style="background:{ch_color};color:#fff;padding:3px 8px;border-radius:8px;font-size:0.72rem;font-weight:700">{ch_name}</span>'
