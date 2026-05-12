@@ -2227,10 +2227,21 @@ def page_competitor_db_mgmt():
 
             # 자동추출 결과를 세션에 저장
             if auto_btn and auto_url:
-                with st.spinner("상품 페이지 분석 중... (최대 60초 소요)"):
+                with st.spinner("상품 페이지 분석 중... (최대 90초 소요)"):
                     auto_result = scrape_product_info(auto_url)
                 if "_error" in auto_result:
                     st.error(f"추출 실패: {auto_result['_error']}")
+                elif not auto_result.get("brand_name") and not auto_result.get("ingredients"):
+                    # 결과가 모두 빈 값
+                    debug_info = auto_result.get("_debug", "")
+                    text_len = auto_result.get("_text_length", 0)
+                    text_preview = auto_result.get("_text_preview", "")[:200]
+                    st.warning(f"페이지에서 정보를 추출하지 못했습니다. (텍스트 {text_len}자 수집)")
+                    if text_preview:
+                        with st.expander("수집된 텍스트 미리보기"):
+                            st.text(text_preview)
+                    if debug_info:
+                        st.caption(f"디버그: {debug_info}")
                 else:
                     # 위젯 key에 직접 값 설정 후 rerun
                     st.session_state[f"cdb_co_{cat_name}"] = auto_result.get("brand_name", "")

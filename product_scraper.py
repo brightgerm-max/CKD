@@ -12,16 +12,19 @@ def scrape_product_info(url: str) -> dict:
     try:
         result = subprocess.run(
             [sys.executable, __file__, url],
-            capture_output=True, timeout=60,
+            capture_output=True, timeout=90,
         )
         stdout = result.stdout.decode("utf-8", errors="replace").strip()
         stderr = result.stderr.decode("utf-8", errors="replace").strip()
         if result.returncode == 0 and stdout:
-            data = json.loads(stdout)
-            if "_error" not in data:
+            try:
+                data = json.loads(stdout)
                 return data
-            return data
-        return {"_error": f"rc={result.returncode}, stderr={stderr[:300]}"}
+            except json.JSONDecodeError:
+                return {"_error": f"JSON 파싱 실패: {stdout[:300]}"}
+        return {"_error": f"rc={result.returncode}, stderr={stderr[:500]}"}
+    except subprocess.TimeoutExpired:
+        return {"_error": "타임아웃 (90초 초과)"}
     except Exception as e:
         return {"_error": str(e)}
 
@@ -31,7 +34,7 @@ def _extract_page_text(url: str) -> str:
     try:
         from playwright.sync_api import sync_playwright
     except ImportError:
-        return ""
+        return "[오류: playwright 미설치]"
 
     text = ""
     try:
@@ -40,33 +43,61 @@ def _extract_page_text(url: str) -> str:
                 headless=True,
                 args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"]
             )
-            page = browser.new_page(viewport={"width": 1280, "height": 900})
+            context = browser.new_context(
+                viewport={"width": 1280, "height": 900},
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            )
+            page = context.new_page()
             page.goto(url, timeout=30000, wait_until="domcontentloaded")
             page.wait_for_timeout(5000)
 
-            # 네이버 스토어 (스마트스토어, 브랜드스토어): 상세 영역 처리
-            if "smartstore.naver.com" in url or "shopping.naver.com" in url or "brand.naver.com" in url:
+            is_naver = any(d in url for d in ["smartstore.naver.com", "shopping.naver.com", "brand.naver.com"])
+
+            if is_naver:
+                # 상세정보 탭 클릭
                 try:
-                    # 상세정보 탭 클릭 시도
                     detail_tab = page.query_selector("a[href*='detail'], button:has-text('상세정보'), a:has-text('상세정보')")
                     if detail_tab:
                         detail_tab.click()
                         page.wait_for_timeout(3000)
                 except Exception:
                     pass
-                # 스크롤 다운 (상세 이미지 로딩)
+                # 스크롤 다운
+                for _ in range(5):
+                    page.evaluate("window.scrollBy(0, 1500)")
+                    page.wait_for_timeout(500)
+
+                # iframe 내 텍스트도 추출 시도
+                iframe_text = ""
                 try:
-                    for _ in range(3):
-                        page.evaluate("window.scrollBy(0, 1000)")
-                        page.wait_for_timeout(500)
+                    frames = page.frames
+                    for frame in frames:
+                        if frame != page.main_frame:
+                            try:
+                                ft = frame.inner_text("body")
+                                if len(ft) > len(iframe_text):
+                                    iframe_text = ft
+                            except Exception:
+                                pass
                 except Exception:
                     pass
 
-            # 전체 텍스트 추출 (최대 15000자)
-            text = page.inner_text("body")[:15000]
+                main_text = page.inner_text("body")[:10000]
+                if iframe_text:
+                    text = main_text + "\n\n--- iframe ---\n\n" + iframe_text[:8000]
+                else:
+                    text = main_text
+            else:
+                # 일반 사이트
+                for _ in range(3):
+                    page.evaluate("window.scrollBy(0, 1000)")
+                    page.wait_for_timeout(500)
+                text = page.inner_text("body")[:15000]
+
             browser.close()
     except Exception as e:
-        text = f"[크롤링 오류: {e}]"
+        import traceback
+        text = f"[크롤링 오류: {e}\n{traceback.format_exc()[:300]}]"
 
     return text
 
@@ -75,7 +106,9 @@ def _parse_with_ai(page_text: str, url: str) -> dict:
     """Claude AI로 상품 정보 파싱"""
     api_key = os.environ.get("ANTHROPIC_API_KEY", "")
     if not api_key:
-        return _parse_with_regex(page_text)
+        result = _parse_with_regex(page_text)
+        result["_debug"] = "AI키 없음, 정규식 폴백"
+        return result
 
     try:
         import anthropic
@@ -111,15 +144,17 @@ URL: {url}
             messages=[{"role": "user", "content": prompt}]
         )
 
-        text = response.content[0].text.strip()
-        # JSON 부분만 추출
-        match = re.search(r'\{[\s\S]*\}', text)
+        resp_text = response.content[0].text.strip()
+        match = re.search(r'\{[\s\S]*\}', resp_text)
         if match:
             return json.loads(match.group())
+        else:
+            return {"_error": f"AI 응답에서 JSON을 찾을 수 없음: {resp_text[:200]}"}
     except Exception as e:
-        pass
-
-    return _parse_with_regex(page_text)
+        import traceback
+        result = _parse_with_regex(page_text)
+        result["_debug"] = f"AI 에러({e}), 정규식 폴백"
+        return result
 
 
 def _parse_with_regex(page_text: str) -> dict:
@@ -127,7 +162,6 @@ def _parse_with_regex(page_text: str) -> dict:
     ingredients = []
     claims = []
 
-    # 흔한 기능성 원료 키워드
     ingredient_keywords = [
         "프로바이오틱스", "비피더스", "락토바실러스", "유산균",
         "콘드로이친", "글루코사민", "MSM", "보스웰리아",
@@ -135,12 +169,12 @@ def _parse_with_regex(page_text: str) -> dict:
         "비타민", "아연", "마그네슘", "셀레늄", "칼슘",
         "프리바이오틱스", "식이섬유", "코엔자임Q10",
         "EPA", "DHA", "크릴오일", "감마리놀렌산",
+        "뮤코다당단백", "상어연골",
     ]
     for kw in ingredient_keywords:
         if kw.lower() in page_text.lower():
             ingredients.append(kw)
 
-    # 건강기능 표시 패턴
     claim_patterns = [
         r"[가-힣]+\s*건강에\s*도움",
         r"[가-힣]+\s*개선에\s*도움",
@@ -182,9 +216,16 @@ if __name__ == "__main__":
                     os.environ.setdefault(k.strip(), v.strip())
 
         page_text = _extract_page_text(target_url)
-        if page_text and not page_text.startswith("[크롤링 오류"):
+        text_len = len(page_text) if page_text else 0
+        text_preview = page_text[:200] if page_text else ""
+
+        if page_text and not page_text.startswith("[크롤링 오류") and not page_text.startswith("[오류"):
             result = _parse_with_ai(page_text, target_url)
         else:
             result = {"_error": page_text or "페이지 텍스트 추출 실패"}
+
+        # 디버그 정보 추가
+        result["_text_length"] = text_len
+        result["_text_preview"] = text_preview
 
         print(json.dumps(result, ensure_ascii=False))
