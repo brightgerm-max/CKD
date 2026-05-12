@@ -2195,7 +2195,7 @@ def page_api_keys():
 # 설정: 경쟁사 DB 관리
 # ═══════════════════════════════════════════
 def _detect_url_type(u):
-    if "smartstore.naver.com" in u or "shopping.naver.com" in u or "search.shopping.naver" in u:
+    if "smartstore.naver.com" in u or "shopping.naver.com" in u or "search.shopping.naver" in u or "brand.naver.com" in u:
         return "naver"
     if "coupang.com" in u:
         return "coupang"

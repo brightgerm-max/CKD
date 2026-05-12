@@ -44,14 +44,21 @@ def _extract_page_text(url: str) -> str:
             page.goto(url, timeout=30000, wait_until="domcontentloaded")
             page.wait_for_timeout(5000)
 
-            # 네이버 스마트스토어: 상세 영역 iframe 처리
-            if "smartstore.naver.com" in url or "shopping.naver.com" in url:
+            # 네이버 스토어 (스마트스토어, 브랜드스토어): 상세 영역 처리
+            if "smartstore.naver.com" in url or "shopping.naver.com" in url or "brand.naver.com" in url:
                 try:
                     # 상세정보 탭 클릭 시도
-                    detail_tab = page.query_selector("a[href*='detail'], button:has-text('상세정보')")
+                    detail_tab = page.query_selector("a[href*='detail'], button:has-text('상세정보'), a:has-text('상세정보')")
                     if detail_tab:
                         detail_tab.click()
-                        page.wait_for_timeout(2000)
+                        page.wait_for_timeout(3000)
+                except Exception:
+                    pass
+                # 스크롤 다운 (상세 이미지 로딩)
+                try:
+                    for _ in range(3):
+                        page.evaluate("window.scrollBy(0, 1000)")
+                        page.wait_for_timeout(500)
                 except Exception:
                     pass
 
