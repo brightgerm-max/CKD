@@ -32,6 +32,7 @@ from mfds_client import search_health_food
 from clinicaltrials_client import search_clinical_trials
 from price_client import search_product_prices
 from competitor_scanner import scan_competitors, compare_ingredients
+from ad_reviewer import review_ad_text, ALLOWED_CLAIMS
 
 # ─── 경로 & 데이터 ───
 DATA_DIR = Path(__file__).parent / "data"
@@ -1744,8 +1745,123 @@ def page_adbanner():
 # 심의: AI 사전검토
 # ═══════════════════════════════════════════
 def page_ai_review():
-    render_page_header("📋","AI 사전검토","식약처/임상시험 데이터 기반 광고 심의 사전 검토 및 증빙자료를 생성합니다","blue")
-    st.info("AI 기반 사전검토 기능은 준비 중입니다.\n\n데이터 수집(PubMed/임상시험/식약처) 결과를 기반으로 광고 심의 증빙자료를 자동 생성하는 기능이 추가될 예정입니다.")
+    render_page_header("📋","AI 사전검토","광고 문구를 입력하면 심의 기준에 맞는지 사전 검토합니다","blue")
+
+    products_data = load_products()
+    products = products_data["products"]
+
+    # 상단: 제품 선택 + 광고 문구 입력
+    col_prod, col_text = st.columns([1, 3])
+    with col_prod:
+        product_names = ["(제품 선택)"] + [p["brand"] for p in products]
+        sel_product = st.selectbox("검토 대상 제품", product_names, key="review_product")
+        if sel_product != "(제품 선택)":
+            product = next(p for p in products if p["brand"] == sel_product)
+            category = product.get("category", "")
+            st.caption(f"카테고리: {category}")
+            # 허용 표현 표시
+            allowed = ALLOWED_CLAIMS.get(category, [])
+            if allowed:
+                st.markdown("**식약처 인정 기능성 표현:**")
+                for a in allowed:
+                    st.markdown(f'<span style="font-size:0.78rem;color:var(--c-success)">✅ {a}</span>', unsafe_allow_html=True)
+        else:
+            category = ""
+
+    with col_text:
+        ad_text = st.text_area("광고 문구를 입력하세요", height=150, placeholder="예: 락토핏 골드는 장 건강에 도움을 줄 수 있는 건강기능식품입니다...")
+        review_btn = st.button("🔍 사전 검토 실행", type="primary", use_container_width=True)
+
+    if not review_btn or not ad_text.strip():
+        st.markdown("---")
+        st.markdown(
+            '<div class="g-card">'
+            '<div class="g-card-header">📌 광고 심의 사전 검토 안내</div>'
+            '<div style="font-size:var(--font-sm);color:var(--c-text-sub);line-height:1.8">'
+            '1. 검토 대상 <b>제품을 선택</b>하면 해당 제품의 식약처 인정 기능성 표현을 확인할 수 있습니다.<br>'
+            '2. <b>광고 문구를 입력</b>하고 검토 실행을 클릭하면 금지 표현을 자동 감지합니다.<br>'
+            '3. 검토 결과는 참고용이며, <b>공식 심의를 대체하지 않습니다</b>.<br><br>'
+            '<b>검토 기준:</b> 식품 등의 표시·광고에 관한 법률 제8조 (부당 표시·광고 금지 10가지)<br>'
+            '<b>심의 기관:</b> 한국건강기능식품협회 (<a href="https://ad.khff.or.kr" target="_blank">ad.khff.or.kr</a>)'
+            '</div></div>',
+            unsafe_allow_html=True,
+        )
+        return
+
+    # 검토 실행
+    result = review_ad_text(ad_text, category)
+    violations = result["violations"]
+    warnings = result["warnings"]
+    score = result["score"]
+    summary = result["summary"]
+
+    st.markdown("---")
+
+    # 점수 + 요약
+    score_color = "#dc2626" if score < 40 else ("#d97706" if score < 70 else "#059669")
+    score_label = "부적합 위험" if score < 40 else ("수정 필요" if score < 70 else "적합 가능")
+    score_icon = "🔴" if score < 40 else ("🟡" if score < 70 else "🟢")
+
+    st.markdown(
+        f'<div style="background:var(--c-card);border:1px solid var(--c-border);border-radius:var(--radius);padding:24px;margin-bottom:16px">'
+        f'<div style="display:flex;align-items:center;gap:20px">'
+        f'<div style="text-align:center">'
+        f'<div style="font-size:2.5rem;font-weight:800;color:{score_color}">{score}</div>'
+        f'<div style="font-size:var(--font-xs);color:var(--c-text-muted)">/ 100점</div></div>'
+        f'<div style="flex:1">'
+        f'<div style="font-size:var(--font-lg);font-weight:700;color:var(--c-text)">{score_icon} {score_label}</div>'
+        f'<div style="font-size:var(--font-sm);color:var(--c-text-sub);margin-top:4px">{summary}</div>'
+        f'<div style="font-size:var(--font-xs);color:var(--c-text-muted);margin-top:8px">'
+        f'위반 {len(violations)}건 · 주의 {len(warnings)}건</div>'
+        f'</div></div></div>',
+        unsafe_allow_html=True,
+    )
+
+    # 위반 사항
+    if violations:
+        st.markdown('<div class="s-header">🚨 위반 감지 항목</div>', unsafe_allow_html=True)
+        for v in violations:
+            level_color = "#dc2626" if v["level"] == "critical" else "#d97706"
+            level_label = "치명적" if v["level"] == "critical" else "주요"
+            st.markdown(
+                f'<div style="background:var(--c-card);border:1px solid var(--c-border);border-left:4px solid {level_color};'
+                f'border-radius:0 var(--radius) var(--radius) 0;padding:14px 16px;margin-bottom:8px">'
+                f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
+                f'<span style="font-weight:700;color:var(--c-text);font-size:var(--font-sm)">{v["type"]}</span>'
+                f'<span style="background:{level_color};color:#fff;padding:2px 10px;border-radius:20px;'
+                f'font-size:var(--font-xs);font-weight:700">{level_label}</span></div>'
+                f'<div style="font-size:var(--font-sm);color:var(--c-text-sub);margin-bottom:4px">'
+                f'감지된 표현: <b style="color:{level_color}">"{v["matched"]}"</b></div>'
+                f'<div style="font-size:var(--font-xs);color:var(--c-text-muted)">'
+                f'📌 {v["desc"]}<br>📋 근거: {v["law"]}</div>'
+                f'</div>', unsafe_allow_html=True)
+
+    # 주의 사항
+    if warnings:
+        st.markdown('<div class="s-header">⚠️ 주의 항목</div>', unsafe_allow_html=True)
+        for w in warnings:
+            st.markdown(
+                f'<div style="background:var(--c-card);border:1px solid var(--c-border);border-left:4px solid #d97706;'
+                f'border-radius:0 var(--radius) var(--radius) 0;padding:12px 16px;margin-bottom:6px">'
+                f'<div style="font-weight:600;color:var(--c-text);font-size:var(--font-sm);margin-bottom:4px">'
+                f'{w["type"]} — <b style="color:#d97706">"{w["matched"]}"</b></div>'
+                f'<div style="font-size:var(--font-xs);color:var(--c-text-muted)">{w["desc"]} ({w["law"]})</div>'
+                f'</div>', unsafe_allow_html=True)
+
+    # 허용 표현 안내
+    if category:
+        allowed = ALLOWED_CLAIMS.get(category, [])
+        if allowed:
+            st.markdown('<div class="s-header">✅ 사용 가능한 표현 (식약처 인정)</div>', unsafe_allow_html=True)
+            for a in allowed:
+                st.markdown(
+                    f'<div class="d-item" style="border-left-color:var(--c-success)">'
+                    f'<span style="font-size:var(--font-sm);color:var(--c-success);font-weight:600">✅ {a}</span>'
+                    f'</div>', unsafe_allow_html=True)
+
+    # 면책 문구
+    st.markdown("")
+    st.caption("⚠️ 본 검토 결과는 참고용이며, 한국건강기능식품협회의 공식 심의를 대체하지 않습니다. 실제 심의는 ad.khff.or.kr에서 신청하세요.")
 
 
 # ═══════════════════════════════════════════
