@@ -1809,7 +1809,7 @@ def page_adbanner():
                     ad = ads[idx]
                     ad_raw = ad.get("text", "")
                     if len(ad_raw) > 100:
-                        ad_raw = ad_raw[:100] + "..."
+                        ad_raw = ad_raw[:100] + "...더보기"
                     ad_text = ad_raw.replace("\n", "<br/>")
 
                     img_url = ad.get("image_url", "")
