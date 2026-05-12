@@ -1436,8 +1436,8 @@ def page_competitor():
 
     st.markdown(f'<div class="s-header">"{product["brand"]}" 경쟁사 분석</div>', unsafe_allow_html=True)
 
-    # ── 채널별 가격 수집 (네이버 쇼핑 API, DB URL은 링크용) ──
-    price_cache_key = f"comp_prices_v5_{product['brand']}"
+    # ── 채널별 가격 수집 (네이버 쇼핑 API + 수동 가격 오버라이드) ──
+    price_cache_key = f"comp_prices_v6_{product['brand']}"
     if price_cache_key not in st.session_state:
         with st.spinner("자사 및 경쟁사 채널별 가격을 조회하고 있습니다..."):
             all_prices = {}
@@ -1445,12 +1445,30 @@ def page_competitor():
             for comp in db_comps:
                 c_brand = comp.get("brand_name", "")
                 search_kw = comp.get("search_keyword", f'{comp.get("product_name","")} {c_brand}')
-                all_prices[c_brand] = search_product_prices(search_kw, brand_keywords=[c_brand])
+                api_prices = search_product_prices(search_kw, brand_keywords=[c_brand])
+                # 수동 가격이 있으면 오버라이드
+                mp = comp.get("manual_prices", {})
+                if mp:
+                    c_urls = comp.get("product_urls", {})
+                    qty_raw = mp.get("quantity", "")
+                    for ch in ["naver", "coupang", "brand"]:
+                        manual_p = mp.get(ch, 0)
+                        if manual_p > 0:
+                            api_prices[ch] = [{
+                                "name": comp.get("product_name", ""),
+                                "price": manual_p,
+                                "link": c_urls.get(ch, ""),
+                                "mall": "",
+                                "quantity": qty_raw,
+                                "days": 0,
+                                "daily_price": 0,
+                            }]
+                all_prices[c_brand] = api_prices
             st.session_state[price_cache_key] = all_prices
     all_prices = st.session_state[price_cache_key]
 
     def _price_chips(pd_data, brand_name="", db_urls=None):
-        """채널별 가격 칩 HTML (1일당 가격 포함). DB URL 우선 사용."""
+        """채널별 가격 칩 HTML. DB URL 우선 사용."""
         import urllib.parse
         enc = urllib.parse.quote(brand_name[:30])
         html = '<div style="display:flex;gap:8px;flex-wrap:wrap">'
@@ -2341,9 +2359,19 @@ def page_competitor_db_mgmt():
                     add_url_coupang = st.text_input("쿠팡 URL", key=f"cdb_uc_{cat_name}")
                 with au3:
                     add_url_brand = st.text_input("자사몰 URL", key=f"cdb_ub_{cat_name}")
+                st.markdown("**채널별 가격 (선택)**")
+                ap1, ap2, ap3, ap4 = st.columns(4)
+                with ap1:
+                    add_price_naver = st.number_input("네이버 가격(원)", min_value=0, value=0, key=f"cdb_pn_{cat_name}")
+                with ap2:
+                    add_price_coupang = st.number_input("쿠팡 가격(원)", min_value=0, value=0, key=f"cdb_pc_{cat_name}")
+                with ap3:
+                    add_price_brand = st.number_input("자사몰 가격(원)", min_value=0, value=0, key=f"cdb_pb_{cat_name}")
+                with ap4:
+                    add_price_qty = st.text_input("수량 (예: 60정, 2개월분)", key=f"cdb_pq_{cat_name}")
                 if st.form_submit_button("추가", type="primary"):
                     if add_brand_name and add_product_name:
-                        comps.append({
+                        new_comp = {
                             "brand_name": add_brand_name, "product_name": add_product_name,
                             "search_keyword": f"{add_product_name} {add_brand_name}",
                             "ingredients": [x.strip() for x in add_ingredients.split(",") if x.strip()],
@@ -2353,7 +2381,14 @@ def page_competitor_db_mgmt():
                                     "selling_points": [s.strip() for s in add_sp.split("\n") if s.strip()],
                                     "target": "", "key_claim": ""},
                             "channels": [], "price_position": "중", "premium_score": 5, "price_score": 5,
-                        })
+                        }
+                        prices = {}
+                        if add_price_naver > 0: prices["naver"] = add_price_naver
+                        if add_price_coupang > 0: prices["coupang"] = add_price_coupang
+                        if add_price_brand > 0: prices["brand"] = add_price_brand
+                        if prices:
+                            new_comp["manual_prices"] = {**prices, "quantity": add_price_qty}
+                        comps.append(new_comp)
                         save_competitor_db(competitor_db)
                         st.rerun()
 
@@ -2424,6 +2459,17 @@ def page_competitor_db_mgmt():
                         ed_url_coupang = st.text_input("쿠팡 URL", value=c_urls.get("coupang",""))
                     with eu3:
                         ed_url_brand = st.text_input("자사몰 URL", value=c_urls.get("brand",""))
+                    c_mp = c.get("manual_prices", {})
+                    st.markdown("**채널별 가격 (선택, 0=API 자동)**")
+                    ep1, ep2, ep3, ep4 = st.columns(4)
+                    with ep1:
+                        ed_price_naver = st.number_input("네이버 가격(원)", min_value=0, value=int(c_mp.get("naver",0)))
+                    with ep2:
+                        ed_price_coupang = st.number_input("쿠팡 가격(원)", min_value=0, value=int(c_mp.get("coupang",0)))
+                    with ep3:
+                        ed_price_brand = st.number_input("자사몰 가격(원)", min_value=0, value=int(c_mp.get("brand",0)))
+                    with ep4:
+                        ed_price_qty = st.text_input("수량", value=c_mp.get("quantity",""))
                     bc1, bc2, _ = st.columns([1, 1, 4])
                     with bc1:
                         save_btn = st.form_submit_button("저장", type="primary")
@@ -2440,6 +2486,14 @@ def page_competitor_db_mgmt():
                         c["usp"] = {"headline": ed_headline,
                                     "selling_points": [s.strip() for s in ed_sp.split("\n") if s.strip()],
                                     "target": "", "key_claim": ""}
+                        prices = {}
+                        if ed_price_naver > 0: prices["naver"] = ed_price_naver
+                        if ed_price_coupang > 0: prices["coupang"] = ed_price_coupang
+                        if ed_price_brand > 0: prices["brand"] = ed_price_brand
+                        if prices:
+                            c["manual_prices"] = {**prices, "quantity": ed_price_qty}
+                        elif "manual_prices" in c:
+                            del c["manual_prices"]
                         save_competitor_db(competitor_db)
                         st.rerun()
                     if del_btn:
