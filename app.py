@@ -1808,32 +1808,57 @@ def page_adbanner():
                         break
                     ad = ads[idx]
                     ad_text = ad.get("text", "").replace("\n", "<br/>")
-                    if len(ad_text) > 150:
-                        ad_text = ad_text[:150] + "..."
+                    if len(ad_text) > 200:
+                        ad_text = ad_text[:200] + "..."
 
                     img_url = ad.get("image_url", "")
+                    cta = ad.get("cta", "")
+                    landing = ad.get("landing_url", "")
+
+                    # 이미지 영역
                     img_html = (
-                        f'<div style="width:100%;height:200px;background:#f1f5f9;border-radius:6px;margin-bottom:8px;'
-                        f'display:flex;align-items:center;justify-content:center;overflow:hidden">'
-                        f'<img src="{img_url}" style="max-width:100%;max-height:100%;object-fit:contain" onerror="this.parentElement.style.display=\'none\'">'
+                        f'<div style="width:100%;background:#f8fafc;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:8px">'
+                        f'<img src="{img_url}" style="width:100%;object-fit:contain" onerror="this.parentElement.style.display=\'none\'">'
                         f'</div>'
                     ) if img_url else ""
+
+                    # CTA 버튼
+                    cta_html = ""
+                    if cta or landing:
+                        cta_label = cta or "더 알아보기"
+                        landing_html = f'<span style="font-size:var(--font-xs);color:var(--c-text-muted);text-transform:uppercase">{landing}</span>' if landing else ""
+                        cta_html = (
+                            f'<div style="border-top:1px solid var(--c-border-light);padding-top:8px;margin-top:8px;'
+                            f'display:flex;justify-content:space-between;align-items:center">'
+                            f'{landing_html}'
+                            f'<div style="background:var(--c-border-light);padding:4px 14px;border-radius:6px;'
+                            f'font-size:var(--font-xs);font-weight:600;color:var(--c-text)">{cta_label}</div>'
+                            f'</div>'
+                        )
 
                     with col:
                         st.markdown(
                             f'<div style="background:var(--c-card);border:1px solid var(--c-border);border-radius:var(--radius);'
-                            f'padding:12px;margin-bottom:10px;min-height:340px;display:flex;flex-direction:column">'
-                            # 이미지 영역 (고정 200px)
-                            f'{img_html}'
-                            # 광고주 + 날짜
-                            f'<div style="margin-bottom:6px">'
-                            f'<div style="font-size:var(--font-sm);font-weight:700;color:var(--c-text);margin-bottom:2px">{ad.get("advertiser","")}</div>'
+                            f'padding:0;margin-bottom:10px;overflow:hidden;display:flex;flex-direction:column">'
+                            # 상단: 광고주 + 날짜
+                            f'<div style="padding:12px 14px 8px">'
+                            f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
+                            f'<span style="font-size:var(--font-sm);font-weight:700;color:var(--c-text)">{ad.get("advertiser","")}</span>'
                             f'<span style="font-size:var(--font-xs);color:var(--c-text-muted)">{ad.get("start_date","")}</span>'
                             f'</div>'
+                            f'<span style="font-size:var(--font-xs);color:var(--c-text-muted)">광고</span>'
+                            f'</div>'
                             # 광고 텍스트
-                            f'<div style="font-size:var(--font-xs);color:var(--c-text-sub);line-height:1.5;margin-bottom:8px;flex:1;overflow:hidden">{ad_text}</div>'
-                            # 링크
-                            f'<a href="{ad.get("url","#")}" target="_blank" style="font-size:var(--font-xs);color:var(--c-primary);font-weight:600;text-decoration:none">상세 보기 →</a>'
+                            f'<div style="padding:0 14px 10px;font-size:var(--font-xs);color:var(--c-text-sub);line-height:1.6">{ad_text}</div>'
+                            # 이미지
+                            f'{img_html}'
+                            # CTA + 랜딩
+                            f'<div style="padding:0 14px 10px">'
+                            f'{cta_html}'
+                            # 상세 보기
+                            f'<div style="text-align:right;margin-top:6px">'
+                            f'<a href="{ad.get("url","#")}" target="_blank" style="font-size:var(--font-xs);color:var(--c-primary);font-weight:600;text-decoration:none">Ad Library에서 보기 →</a>'
+                            f'</div></div>'
                             f'</div>', unsafe_allow_html=True)
         else:
             st.info("검색 결과가 없거나 크롤링에 실패했습니다.")

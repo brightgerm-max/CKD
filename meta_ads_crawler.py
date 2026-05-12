@@ -98,6 +98,8 @@ def _crawl_internal(keyword: str, country: str = "KR", max_ads: int = 10) -> lis
                         "advertiser": "",
                         "start_date": "",
                         "text": "",
+                        "cta": "",
+                        "landing_url": "",
                         "platforms": [],
                         "url": f"https://www.facebook.com/ads/library/?id={lib_id}",
                     }
@@ -117,13 +119,29 @@ def _crawl_internal(keyword: str, country: str = "KR", max_ads: int = 10) -> lis
                         if prev and prev not in ["광고 상세 정보 보기", "드롭다운 열기", "플랫폼", "​"]:
                             current_ad["advertiser"] = prev
 
+                    # CTA 버튼 감지
+                    elif line in ["더 알아보기", "지금 구매하기", "Shop Now", "자세히 알아보기",
+                                  "지금 쇼핑하기", "가입하기", "예약하기", "다운로드", "문의하기",
+                                  "지금 신청하기", "지금 주문하기", "더 보기", "구매하기"]:
+                        current_ad["cta"] = line
+
+                    # 랜딩 URL 감지 (대문자 도메인)
+                    elif line.endswith(".COM") or line.endswith(".CO.KR") or line.endswith(".KR") or ".com" in line.lower():
+                        if len(line) < 50 and "facebook" not in line.lower():
+                            current_ad["landing_url"] = line
+
                     # 플랫폼/UI 텍스트 스킵
                     elif line in ["플랫폼", "드롭다운 열기", "광고 상세 정보 보기", "​", "활성",
-                                  "정렬", "필터", "삭제", "정렬 기준", "활동 상태: 게재 중인 광고"]:
+                                  "정렬", "필터", "삭제", "정렬 기준", "활동 상태: 게재 중인 광고",
+                                  "0:00 / 0:25", "0:00 / 0:28", "0:00 / 0:30", "0:00 / 0:15"]:
+                        continue
+
+                    # 동영상 길이 스킵
+                    elif re.match(r"^\d+:\d+\s*/\s*\d+:\d+$", line):
                         continue
 
                     # 광고 텍스트
-                    elif current_ad.get("advertiser") and len(line) > 5:
+                    elif current_ad.get("advertiser") and len(line) > 3:
                         text_buffer.append(line)
 
             # 마지막 광고 저장
