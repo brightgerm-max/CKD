@@ -49,6 +49,13 @@ def _crawl_internal(keyword: str, country: str = "KR", max_ads: int = 10) -> lis
             page.goto(url, timeout=30000)
             page.wait_for_timeout(8000)
 
+            # 스크롤하여 더 많은 광고 로딩
+            if max_ads > 20:
+                scroll_count = (max_ads - 20) // 10 + 1
+                for _ in range(min(scroll_count, 5)):
+                    page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+                    page.wait_for_timeout(3000)
+
             # 광고 이미지 URL 추출
             ad_images = page.evaluate('''() => {
                 const results = [];

@@ -1769,7 +1769,7 @@ def page_adbanner():
         st.markdown('<div style="height:28px"></div>', unsafe_allow_html=True)
         search_btn = st.button("검색", type="primary", use_container_width=True)
 
-    max_ads = 20
+    max_ads = 50
     st.markdown("---")
 
     # 검색 실행
