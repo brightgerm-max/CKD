@@ -1808,37 +1808,38 @@ def page_adbanner():
         if ads:
             st.markdown(f'<div class="s-header">"{search_kw}" 관련 Meta 광고 ({len(ads)}건)</div>', unsafe_allow_html=True)
 
-            for idx, ad in enumerate(ads):
-                ad_text = ad.get("text", "").replace("\n", "<br>")
-                if len(ad_text) > 300:
-                    ad_text = ad_text[:300] + "..."
+            cols_per_row = 3
+            for row_start in range(0, len(ads), cols_per_row):
+                cols = st.columns(cols_per_row)
+                for i, col in enumerate(cols):
+                    idx = row_start + i
+                    if idx >= len(ads):
+                        break
+                    ad = ads[idx]
+                    ad_text = ad.get("text", "").replace("\n", "<br>")
+                    if len(ad_text) > 150:
+                        ad_text = ad_text[:150] + "..."
 
-                img_url = ad.get("image_url", "")
-                img_html = (f'<img src="{img_url}" style="width:100%;border-radius:8px;margin-bottom:10px;object-fit:contain">'
-                            if img_url else "")
+                    img_url = ad.get("image_url", "")
+                    img_html = (f'<img src="{img_url}" style="width:100%;border-radius:6px;margin-bottom:8px;aspect-ratio:16/9;object-fit:cover">'
+                                if img_url else '<div style="width:100%;aspect-ratio:16/9;background:var(--c-border-light);border-radius:6px;margin-bottom:8px"></div>')
 
-                st.markdown(
-                    f'<div style="background:var(--c-card);border:1px solid var(--c-border);border-radius:var(--radius);'
-                    f'padding:18px;margin-bottom:12px">'
-                    # 헤더: 광고주 + 날짜
-                    f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
-                    f'<div>'
-                    f'<span style="font-size:var(--font-base);font-weight:700;color:var(--c-text)">{ad.get("advertiser","")}</span>'
-                    f'<span style="background:#1877f2;color:#fff;padding:2px 8px;border-radius:20px;font-size:var(--font-xs);font-weight:600;margin-left:8px">Meta Ads</span>'
-                    f'</div>'
-                    f'<span style="font-size:var(--font-xs);color:var(--c-text-muted)">{ad.get("start_date","")}</span>'
-                    f'</div>'
-                    # 이미지
-                    f'{img_html}'
-                    # 광고 텍스트
-                    f'<div style="background:var(--c-border-light);border-radius:8px;padding:14px;margin-bottom:10px;'
-                    f'font-size:var(--font-sm);color:var(--c-text);line-height:1.7">{ad_text}</div>'
-                    # 하단: 링크
-                    f'<div style="display:flex;justify-content:space-between;align-items:center">'
-                    f'<span style="font-size:var(--font-xs);color:var(--c-text-muted)">ID: {ad.get("library_id","")}</span>'
-                    f'<a href="{ad.get("url","#")}" target="_blank" style="font-size:var(--font-xs);color:var(--c-primary);font-weight:600;text-decoration:none">광고 상세 보기 →</a>'
-                    f'</div>'
-                    f'</div>', unsafe_allow_html=True)
+                    with col:
+                        st.markdown(
+                            f'<div style="background:var(--c-card);border:1px solid var(--c-border);border-radius:var(--radius);'
+                            f'padding:12px;margin-bottom:10px;height:100%">'
+                            # 이미지
+                            f'{img_html}'
+                            # 광고주 + 날짜
+                            f'<div style="margin-bottom:6px">'
+                            f'<div style="font-size:var(--font-sm);font-weight:700;color:var(--c-text);margin-bottom:2px">{ad.get("advertiser","")}</div>'
+                            f'<span style="font-size:var(--font-xs);color:var(--c-text-muted)">{ad.get("start_date","")}</span>'
+                            f'</div>'
+                            # 광고 텍스트
+                            f'<div style="font-size:var(--font-xs);color:var(--c-text-sub);line-height:1.5;margin-bottom:8px">{ad_text}</div>'
+                            # 링크
+                            f'<a href="{ad.get("url","#")}" target="_blank" style="font-size:var(--font-xs);color:var(--c-primary);font-weight:600;text-decoration:none">상세 보기 →</a>'
+                            f'</div>', unsafe_allow_html=True)
         else:
             st.info("검색 결과가 없거나 크롤링에 실패했습니다.")
     else:
