@@ -1761,16 +1761,12 @@ def page_trend():
 def page_adbanner():
     render_page_header("🎨","광고배너 조사","META 광고 라이브러리에서 경쟁사 광고 소재를 조사합니다","orange")
 
-    import urllib.parse as _urlparse
-
     # 검색 설정
-    col_kw, col_country, col_media, col_btn = st.columns([3, 1, 1, 1])
+    col_kw, col_count, col_btn = st.columns([3, 1, 1])
     with col_kw:
         search_kw = st.text_input("검색 키워드", value="유산균", placeholder="예: 유산균, 관절건강, 콘드로이친...")
-    with col_country:
-        country = st.selectbox("국가", ["KR", "US", "JP", "ALL"], index=0)
-    with col_media:
-        media = st.selectbox("미디어", ["전체", "이미지", "영상"], index=0)
+    with col_count:
+        max_ads = st.selectbox("조회 수", [5, 10, 15, 20], index=1)
     with col_btn:
         st.markdown('<div style="height:28px"></div>', unsafe_allow_html=True)
         search_btn = st.button("검색", type="primary", use_container_width=True)
@@ -1782,35 +1778,65 @@ def page_adbanner():
     for i, qk in enumerate(quick_keywords):
         with quick_cols[i]:
             if st.button(qk, key=f"quick_{qk}", use_container_width=True):
-                search_kw = qk
-                search_btn = True
+                st.session_state["ad_search_kw"] = qk
+                st.session_state.pop("ad_results", None)
+                st.rerun()
+
+    if st.session_state.get("ad_search_kw"):
+        search_kw = st.session_state["ad_search_kw"]
 
     st.markdown("---")
 
-    if search_kw:
-        # Meta Ad Library URL 생성
-        media_map = {"전체": "all", "이미지": "image", "영상": "video"}
-        encoded_kw = _urlparse.quote(search_kw)
-        ad_url = (
-            f"https://www.facebook.com/ads/library/"
-            f"?active_status=active&ad_type=all&country={country}"
-            f"&is_targeted_country=false&media_type={media_map.get(media,'all')}"
-            f"&q={encoded_kw}&search_type=keyword_unordered"
-            f"&sort_data[direction]=desc&sort_data[mode]=total_impressions"
-        )
+    # 검색 실행
+    ad_cache_key = f"ad_results_{search_kw}_{max_ads}"
+    if search_btn and search_kw:
+        st.session_state.pop(ad_cache_key, None)
 
-        # iframe 임베드 시도
-        st.markdown(
-            f'<div style="background:var(--c-card);border:1px solid var(--c-border);border-radius:var(--radius);'
-            f'padding:14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">'
-            f'<div style="font-size:var(--font-sm);color:var(--c-text)">검색어: <b>{search_kw}</b> · 국가: {country} · 미디어: {media}</div>'
-            f'<a href="{ad_url}" target="_blank" style="font-size:var(--font-sm);color:var(--c-primary);font-weight:600;text-decoration:none">새 탭에서 열기 →</a>'
-            f'</div>', unsafe_allow_html=True)
+    if search_kw and (search_btn or ad_cache_key in st.session_state):
+        if ad_cache_key not in st.session_state:
+            with st.spinner(f"Meta Ad Library에서 '{search_kw}' 관련 광고를 수집하고 있습니다... (10~20초 소요)"):
+                try:
+                    from meta_ads_crawler import crawl_meta_ads
+                    results = crawl_meta_ads(search_kw, country="KR", max_ads=max_ads)
+                    st.session_state[ad_cache_key] = results
+                except Exception as e:
+                    st.error(f"크롤링 실패: {e}")
+                    st.session_state[ad_cache_key] = []
 
-        import streamlit.components.v1 as components
-        components.iframe(ad_url, height=800, scrolling=True)
+        ads = st.session_state.get(ad_cache_key, [])
 
-        st.caption("위 영역이 표시되지 않는 경우 '새 탭에서 열기'를 클릭하세요. Meta가 iframe 임베드를 차단할 수 있습니다.")
+        if ads:
+            st.markdown(f'<div class="s-header">"{search_kw}" 관련 Meta 광고 ({len(ads)}건)</div>', unsafe_allow_html=True)
+
+            for idx, ad in enumerate(ads):
+                ad_text = ad.get("text", "").replace("\n", "<br>")
+                if len(ad_text) > 300:
+                    ad_text = ad_text[:300] + "..."
+
+                st.markdown(
+                    f'<div style="background:var(--c-card);border:1px solid var(--c-border);border-radius:var(--radius);'
+                    f'padding:18px;margin-bottom:12px">'
+                    # 헤더: 광고주 + 날짜
+                    f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
+                    f'<div>'
+                    f'<span style="font-size:var(--font-base);font-weight:700;color:var(--c-text)">{ad.get("advertiser","")}</span>'
+                    f'<span style="background:#1877f2;color:#fff;padding:2px 8px;border-radius:20px;font-size:var(--font-xs);font-weight:600;margin-left:8px">Meta Ads</span>'
+                    f'</div>'
+                    f'<span style="font-size:var(--font-xs);color:var(--c-text-muted)">{ad.get("start_date","")}</span>'
+                    f'</div>'
+                    # 광고 텍스트
+                    f'<div style="background:var(--c-border-light);border-radius:8px;padding:14px;margin-bottom:10px;'
+                    f'font-size:var(--font-sm);color:var(--c-text);line-height:1.7">{ad_text}</div>'
+                    # 하단: 링크
+                    f'<div style="display:flex;justify-content:space-between;align-items:center">'
+                    f'<span style="font-size:var(--font-xs);color:var(--c-text-muted)">ID: {ad.get("library_id","")}</span>'
+                    f'<a href="{ad.get("url","#")}" target="_blank" style="font-size:var(--font-xs);color:var(--c-primary);font-weight:600;text-decoration:none">광고 상세 보기 →</a>'
+                    f'</div>'
+                    f'</div>', unsafe_allow_html=True)
+        else:
+            st.info("검색 결과가 없거나 크롤링에 실패했습니다.")
+    else:
+        st.info("키워드를 입력하고 검색 버튼을 클릭하세요.")
 
 
 # ═══════════════════════════════════════════
