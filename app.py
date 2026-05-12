@@ -1814,7 +1814,7 @@ def page_adbanner():
                     ad_text = ad_text[:300] + "..."
 
                 img_url = ad.get("image_url", "")
-                img_html = (f'<img src="{img_url}" style="width:100%;border-radius:8px;margin-bottom:10px;max-height:300px;object-fit:cover">'
+                img_html = (f'<img src="{img_url}" style="width:100%;border-radius:8px;margin-bottom:10px;object-fit:contain">'
                             if img_url else "")
 
                 st.markdown(
