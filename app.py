@@ -2383,16 +2383,17 @@ def page_competitor_db_mgmt():
                 with au3:
                     add_url_brand = st.text_input("자사몰 URL", key=f"cdb_ub_{cat_name}")
                 st.markdown("**채널별 가격 (선택)**")
+                st.caption("단위 입력 형식: 60정, 120캡슐, 30포, 2개월분, 90일분")
                 ap1, ap2, ap3 = st.columns(3)
                 with ap1:
                     add_price_naver = st.number_input("네이버 가격(원)", min_value=0, value=0, key=f"cdb_pn_{cat_name}")
-                    add_qty_naver = st.text_input("네이버 수량", placeholder="예: 60정, 4개월분", key=f"cdb_qn_{cat_name}")
+                    add_qty_naver = st.text_input("네이버 단위", placeholder="예: 60정, 4개월분", key=f"cdb_qn_{cat_name}")
                 with ap2:
                     add_price_coupang = st.number_input("쿠팡 가격(원)", min_value=0, value=0, key=f"cdb_pc_{cat_name}")
-                    add_qty_coupang = st.text_input("쿠팡 수량", placeholder="예: 60정, 4개월분", key=f"cdb_qc_{cat_name}")
+                    add_qty_coupang = st.text_input("쿠팡 단위", placeholder="예: 60정, 4개월분", key=f"cdb_qc_{cat_name}")
                 with ap3:
                     add_price_brand = st.number_input("자사몰 가격(원)", min_value=0, value=0, key=f"cdb_pb_{cat_name}")
-                    add_qty_brand = st.text_input("자사몰 수량", placeholder="예: 60정, 4개월분", key=f"cdb_qb_{cat_name}")
+                    add_qty_brand = st.text_input("자사몰 단위", placeholder="예: 60정, 4개월분", key=f"cdb_qb_{cat_name}")
                 if st.form_submit_button("추가", type="primary"):
                     if add_brand_name and add_product_name:
                         new_comp = {
@@ -2486,19 +2487,20 @@ def page_competitor_db_mgmt():
                         ed_url_brand = st.text_input("자사몰 URL", value=c_urls.get("brand",""))
                     c_mp = c.get("manual_prices", {})
                     st.markdown("**채널별 가격 (선택, 0=API 자동)**")
+                    st.caption("단위 입력 형식: 60정, 120캡슐, 30포, 2개월분, 90일분")
                     ep1, ep2, ep3 = st.columns(3)
                     with ep1:
                         _mp_n = c_mp.get("naver", {})
                         ed_price_naver = st.number_input("네이버 가격(원)", min_value=0, value=int(_mp_n.get("price",0) if isinstance(_mp_n, dict) else _mp_n))
-                        ed_qty_naver = st.text_input("네이버 수량", value=_mp_n.get("quantity","") if isinstance(_mp_n, dict) else "")
+                        ed_qty_naver = st.text_input("네이버 단위", value=_mp_n.get("quantity","") if isinstance(_mp_n, dict) else "")
                     with ep2:
                         _mp_c = c_mp.get("coupang", {})
                         ed_price_coupang = st.number_input("쿠팡 가격(원)", min_value=0, value=int(_mp_c.get("price",0) if isinstance(_mp_c, dict) else _mp_c))
-                        ed_qty_coupang = st.text_input("쿠팡 수량", value=_mp_c.get("quantity","") if isinstance(_mp_c, dict) else "")
+                        ed_qty_coupang = st.text_input("쿠팡 단위", value=_mp_c.get("quantity","") if isinstance(_mp_c, dict) else "")
                     with ep3:
                         _mp_b = c_mp.get("brand", {})
                         ed_price_brand = st.number_input("자사몰 가격(원)", min_value=0, value=int(_mp_b.get("price",0) if isinstance(_mp_b, dict) else _mp_b))
-                        ed_qty_brand = st.text_input("자사몰 수량", value=_mp_b.get("quantity","") if isinstance(_mp_b, dict) else "")
+                        ed_qty_brand = st.text_input("자사몰 단위", value=_mp_b.get("quantity","") if isinstance(_mp_b, dict) else "")
                     bc1, bc2, _ = st.columns([1, 1, 4])
                     with bc1:
                         save_btn = st.form_submit_button("저장", type="primary")
