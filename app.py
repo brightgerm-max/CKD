@@ -1392,26 +1392,23 @@ def page_usp():
 def page_competitor():
     render_page_header("🔍","경쟁사 모니터링","제품별 경쟁사 현황을 분석합니다","orange")
 
-    # 3개 제품만 + 고정 경쟁사
-    COMPETITOR_MAP = {
-        "콘드로이친": [
-            {"brand": "주영엔에스", "product": "뮤코다당 단백 콘드로이친 1200플러스", "search": "주영엔에스 콘드로이친 1200"},
-            {"brand": "뉴트리코어", "product": "철갑상어 콘드로이친 1200", "search": "뉴트리코어 콘드로이친 1200"},
-            {"brand": "닥터린", "product": "철갑상어 콘드로이친 1200맥스 저분자 뮤코다당단백", "search": "닥터린 콘드로이친 1200"},
-        ],
-        "비피더스 유산균": [
-            {"brand": "덴프스", "product": "덴마크 유산균 이야기", "search": "덴프스 덴마크 유산균"},
-            {"brand": "비피젠", "product": "퓨어 비피더스 프리미엄", "search": "비피젠 비피더스"},
-            {"brand": "레디웰", "product": "프로바이오틱스밸런스 레디웰 비피더스유산균", "search": "레디웰 비피더스"},
-        ],
-        "포스파티딜세린": [
-            {"brand": "뉴트리원", "product": "인지력 개선엔 포스파티딜세린", "search": "뉴트리원 포스파티딜세린"},
-            {"brand": "뉴트리코어", "product": "포스파티딜세린 PS", "search": "뉴트리코어 포스파티딜세린"},
-        ],
-    }
+    # 경쟁사 DB에서 카테고리별 경쟁사 로드
+    competitor_db = load_competitor_db()
+    comp_categories = competitor_db.get("categories", {})
+
+    # ckd_brand 기준으로 COMPETITOR_MAP 동적 생성
+    COMPETITOR_MAP = {}
+    for cat_name, cat_data in comp_categories.items():
+        ckd_brand = cat_data.get("ckd_brand", "")
+        if ckd_brand:
+            COMPETITOR_MAP[ckd_brand] = cat_data.get("competitors", [])
 
     products_data = load_products()
     products = [p for p in products_data["products"] if p["brand"] in COMPETITOR_MAP]
+
+    if not products:
+        st.info("경쟁사 DB에 등록된 자사 상품이 없습니다. 설정 > 경쟁사 DB 관리에서 등록해주세요.")
+        return
 
     st.markdown('<div class="s-header">자사 상품 선택</div>', unsafe_allow_html=True)
     btn_cols = st.columns(len(products))
@@ -1428,46 +1425,53 @@ def page_competitor():
                          type="primary" if is_sel else "secondary"):
                 st.session_state["comp_product"] = i
                 st.rerun()
-                st.rerun()
 
     if st.session_state.get("comp_product") is None:
         st.info("분석할 자사 상품을 선택하세요.")
         return
 
     product = products[st.session_state["comp_product"]]
-    fixed_comps = COMPETITOR_MAP.get(product["brand"], [])
+    db_comps = COMPETITOR_MAP.get(product["brand"], [])
 
     st.markdown(f'<div class="s-header">"{product["brand"]}" 경쟁사 분석</div>', unsafe_allow_html=True)
 
-    # ── 채널별 가격 수집 (자사 + 고정 경쟁사) ──
-    price_cache_key = f"comp_prices_v2_{product['brand']}"
+    # ── 채널별 가격 수집 (자사 + 경쟁사 DB) ──
+    price_cache_key = f"comp_prices_v3_{product['brand']}"
     if price_cache_key not in st.session_state:
         with st.spinner("자사 및 경쟁사 채널별 가격을 조회하고 있습니다..."):
             all_prices = {}
             all_prices["ckd"] = search_product_prices(f"종근당 {product['brand']}", brand_keywords=["종근당","종근당건강","ckd"])
-            for comp in fixed_comps:
-                all_prices[comp["brand"]] = search_product_prices(comp["search"], brand_keywords=[comp["brand"]])
+            for comp in db_comps:
+                search_kw = comp.get("search_keyword", f'{comp.get("product_name","")} {comp.get("brand_name","")}')
+                all_prices[comp.get("brand_name","")] = search_product_prices(search_kw, brand_keywords=[comp.get("brand_name","")])
             st.session_state[price_cache_key] = all_prices
     all_prices = st.session_state[price_cache_key]
 
-    def _price_chips(pd_data, brand_name=""):
-        """채널별 가격 칩 HTML (1일당 가격 포함)."""
+    def _price_chips(pd_data, brand_name="", db_urls=None):
+        """채널별 가격 칩 HTML (1일당 가격 포함). DB URL 우선 사용."""
         import urllib.parse
         enc = urllib.parse.quote(brand_name[:30])
         html = '<div style="display:flex;gap:8px;flex-wrap:wrap">'
-        for ch_key, ch_name, ch_color, fallback in [("naver","네이버","#03c75a",None),("coupang","쿠팡","#ef4444",f"https://www.coupang.com/np/search?q={enc}"),("brand","자사몰","#2563eb",f"https://www.ckdmall.co.kr/search?q={enc}")]:
+        for ch_key, ch_name, ch_color, fallback in [("naver","네이버","#03c75a",None),("coupang","쿠팡","#ef4444",f"https://www.coupang.com/np/search?q={enc}"),("brand","자사몰","#2563eb",None)]:
             items = pd_data.get(ch_key,[])
+            db_url = (db_urls or {}).get(ch_key, "")
             if items and items[0].get("daily_price",0) > 0:
                 it = items[0]
-                html += (f'<a href="{it["link"]}" target="_blank" style="text-decoration:none">'
+                link = db_url or it["link"]
+                html += (f'<a href="{link}" target="_blank" style="text-decoration:none">'
                          f'<span style="background:{ch_color};color:#fff;padding:3px 8px;border-radius:8px;font-size:0.72rem;font-weight:700">{ch_name}</span>'
                          f' <span style="font-weight:700;font-size:0.85rem">{it["price"]:,}원</span>'
                          f' <span style="font-size:0.68rem;color:#94a3b8">({it["quantity"]}, 1일 {it["daily_price"]:,}원)</span></a>')
             elif items:
                 it = items[0]
-                html += (f'<a href="{it["link"]}" target="_blank" style="text-decoration:none">'
+                link = db_url or it["link"]
+                html += (f'<a href="{link}" target="_blank" style="text-decoration:none">'
                          f'<span style="background:{ch_color};color:#fff;padding:3px 8px;border-radius:8px;font-size:0.72rem;font-weight:700">{ch_name}</span>'
                          f' <span style="font-weight:700;font-size:0.85rem">{it["price"]:,}원</span></a>')
+            elif db_url:
+                html += (f'<a href="{db_url}" target="_blank" style="text-decoration:none">'
+                         f'<span style="background:{ch_color};color:#fff;padding:3px 8px;border-radius:8px;font-size:0.72rem;font-weight:700">{ch_name}</span>'
+                         f' <span style="color:#94a3b8;font-size:0.75rem">바로가기 →</span></a>')
             elif fallback:
                 html += (f'<a href="{fallback}" target="_blank" style="text-decoration:none">'
                          f'<span style="background:{ch_color};opacity:0.5;color:#fff;padding:3px 8px;border-radius:8px;font-size:0.72rem;font-weight:700">{ch_name}</span>'
@@ -1475,60 +1479,87 @@ def page_competitor():
         html += '</div>'
         return html
 
+    def _tag_chips(items, bg_color, text_color):
+        return "".join(f'<span style="background:{bg_color};color:{text_color};padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:600;margin:2px">{item}</span>' for item in items)
+
     # ── 자사 카드 ──
     ckd_kr_ings = product.get("ingredient_keywords_kr",[])
     ckd_claims = product.get("health_claims",[])
     target_info = product.get("target_demographic",{})
-    ckd_ings_html = "".join(f'<span style="background:rgba(37,99,235,0.15);color:#93c5fd;padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:600;margin:2px">{ing}</span>' for ing in ckd_kr_ings)
-    ckd_claims_html = "".join(f'<span style="background:rgba(34,197,94,0.15);color:#86efac;padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:600;margin:2px">{c}</span>' for c in ckd_claims)
     ckd_pd = all_prices.get("ckd",{"naver":[],"coupang":[],"brand":[]})
+    ckd_urls = product.get("product_urls", {})
 
     st.markdown(
         f'<div style="background:linear-gradient(135deg,#1e293b,#334155);border-radius:16px;padding:20px;margin-bottom:16px;color:#fff">'
         f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'
         f'<div><span style="font-size:1.1rem;font-weight:800">종근당 {product["brand"]}</span>'
         f'<span style="background:rgba(37,99,235,0.3);padding:3px 10px;border-radius:20px;font-size:0.75rem;margin-left:8px">자사</span></div>'
-        f'<span style="color:#94a3b8;font-size:0.82rem">🎯 타겟: {target_info.get("primary_age","")}</span></div>'
-        # 제품명
+        f'<span style="color:#94a3b8;font-size:0.82rem">타겟: {target_info.get("primary_age","")}</span></div>'
         f'<div style="font-size:0.72rem;color:rgba(255,255,255,0.4);margin-bottom:2px">제품명</div>'
         f'<div style="font-size:0.88rem;color:#e2e8f0;margin-bottom:12px;padding:8px 12px;background:rgba(255,255,255,0.06);border-radius:8px">{product["brand"]} ({", ".join(product.get("sub_products",[])[:3])})</div>'
-        # 가격
         f'<div style="font-size:0.72rem;color:rgba(255,255,255,0.4);margin-bottom:4px">채널별 가격</div>'
-        f'{_price_chips(ckd_pd, product["brand"])}'
-        # 주요 성분
+        f'{_price_chips(ckd_pd, product["brand"], ckd_urls)}'
         f'<div style="margin-top:12px;font-size:0.72rem;color:rgba(255,255,255,0.4);margin-bottom:4px">주요 성분</div>'
-        f'<div style="display:flex;flex-wrap:wrap;gap:3px">{ckd_ings_html}</div>'
-        # 건강기능 표시
+        f'<div style="display:flex;flex-wrap:wrap;gap:3px">{_tag_chips(ckd_kr_ings, "rgba(37,99,235,0.15)", "#93c5fd")}</div>'
         f'<div style="margin-top:8px;font-size:0.72rem;color:rgba(255,255,255,0.4);margin-bottom:4px">건강기능 표시</div>'
-        f'<div style="display:flex;flex-wrap:wrap;gap:3px">{ckd_claims_html}</div>'
+        f'<div style="display:flex;flex-wrap:wrap;gap:3px">{_tag_chips(ckd_claims, "rgba(34,197,94,0.15)", "#86efac")}</div>'
         f'</div>', unsafe_allow_html=True)
 
-    # ── 경쟁사 카드 ──
-    if fixed_comps:
-        st.markdown(f'<div class="s-header">경쟁사 ({len(fixed_comps)}개)</div>', unsafe_allow_html=True)
+    # ── 경쟁사 카드 (DB 기반) ──
+    if db_comps:
+        st.markdown(f'<div class="s-header">경쟁사 ({len(db_comps)}개)</div>', unsafe_allow_html=True)
 
-        for comp in fixed_comps:
-            comp_pd = all_prices.get(comp["brand"], {"naver":[],"coupang":[],"brand":[]})
+        for comp in db_comps:
+            c_brand = comp.get("brand_name", "")
+            c_product = comp.get("product_name", "")
+            c_ings = comp.get("ingredients", [])
+            c_claims = comp.get("health_claims", [])
+            c_urls = comp.get("product_urls", {})
+            c_usp = comp.get("usp", {})
+            c_headline = c_usp.get("headline", "") if isinstance(c_usp, dict) else ""
+            c_sp = c_usp.get("selling_points", []) if isinstance(c_usp, dict) else []
+            comp_pd = all_prices.get(c_brand, {"naver":[],"coupang":[],"brand":[]})
+
+            # 성분 칩
+            ings_html = _tag_chips(c_ings, "rgba(37,99,235,0.08)", "var(--c-primary)") if c_ings else '<span style="color:var(--c-text-muted);font-size:0.72rem">미등록</span>'
+            # 건강기능 표시 칩
+            claims_html = _tag_chips(c_claims, "rgba(5,150,105,0.08)", "var(--c-success)") if c_claims else '<span style="color:var(--c-text-muted);font-size:0.72rem">미등록</span>'
+            # 셀링포인트
+            sp_html = ""
+            if c_sp:
+                sp_items = "".join(f'<li style="margin-bottom:2px">{s}</li>' for s in c_sp[:5])
+                sp_html = (f'<div style="margin-top:8px;font-size:var(--font-xs);font-weight:600;color:var(--c-text-muted);margin-bottom:4px">셀링포인트</div>'
+                           f'<ul style="margin:0;padding-left:18px;font-size:0.78rem;color:var(--c-text-sub)">{sp_items}</ul>')
 
             st.markdown(
                 f'<div style="background:var(--c-card);border:1px solid var(--c-border);border-radius:var(--radius);'
                 f'padding:18px;margin-bottom:10px">'
                 # 브랜드 + 제품명
                 f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
-                f'<div><span style="font-size:var(--font-base);font-weight:700;color:var(--c-text)">{comp["brand"]}</span>'
+                f'<div><span style="font-size:var(--font-base);font-weight:700;color:var(--c-text)">{c_brand}</span>'
                 f'<span style="background:#fef2f2;color:#ef4444;padding:2px 8px;border-radius:20px;font-size:var(--font-xs);font-weight:600;margin-left:8px">경쟁사</span></div></div>'
                 f'<div style="font-size:var(--font-xs);font-weight:600;color:var(--c-text-muted);margin-bottom:2px">제품명</div>'
-                f'<div style="font-size:var(--font-sm);color:var(--c-text-sub);margin-bottom:10px;padding:8px 12px;background:var(--c-border-light);border-radius:8px">{comp["product"]}</div>'
+                f'<div style="font-size:var(--font-sm);color:var(--c-text-sub);margin-bottom:10px;padding:8px 12px;background:var(--c-border-light);border-radius:8px">{c_product}</div>'
+                # USP 헤드라인
+                + (f'<div style="font-size:0.82rem;color:var(--c-text);font-weight:600;margin-bottom:10px;padding:8px 12px;background:rgba(37,99,235,0.04);border-left:3px solid var(--c-primary);border-radius:4px">{c_headline}</div>' if c_headline else '')
                 # 채널별 가격
-                f'<div style="font-size:var(--font-xs);font-weight:600;color:var(--c-text-muted);margin-bottom:4px">채널별 가격</div>'
-                f'{_price_chips(comp_pd, comp["search"])}'
-                f'</div>', unsafe_allow_html=True)
+                + f'<div style="font-size:var(--font-xs);font-weight:600;color:var(--c-text-muted);margin-bottom:4px">채널별 가격</div>'
+                f'{_price_chips(comp_pd, comp.get("search_keyword",""), c_urls)}'
+                # 주요 성분
+                f'<div style="margin-top:10px;font-size:var(--font-xs);font-weight:600;color:var(--c-text-muted);margin-bottom:4px">핵심 성분</div>'
+                f'<div style="display:flex;flex-wrap:wrap;gap:3px">{ings_html}</div>'
+                # 건강기능 표시
+                f'<div style="margin-top:8px;font-size:var(--font-xs);font-weight:600;color:var(--c-text-muted);margin-bottom:4px">건강기능 표시</div>'
+                f'<div style="display:flex;flex-wrap:wrap;gap:3px">{claims_html}</div>'
+                # 셀링포인트
+                + sp_html
+                + f'</div>', unsafe_allow_html=True)
 
     # ── 채널별 1일당 가격 비교 차트 ──
     with st.container(border=True):
         st.markdown("**채널별 1일당 가격 비교** _(네이버 쇼핑 실시간 · 동일 단위 환산)_")
         chart_data = []
-        chart_brands = [("종근당 " + product["brand"][:4], "ckd")] + [(c["brand"][:8], c["brand"]) for c in fixed_comps]
+        chart_brands = [("종근당 " + product["brand"][:4], "ckd")] + [(c.get("brand_name","")[:8], c.get("brand_name","")) for c in db_comps]
         for label, key in chart_brands:
             pd_data = all_prices.get(key, {"naver":[],"coupang":[],"brand":[]})
             for ch_name, ch_key in [("네이버","naver"),("쿠팡","coupang"),("자사몰","brand")]:
