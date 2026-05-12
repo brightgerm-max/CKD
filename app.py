@@ -2227,24 +2227,24 @@ def page_competitor_db_mgmt():
 
             # 자동추출 결과를 세션에 저장
             if auto_btn and auto_url:
-                with st.spinner("상품 페이지 분석 중..."):
+                with st.spinner("상품 페이지 분석 중... (최대 60초 소요)"):
                     auto_result = scrape_product_info(auto_url)
-                    if "_error" in auto_result:
-                        st.error(f"추출 실패: {auto_result['_error']}")
-                    else:
-                        # 위젯 key에 직접 값 설정 후 rerun
-                        st.session_state[f"cdb_co_{cat_name}"] = auto_result.get("brand_name", "")
-                        st.session_state[f"cdb_br_{cat_name}"] = auto_result.get("product_name", "")
-                        st.session_state[f"cdb_ing_{cat_name}"] = ", ".join(auto_result.get("ingredients", []))
-                        st.session_state[f"cdb_hl_{cat_name}"] = auto_result.get("headline", "")
-                        st.session_state[f"cdb_cl_{cat_name}"] = ", ".join(auto_result.get("health_claims", []))
-                        st.session_state[f"cdb_sp_{cat_name}"] = "\n".join(auto_result.get("selling_points", []))
-                        url_type = _detect_url_type(auto_url)
-                        st.session_state[f"cdb_un_{cat_name}"] = auto_url if url_type == "naver" else ""
-                        st.session_state[f"cdb_uc_{cat_name}"] = auto_url if url_type == "coupang" else ""
-                        st.session_state[f"cdb_ub_{cat_name}"] = auto_url if url_type == "brand" else ""
-                        st.success("추출 완료! 아래 폼에 자동 입력되었습니다.")
-                        st.rerun()
+                if "_error" in auto_result:
+                    st.error(f"추출 실패: {auto_result['_error']}")
+                else:
+                    # 위젯 key에 직접 값 설정 후 rerun
+                    st.session_state[f"cdb_co_{cat_name}"] = auto_result.get("brand_name", "")
+                    st.session_state[f"cdb_br_{cat_name}"] = auto_result.get("product_name", "")
+                    st.session_state[f"cdb_ing_{cat_name}"] = ", ".join(auto_result.get("ingredients", []))
+                    st.session_state[f"cdb_hl_{cat_name}"] = auto_result.get("headline", "")
+                    st.session_state[f"cdb_cl_{cat_name}"] = ", ".join(auto_result.get("health_claims", []))
+                    st.session_state[f"cdb_sp_{cat_name}"] = "\n".join(auto_result.get("selling_points", []))
+                    url_type = _detect_url_type(auto_url)
+                    st.session_state[f"cdb_un_{cat_name}"] = auto_url if url_type == "naver" else ""
+                    st.session_state[f"cdb_uc_{cat_name}"] = auto_url if url_type == "coupang" else ""
+                    st.session_state[f"cdb_ub_{cat_name}"] = auto_url if url_type == "brand" else ""
+                    st.success(f"추출 완료! 브랜드: {auto_result.get('brand_name','')}, 제품: {auto_result.get('product_name','')}, 성분: {len(auto_result.get('ingredients',[]))}개")
+                    st.rerun()
 
             # 추가 폼
             with st.form(f"cdb_add_{cat_name}"):
