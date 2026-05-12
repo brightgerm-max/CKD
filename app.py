@@ -1875,7 +1875,7 @@ def page_ai_review():
                     f'</div>', unsafe_allow_html=True)
 
     # ── AI 심층 분석 + 증빙자료 ──
-    st.markdown('<div class="s-header">🤖 AI 심층 분석 + 증빙자료</div>', unsafe_allow_html=True)
+    st.markdown('<div class="s-header">AI 심층 분석 + 증빙자료</div>', unsafe_allow_html=True)
 
     ai_review_key = f"ai_review_{hash(ad_text)}"
     if ai_review_key not in st.session_state:
