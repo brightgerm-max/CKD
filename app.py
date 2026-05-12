@@ -2187,7 +2187,16 @@ def page_api_keys():
             f'</div>', unsafe_allow_html=True)
 
     st.markdown("")
-    st.caption("API 키는 `.env` 파일(로컬) 또는 Streamlit Cloud Secrets에서 관리합니다.")
+    st.caption("API 키는 Railway Variables 또는 `.env` 파일(로컬)에서 관리합니다.")
+
+    # 디버그: 환경변수 로딩 확인
+    with st.expander("🔧 환경변수 디버그", expanded=False):
+        env_file = _P(__file__).parent / ".env"
+        st.write(f".env 파일 존재: {env_file.exists()}")
+        for name, key1, key2 in api_list:
+            val = os.environ.get(key1, "")
+            masked = f"{val[:4]}...{val[-4:]}" if len(val) > 8 else ("(비어있음)" if not val else "***")
+            st.write(f"{key1}: {masked}")
 
 
 # ═══════════════════════════════════════════
