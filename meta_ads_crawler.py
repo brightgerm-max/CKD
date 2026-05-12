@@ -49,6 +49,19 @@ def _crawl_internal(keyword: str, country: str = "KR", max_ads: int = 10) -> lis
             page.goto(url, timeout=30000)
             page.wait_for_timeout(8000)
 
+            # 광고 이미지 URL 추출
+            ad_images = page.evaluate('''() => {
+                const results = [];
+                const imgs = document.querySelectorAll("img");
+                for (const img of imgs) {
+                    const src = img.src || "";
+                    if (src && (src.includes("scontent") || src.includes("fbcdn") || src.includes("cdninstagram")) && img.width > 100) {
+                        results.push(src);
+                    }
+                }
+                return results;
+            }''')
+
             # 페이지 텍스트 추출
             all_text = page.inner_text("body")
             lines = [l.strip() for l in all_text.split("\n") if l.strip()]
@@ -107,6 +120,13 @@ def _crawl_internal(keyword: str, country: str = "KR", max_ads: int = 10) -> lis
                 current_ad["text"] = "\n".join(text_buffer).strip()
                 if current_ad["text"] and len(ads) < max_ads:
                     ads.append(current_ad)
+
+            # 이미지 매칭 (순서대로 할당)
+            for i, ad in enumerate(ads):
+                if i < len(ad_images):
+                    ad["image_url"] = ad_images[i]
+                else:
+                    ad["image_url"] = ""
 
             browser.close()
 

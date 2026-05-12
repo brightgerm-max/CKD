@@ -1813,6 +1813,10 @@ def page_adbanner():
                 if len(ad_text) > 300:
                     ad_text = ad_text[:300] + "..."
 
+                img_url = ad.get("image_url", "")
+                img_html = (f'<img src="{img_url}" style="width:100%;border-radius:8px;margin-bottom:10px;max-height:300px;object-fit:cover">'
+                            if img_url else "")
+
                 st.markdown(
                     f'<div style="background:var(--c-card);border:1px solid var(--c-border);border-radius:var(--radius);'
                     f'padding:18px;margin-bottom:12px">'
@@ -1824,6 +1828,8 @@ def page_adbanner():
                     f'</div>'
                     f'<span style="font-size:var(--font-xs);color:var(--c-text-muted)">{ad.get("start_date","")}</span>'
                     f'</div>'
+                    # 이미지
+                    f'{img_html}'
                     # 광고 텍스트
                     f'<div style="background:var(--c-border-light);border-radius:8px;padding:14px;margin-bottom:10px;'
                     f'font-size:var(--font-sm);color:var(--c-text);line-height:1.7">{ad_text}</div>'
