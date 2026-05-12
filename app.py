@@ -1717,11 +1717,25 @@ def page_adbanner():
         if ad_cache_key not in st.session_state:
             with st.spinner(f"Meta Ad Library에서 '{search_kw}' 관련 광고를 수집하고 있습니다... (10~20초 소요)"):
                 try:
+                    import subprocess as _sp
+                    _result = _sp.run(
+                        [sys.executable, "-c", "from playwright.sync_api import sync_playwright; print('playwright OK')"],
+                        capture_output=True, timeout=10,
+                    )
+                    pw_check = _result.stdout.decode("utf-8", errors="replace").strip()
+                    pw_err = _result.stderr.decode("utf-8", errors="replace").strip()
+                    if "OK" not in pw_check:
+                        st.warning(f"Playwright 상태: {pw_err[:200]}")
+
                     from meta_ads_crawler import crawl_meta_ads
                     results = crawl_meta_ads(search_kw, country="KR", max_ads=max_ads)
                     st.session_state[ad_cache_key] = results
+                    if not results:
+                        st.warning("크롤링은 실행되었으나 결과가 없습니다. Playwright/Chromium 환경을 확인하세요.")
                 except Exception as e:
                     st.error(f"크롤링 실패: {e}")
+                    import traceback
+                    st.code(traceback.format_exc()[:500])
                     st.session_state[ad_cache_key] = []
 
         ads = st.session_state.get(ad_cache_key, [])
