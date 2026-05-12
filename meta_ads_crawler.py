@@ -11,14 +11,16 @@ def crawl_meta_ads(keyword: str, country: str = "KR", max_ads: int = 28) -> list
     try:
         result = subprocess.run(
             [sys.executable, __file__, keyword, country, str(max_ads)],
-            capture_output=True, timeout=60,
+            capture_output=True, timeout=90,
         )
         stdout = result.stdout.decode("utf-8", errors="replace").strip()
+        stderr = result.stderr.decode("utf-8", errors="replace").strip()
         if result.returncode == 0 and stdout:
             return json.loads(stdout)
+        # 에러 정보를 반환
+        return [{"_error": f"rc={result.returncode}, stderr={stderr[:300]}"}]
     except Exception as e:
-        print(f"[meta_crawler] subprocess error: {e}")
-    return []
+        return [{"_error": str(e)}]
 
 
 def _crawl_internal(keyword: str, country: str = "KR", max_ads: int = 28) -> list[dict]:

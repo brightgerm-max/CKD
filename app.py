@@ -1730,8 +1730,11 @@ def page_adbanner():
                     from meta_ads_crawler import crawl_meta_ads
                     results = crawl_meta_ads(search_kw, country="KR", max_ads=max_ads)
                     st.session_state[ad_cache_key] = results
-                    if not results:
-                        st.warning("크롤링은 실행되었으나 결과가 없습니다. Playwright/Chromium 환경을 확인하세요.")
+                    if results and "_error" in results[0]:
+                        st.error(f"크롤링 에러: {results[0]['_error']}")
+                        results = []
+                    elif not results:
+                        st.warning("크롤링은 실행되었으나 결과가 없습니다.")
                 except Exception as e:
                     st.error(f"크롤링 실패: {e}")
                     import traceback
