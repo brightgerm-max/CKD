@@ -714,7 +714,13 @@ def page_product_management():
                     new_kr_keywords = st.text_area("한글 키워드 (쉼표 구분)")
                     new_en_keywords = st.text_area("영문 키워드 (쉼표 구분)")
                 new_claims = st.text_input("건강기능 표시 (쉼표 구분)")
-                new_url = st.text_input("상품몰 URL")
+                uc1, uc2, uc3 = st.columns(3)
+                with uc1:
+                    new_url_naver = st.text_input("네이버 URL")
+                with uc2:
+                    new_url_coupang = st.text_input("쿠팡 URL")
+                with uc3:
+                    new_url_brand = st.text_input("자사몰 URL")
                 if st.form_submit_button("등록", type="primary"):
                     if new_brand and new_category:
                         products_data["products"].append({
@@ -724,7 +730,8 @@ def page_product_management():
                             "ingredient_keywords_en": [x.strip() for x in new_en_keywords.split(",") if x.strip()],
                             "health_claims": [x.strip() for x in new_claims.split(",") if x.strip()],
                             "target_demographic": {"gender":"all","primary_age":new_target},
-                            "sub_products": [new_brand], "product_url": new_url,
+                            "sub_products": [new_brand],
+                            "product_urls": {"naver": new_url_naver, "coupang": new_url_coupang, "brand": new_url_brand},
                         })
                         save_product_db(products_data)
                         st.session_state.pop("mgmt_add_mode", None)
@@ -807,13 +814,20 @@ def page_product_management():
                 with c2:
                     edit_ingredients = st.text_area("핵심 성분", value=", ".join(p.get("ingredients",[])))
                     edit_claims = st.text_area("건강기능 표시", value=", ".join(p.get("health_claims",[])))
-                edit_url = st.text_input("상품몰 URL", value=p.get("product_url",""))
+                urls = p.get("product_urls", {})
+                eu1, eu2, eu3 = st.columns(3)
+                with eu1:
+                    edit_url_naver = st.text_input("네이버 URL", value=urls.get("naver",""))
+                with eu2:
+                    edit_url_coupang = st.text_input("쿠팡 URL", value=urls.get("coupang",""))
+                with eu3:
+                    edit_url_brand = st.text_input("자사몰 URL", value=urls.get("brand",""))
                 if st.form_submit_button("저장", type="primary"):
                     p["brand"]=edit_brand; p["category"]=edit_category
                     p["target_demographic"]["primary_age"]=edit_target
                     p["ingredients"]=[x.strip() for x in edit_ingredients.split(",") if x.strip()]
                     p["health_claims"]=[x.strip() for x in edit_claims.split(",") if x.strip()]
-                    p["product_url"]=edit_url
+                    p["product_urls"]={"naver":edit_url_naver,"coupang":edit_url_coupang,"brand":edit_url_brand}
                     save_product_db(products_data)
                     st.session_state.pop("mgmt_edit_mode",None)
                     st.rerun()
@@ -862,9 +876,10 @@ def page_product_management():
                         st.session_state["mgmt_selected"] = idx
                         st.rerun()
                 with b2:
-                    url = p.get("product_url","")
-                    if url:
-                        st.link_button("몰이동 >", url, use_container_width=True)
+                    urls = p.get("product_urls", {})
+                    brand_url = urls.get("brand","") if isinstance(urls, dict) else p.get("product_url","")
+                    if brand_url:
+                        st.link_button("몰이동 >", brand_url, use_container_width=True)
                     else:
                         st.button("—", key=f"mall_{idx}", disabled=True, use_container_width=True)
 
@@ -2169,19 +2184,31 @@ def page_competitor_db_mgmt():
 
             # 추가 폼
             with st.form(f"cdb_add_{cat_name}"):
-                st.markdown("**경쟁사 추가** (회사명, 브랜드, USP를 입력하세요)")
+                st.markdown("**경쟁사 추가**")
                 a1, a2 = st.columns(2)
                 with a1:
                     add_company = st.text_input("회사명", key=f"cdb_co_{cat_name}")
                     add_brand = st.text_input("브랜드명", key=f"cdb_br_{cat_name}")
+                    add_ingredients = st.text_input("핵심 성분 (쉼표 구분)", key=f"cdb_ing_{cat_name}")
                 with a2:
                     add_headline = st.text_input("USP 헤드라인", key=f"cdb_hl_{cat_name}")
+                    add_claims = st.text_input("건강기능 표시 (쉼표 구분)", key=f"cdb_cl_{cat_name}")
                     add_sp = st.text_area("셀링포인트 (줄바꿈 구분)", height=60, key=f"cdb_sp_{cat_name}")
+                au1, au2, au3 = st.columns(3)
+                with au1:
+                    add_url_naver = st.text_input("네이버 URL", key=f"cdb_un_{cat_name}")
+                with au2:
+                    add_url_coupang = st.text_input("쿠팡 URL", key=f"cdb_uc_{cat_name}")
+                with au3:
+                    add_url_brand = st.text_input("자사몰 URL", key=f"cdb_ub_{cat_name}")
                 if st.form_submit_button("추가", type="primary"):
                     if add_company and add_brand:
                         comps.append({
                             "company": add_company, "brand": add_brand,
                             "search_keyword": f"{add_brand} {add_company}",
+                            "ingredients": [x.strip() for x in add_ingredients.split(",") if x.strip()],
+                            "health_claims": [x.strip() for x in add_claims.split(",") if x.strip()],
+                            "product_urls": {"naver": add_url_naver, "coupang": add_url_coupang, "brand": add_url_brand},
                             "usp": {"headline": add_headline or add_brand,
                                     "selling_points": [s.strip() for s in add_sp.split("\n") if s.strip()],
                                     "target": "", "key_claim": ""},
@@ -2202,15 +2229,24 @@ def page_competitor_db_mgmt():
                 sp = usp.get("selling_points", []) if isinstance(usp, dict) else []
                 tgt = usp.get("target", "") if isinstance(usp, dict) else ""
 
+                c_urls = c.get("product_urls", {})
                 with st.form(f"cdb_edit_{cat_name}_{sel_idx}"):
                     e1, e2 = st.columns(2)
                     with e1:
                         ed_company = st.text_input("회사명", value=c.get("company",""))
                         ed_brand = st.text_input("브랜드명", value=c.get("brand",""))
+                        ed_ingredients = st.text_input("핵심 성분 (쉼표 구분)", value=", ".join(c.get("ingredients",[])))
                     with e2:
                         ed_headline = st.text_input("USP 헤드라인", value=hl)
+                        ed_claims = st.text_input("건강기능 표시 (쉼표 구분)", value=", ".join(c.get("health_claims",[])))
                         ed_sp = st.text_area("셀링포인트 (줄바꿈 구분)", value="\n".join(sp), height=60)
-                        ed_target = st.text_input("타겟 고객층", value=tgt)
+                    eu1, eu2, eu3 = st.columns(3)
+                    with eu1:
+                        ed_url_naver = st.text_input("네이버 URL", value=c_urls.get("naver",""))
+                    with eu2:
+                        ed_url_coupang = st.text_input("쿠팡 URL", value=c_urls.get("coupang",""))
+                    with eu3:
+                        ed_url_brand = st.text_input("자사몰 URL", value=c_urls.get("brand",""))
                     bc1, bc2, _ = st.columns([1, 1, 4])
                     with bc1:
                         save_btn = st.form_submit_button("저장", type="primary")
@@ -2221,9 +2257,12 @@ def page_competitor_db_mgmt():
                         c["company"] = ed_company
                         c["brand"] = ed_brand
                         c["search_keyword"] = f"{ed_brand} {ed_company}"
+                        c["ingredients"] = [x.strip() for x in ed_ingredients.split(",") if x.strip()]
+                        c["health_claims"] = [x.strip() for x in ed_claims.split(",") if x.strip()]
+                        c["product_urls"] = {"naver": ed_url_naver, "coupang": ed_url_coupang, "brand": ed_url_brand}
                         c["usp"] = {"headline": ed_headline,
                                     "selling_points": [s.strip() for s in ed_sp.split("\n") if s.strip()],
-                                    "target": ed_target, "key_claim": ""}
+                                    "target": "", "key_claim": ""}
                         save_competitor_db(competitor_db)
                         st.rerun()
                     if del_btn:

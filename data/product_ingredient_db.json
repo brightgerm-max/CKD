@@ -46,7 +46,11 @@
         "락토핏 맘",
         "락토핏 생유산균"
       ],
-      "product_url": "https://www.ckdmall.co.kr/product/lactofit-gold"
+      "product_urls": {
+        "naver": "",
+        "coupang": "",
+        "brand": "https://www.ckdmall.co.kr/product/lactofit-gold"
+      }
     },
     {
       "brand": "콘드로이친",
@@ -83,7 +87,11 @@
       "sub_products": [
         "콘드로이친"
       ],
-      "product_url": "https://www.ckdmall.co.kr/product/chondroitin"
+      "product_urls": {
+        "naver": "",
+        "coupang": "",
+        "brand": "https://www.ckdmall.co.kr/product/chondroitin"
+      }
     },
     {
       "brand": "포스파티딜세린",
@@ -119,7 +127,11 @@
       "sub_products": [
         "포스파티딜세린"
       ],
-      "product_url": "https://www.ckdmall.co.kr/product/phosphatidylserine"
+      "product_urls": {
+        "naver": "",
+        "coupang": "",
+        "brand": "https://www.ckdmall.co.kr/product/phosphatidylserine"
+      }
     },
     {
       "brand": "아이클리어 루테인",
@@ -155,7 +167,11 @@
       "sub_products": [
         "아이클리어 루테인"
       ],
-      "product_url": "https://www.ckdmall.co.kr/product/eyeclear-lutein"
+      "product_urls": {
+        "naver": "",
+        "coupang": "",
+        "brand": "https://www.ckdmall.co.kr/product/eyeclear-lutein"
+      }
     },
     {
       "brand": "오메가3",
@@ -195,7 +211,11 @@
       "sub_products": [
         "rTG 오메가3"
       ],
-      "product_url": "https://www.ckdmall.co.kr/product/omega3"
+      "product_urls": {
+        "naver": "",
+        "coupang": "",
+        "brand": "https://www.ckdmall.co.kr/product/omega3"
+      }
     },
     {
       "brand": "밀크씨슬",
@@ -228,7 +248,11 @@
       "sub_products": [
         "밀크씨슬"
       ],
-      "product_url": "https://www.ckdmall.co.kr/product/milk-thistle"
+      "product_urls": {
+        "naver": "",
+        "coupang": "",
+        "brand": "https://www.ckdmall.co.kr/product/milk-thistle"
+      }
     },
     {
       "brand": "칼슘 마그네슘 비타민D",
@@ -267,7 +291,11 @@
       "sub_products": [
         "칼슘 마그네슘 비타민D"
       ],
-      "product_url": "https://www.ckdmall.co.kr/product/calcium-magnesium-vitd"
+      "product_urls": {
+        "naver": "",
+        "coupang": "",
+        "brand": "https://www.ckdmall.co.kr/product/calcium-magnesium-vitd"
+      }
     },
     {
       "brand": "홍국",
@@ -300,7 +328,11 @@
       "sub_products": [
         "홍국"
       ],
-      "product_url": "https://www.ckdmall.co.kr/product/red-yeast-rice"
+      "product_urls": {
+        "naver": "",
+        "coupang": "",
+        "brand": "https://www.ckdmall.co.kr/product/red-yeast-rice"
+      }
     },
     {
       "brand": "비타민C",
@@ -335,7 +367,11 @@
       "sub_products": [
         "비타민C 1000"
       ],
-      "product_url": "https://www.ckdmall.co.kr/product/vitamin-c"
+      "product_urls": {
+        "naver": "",
+        "coupang": "",
+        "brand": "https://www.ckdmall.co.kr/product/vitamin-c"
+      }
     },
     {
       "brand": "콜라겐",
@@ -370,7 +406,11 @@
       "sub_products": [
         "저분자 콜라겐"
       ],
-      "product_url": "https://www.ckdmall.co.kr/product/collagen"
+      "product_urls": {
+        "naver": "",
+        "coupang": "",
+        "brand": "https://www.ckdmall.co.kr/product/collagen"
+      }
     },
     {
       "brand": "쏘팔메토",
@@ -401,7 +441,11 @@
       "sub_products": [
         "쏘팔메토"
       ],
-      "product_url": "https://www.ckdmall.co.kr/product/saw-palmetto"
+      "product_urls": {
+        "naver": "",
+        "coupang": "",
+        "brand": "https://www.ckdmall.co.kr/product/saw-palmetto"
+      }
     },
     {
       "brand": "크랜베리",
@@ -434,7 +478,11 @@
       "sub_products": [
         "크랜베리"
       ],
-      "product_url": "https://www.ckdmall.co.kr/product/cranberry"
+      "product_urls": {
+        "naver": "",
+        "coupang": "",
+        "brand": "https://www.ckdmall.co.kr/product/cranberry"
+      }
     },
     {
       "brand": "가르시니아",
@@ -469,7 +517,11 @@
       "sub_products": [
         "가르시니아"
       ],
-      "product_url": "https://www.ckdmall.co.kr/product/garcinia"
+      "product_urls": {
+        "naver": "",
+        "coupang": "",
+        "brand": "https://www.ckdmall.co.kr/product/garcinia"
+      }
     }
   ]
 }
