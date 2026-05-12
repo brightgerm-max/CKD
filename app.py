@@ -1821,14 +1821,18 @@ def page_adbanner():
                         ad_text = ad_text[:150] + "..."
 
                     img_url = ad.get("image_url", "")
-                    img_html = (f'<img src="{img_url}" style="width:100%;border-radius:6px;margin-bottom:8px;object-fit:contain" onerror="this.style.display=\'none\'">'
-                                if img_url else "")
+                    img_html = (
+                        f'<div style="width:100%;height:200px;background:#f1f5f9;border-radius:6px;margin-bottom:8px;'
+                        f'display:flex;align-items:center;justify-content:center;overflow:hidden">'
+                        f'<img src="{img_url}" style="max-width:100%;max-height:100%;object-fit:contain" onerror="this.parentElement.style.display=\'none\'">'
+                        f'</div>'
+                    ) if img_url else ""
 
                     with col:
                         st.markdown(
                             f'<div style="background:var(--c-card);border:1px solid var(--c-border);border-radius:var(--radius);'
-                            f'padding:12px;margin-bottom:10px;height:100%">'
-                            # 이미지
+                            f'padding:12px;margin-bottom:10px;min-height:340px;display:flex;flex-direction:column">'
+                            # 이미지 영역 (고정 200px)
                             f'{img_html}'
                             # 광고주 + 날짜
                             f'<div style="margin-bottom:6px">'
@@ -1836,7 +1840,7 @@ def page_adbanner():
                             f'<span style="font-size:var(--font-xs);color:var(--c-text-muted)">{ad.get("start_date","")}</span>'
                             f'</div>'
                             # 광고 텍스트
-                            f'<div style="font-size:var(--font-xs);color:var(--c-text-sub);line-height:1.5;margin-bottom:8px">{ad_text}</div>'
+                            f'<div style="font-size:var(--font-xs);color:var(--c-text-sub);line-height:1.5;margin-bottom:8px;flex:1;overflow:hidden">{ad_text}</div>'
                             # 링크
                             f'<a href="{ad.get("url","#")}" target="_blank" style="font-size:var(--font-xs);color:var(--c-primary);font-weight:600;text-decoration:none">상세 보기 →</a>'
                             f'</div>', unsafe_allow_html=True)
