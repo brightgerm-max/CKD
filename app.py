@@ -34,6 +34,7 @@ from price_client import search_product_prices
 from competitor_scanner import scan_competitors, compare_ingredients
 from ad_reviewer import review_ad_text, ALLOWED_CLAIMS
 from product_scraper import scrape_product_info
+from price_scraper import scrape_prices_from_urls
 
 # ─── 경로 & 데이터 ───
 DATA_DIR = Path(__file__).parent / "data"
@@ -1435,15 +1436,28 @@ def page_competitor():
 
     st.markdown(f'<div class="s-header">"{product["brand"]}" 경쟁사 분석</div>', unsafe_allow_html=True)
 
-    # ── 채널별 가격 수집 (자사 + 경쟁사 DB) ──
-    price_cache_key = f"comp_prices_v3_{product['brand']}"
+    # ── 채널별 가격 수집 (URL 기반 + API 폴백) ──
+    price_cache_key = f"comp_prices_v4_{product['brand']}"
     if price_cache_key not in st.session_state:
         with st.spinner("자사 및 경쟁사 채널별 가격을 조회하고 있습니다..."):
             all_prices = {}
-            all_prices["ckd"] = search_product_prices(f"종근당 {product['brand']}", brand_keywords=["종근당","종근당건강","ckd"])
+            # 자사: URL 있으면 URL 크롤링, 없으면 API 검색
+            ckd_urls = product.get("product_urls", {})
+            has_ckd_urls = any(ckd_urls.get(k) for k in ["naver", "coupang", "brand"])
+            if has_ckd_urls:
+                all_prices["ckd"] = scrape_prices_from_urls(ckd_urls)
+            else:
+                all_prices["ckd"] = search_product_prices(f"종근당 {product['brand']}", brand_keywords=["종근당","종근당건강","ckd"])
+            # 경쟁사: URL 있으면 URL 크롤링, 없으면 API 검색
             for comp in db_comps:
-                search_kw = comp.get("search_keyword", f'{comp.get("product_name","")} {comp.get("brand_name","")}')
-                all_prices[comp.get("brand_name","")] = search_product_prices(search_kw, brand_keywords=[comp.get("brand_name","")])
+                c_brand = comp.get("brand_name", "")
+                c_urls = comp.get("product_urls", {})
+                has_urls = any(c_urls.get(k) for k in ["naver", "coupang", "brand"])
+                if has_urls:
+                    all_prices[c_brand] = scrape_prices_from_urls(c_urls)
+                else:
+                    search_kw = comp.get("search_keyword", f'{comp.get("product_name","")} {c_brand}')
+                    all_prices[c_brand] = search_product_prices(search_kw, brand_keywords=[c_brand])
             st.session_state[price_cache_key] = all_prices
     all_prices = st.session_state[price_cache_key]
 
