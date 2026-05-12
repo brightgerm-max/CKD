@@ -1807,9 +1807,10 @@ def page_adbanner():
                     if idx >= len(ads):
                         break
                     ad = ads[idx]
-                    ad_text = ad.get("text", "").replace("\n", "<br/>")
-                    if len(ad_text) > 200:
-                        ad_text = ad_text[:200] + "..."
+                    ad_raw = ad.get("text", "")
+                    if len(ad_raw) > 100:
+                        ad_raw = ad_raw[:100] + "..."
+                    ad_text = ad_raw.replace("\n", "<br/>")
 
                     img_url = ad.get("image_url", "")
                     cta = ad.get("cta", "")
@@ -1823,7 +1824,6 @@ def page_adbanner():
                     ) if img_url else ""
 
                     # CTA 영역
-                    cta_desc = ad.get("cta_desc", "").replace("\n", "<br/>")
                     cta_html = ""
                     if cta or landing or cta_desc:
                         cta_label = cta or "더 알아보기"
@@ -1839,27 +1839,33 @@ def page_adbanner():
                             f'</div></div>'
                         )
 
+                    # CTA 설명도 자르기
+                    cta_desc_raw = ad.get("cta_desc", "")
+                    if len(cta_desc_raw) > 60:
+                        cta_desc_raw = cta_desc_raw[:60] + "..."
+                    cta_desc = cta_desc_raw.replace("\n", "<br/>")
+
                     with col:
                         st.markdown(
                             f'<div style="background:var(--c-card);border:1px solid var(--c-border);border-radius:var(--radius);'
-                            f'padding:0;margin-bottom:10px;overflow:hidden;display:flex;flex-direction:column">'
+                            f'padding:0;margin-bottom:10px;overflow:hidden;height:460px;display:flex;flex-direction:column">'
                             # 상단: 광고주 + 날짜
-                            f'<div style="padding:12px 14px 8px">'
-                            f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
-                            f'<span style="font-size:var(--font-sm);font-weight:700;color:var(--c-text)">{ad.get("advertiser","")}</span>'
-                            f'<span style="font-size:var(--font-xs);color:var(--c-text-muted)">{ad.get("start_date","")}</span>'
+                            f'<div style="padding:10px 12px 6px">'
+                            f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">'
+                            f'<span style="font-size:var(--font-sm);font-weight:700;color:var(--c-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:70%">{ad.get("advertiser","")}</span>'
+                            f'<span style="font-size:var(--font-xs);color:var(--c-text-muted);white-space:nowrap">{ad.get("start_date","")}</span>'
                             f'</div>'
                             f'<span style="font-size:var(--font-xs);color:var(--c-text-muted)">광고</span>'
                             f'</div>'
-                            # 광고 텍스트
-                            f'<div style="padding:0 14px 10px;font-size:var(--font-xs);color:var(--c-text-sub);line-height:1.6">{ad_text}</div>'
-                            # 이미지
+                            # 광고 텍스트 (고정 높이)
+                            f'<div style="padding:0 12px 8px;font-size:var(--font-xs);color:var(--c-text-sub);line-height:1.5;'
+                            f'height:60px;overflow:hidden">{ad_text}</div>'
+                            # 이미지 (고정 높이)
                             f'{img_html}'
-                            # CTA + 랜딩
-                            f'<div style="padding:0 14px 10px">'
+                            # CTA + 랜딩 (하단 고정)
+                            f'<div style="padding:6px 12px 10px;margin-top:auto">'
                             f'{cta_html}'
-                            # 상세 보기
-                            f'<div style="text-align:right;margin-top:6px">'
+                            f'<div style="text-align:right;margin-top:4px">'
                             f'<a href="{ad.get("url","#")}" target="_blank" style="font-size:var(--font-xs);color:var(--c-primary);font-weight:600;text-decoration:none">Ad Library에서 보기 →</a>'
                             f'</div></div>'
                             f'</div>', unsafe_allow_html=True)
