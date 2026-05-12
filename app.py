@@ -2218,6 +2218,7 @@ def page_competitor_db_mgmt():
         [data-testid="stFileUploader"] {background:none !important; padding:0 !important; border:none !important;}
         [data-testid="stFileUploader"] section {padding:0 !important;}
         [data-testid="stFileUploader"] [data-testid="stFileUploaderDropzone"] {background:none !important; border:1px dashed var(--c-border) !important; padding:8px 12px !important; min-height:auto !important;}
+        [data-testid="stFileUploader"] [data-testid="stFileUploaderDropzone"] small {display:none !important;}
         </style>""", unsafe_allow_html=True)
         c1, c2, c3, c4 = st.columns([1.5, 2, 1.5, 2])
         with c1:
