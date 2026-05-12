@@ -1762,33 +1762,18 @@ def page_adbanner():
     render_page_header("🎨","광고배너 조사","META 광고 라이브러리에서 경쟁사 광고 소재를 조사합니다","orange")
 
     # 검색 설정
-    col_kw, col_count, col_btn = st.columns([3, 1, 1])
+    col_kw, col_btn = st.columns([4, 1])
     with col_kw:
         search_kw = st.text_input("검색 키워드", value="유산균", placeholder="예: 유산균, 관절건강, 콘드로이친...")
-    with col_count:
-        max_ads = st.selectbox("조회 수", [5, 10, 15, 20], index=1)
     with col_btn:
         st.markdown('<div style="height:28px"></div>', unsafe_allow_html=True)
         search_btn = st.button("검색", type="primary", use_container_width=True)
 
-    # 빠른 검색 버튼
-    st.markdown("**빠른 검색**")
-    quick_cols = st.columns(6)
-    quick_keywords = ["유산균", "관절건강", "루테인", "콜라겐", "오메가3", "다이어트"]
-    for i, qk in enumerate(quick_keywords):
-        with quick_cols[i]:
-            if st.button(qk, key=f"quick_{qk}", use_container_width=True):
-                st.session_state["ad_search_kw"] = qk
-                st.session_state.pop("ad_results", None)
-                st.rerun()
-
-    if st.session_state.get("ad_search_kw"):
-        search_kw = st.session_state["ad_search_kw"]
-
+    max_ads = 20
     st.markdown("---")
 
     # 검색 실행
-    ad_cache_key = f"ad_results_{search_kw}_{max_ads}"
+    ad_cache_key = f"ad_results_{search_kw}"
     if search_btn and search_kw:
         st.session_state.pop(ad_cache_key, None)
 
