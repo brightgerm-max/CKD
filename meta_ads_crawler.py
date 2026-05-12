@@ -45,20 +45,9 @@ def _crawl_internal(keyword: str, country: str = "KR", max_ads: int = 10) -> lis
     try:
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
-            page = browser.new_page()
+            page = browser.new_page(viewport={"width": 1280, "height": 800})
             page.goto(url, timeout=30000)
             page.wait_for_timeout(8000)
-
-            # 점진적 스크롤 — 이미지 lazy loading 대응
-            scroll_times = max(3, max_ads // 10)
-            for i in range(min(scroll_times, 8)):
-                page.evaluate(f"window.scrollTo(0, document.body.scrollHeight * {(i+1)/scroll_times})")
-                page.wait_for_timeout(2000)
-            # 맨 위로 돌아간 후 다시 전체 스크롤 (이미지 재로딩)
-            page.evaluate("window.scrollTo(0, 0)")
-            page.wait_for_timeout(1000)
-            page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
-            page.wait_for_timeout(2000)
 
             # 광고 이미지 URL 추출
             ad_images = page.evaluate('''() => {
