@@ -2207,6 +2207,51 @@ def page_competitor_db_mgmt():
     competitor_db = load_competitor_db()
     categories = competitor_db.get("categories", {})
 
+    # 데이터 내보내기 / 가져오기
+    with st.expander("데이터 내보내기 / 가져오기", expanded=False):
+        dl1, dl2 = st.columns(2)
+        with dl1:
+            st.download_button(
+                "경쟁사 DB 다운로드 (JSON)",
+                data=json.dumps(competitor_db, ensure_ascii=False, indent=2),
+                file_name="competitor_db.json",
+                mime="application/json",
+                use_container_width=True,
+            )
+            products_data = load_products()
+            st.download_button(
+                "자사상품 DB 다운로드 (JSON)",
+                data=json.dumps(products_data, ensure_ascii=False, indent=2),
+                file_name="product_ingredient_db.json",
+                mime="application/json",
+                use_container_width=True,
+            )
+        with dl2:
+            uploaded_comp = st.file_uploader("경쟁사 DB 업로드", type=["json"], key="upload_comp_db")
+            if uploaded_comp:
+                try:
+                    new_data = json.loads(uploaded_comp.read().decode("utf-8"))
+                    if "categories" in new_data:
+                        save_competitor_db(new_data)
+                        st.success("경쟁사 DB가 업데이트되었습니다.")
+                        st.rerun()
+                    else:
+                        st.error("올바른 경쟁사 DB 형식이 아닙니다.")
+                except Exception as e:
+                    st.error(f"파일 읽기 실패: {e}")
+            uploaded_prod = st.file_uploader("자사상품 DB 업로드", type=["json"], key="upload_prod_db")
+            if uploaded_prod:
+                try:
+                    new_data = json.loads(uploaded_prod.read().decode("utf-8"))
+                    if "products" in new_data:
+                        save_product_db(new_data)
+                        st.success("자사상품 DB가 업데이트되었습니다.")
+                        st.rerun()
+                    else:
+                        st.error("올바른 자사상품 DB 형식이 아닙니다.")
+                except Exception as e:
+                    st.error(f"파일 읽기 실패: {e}")
+
     for cat_name, cat_data in categories.items():
         comps = cat_data.get("competitors", [])
         with st.expander(f"📁 {cat_name} ({len(comps)}개)", expanded=False):
