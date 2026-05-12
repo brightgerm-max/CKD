@@ -1,9 +1,27 @@
-"""Meta Ad Library 크롤러 — Playwright 기반"""
+"""Meta Ad Library 크롤러 — Playwright 기반 (서브프로세스 실행)"""
 
 import re
+import json
+import subprocess
+import sys
 
 
 def crawl_meta_ads(keyword: str, country: str = "KR", max_ads: int = 10) -> list[dict]:
+    """서브프로세스에서 Playwright 크롤링 실행 (Streamlit asyncio 충돌 방지)"""
+    try:
+        result = subprocess.run(
+            [sys.executable, __file__, keyword, country, str(max_ads)],
+            capture_output=True, timeout=60,
+        )
+        stdout = result.stdout.decode("utf-8", errors="replace").strip()
+        if result.returncode == 0 and stdout:
+            return json.loads(stdout)
+    except Exception as e:
+        print(f"[meta_crawler] subprocess error: {e}")
+    return []
+
+
+def _crawl_internal(keyword: str, country: str = "KR", max_ads: int = 10) -> list[dict]:
     """
     Meta Ad Library에서 키워드로 광고를 검색하여 크롤링.
     반환: [{"advertiser", "text", "start_date", "library_id", "platforms", "url"}, ...]
@@ -99,11 +117,19 @@ def crawl_meta_ads(keyword: str, country: str = "KR", max_ads: int = 10) -> list
 
 
 if __name__ == "__main__":
-    import json
-    results = crawl_meta_ads("유산균", max_ads=3)
-    print(f"Found {len(results)} ads")
-    for ad in results:
-        print(f"\n광고주: {ad['advertiser']}")
-        print(f"시작일: {ad['start_date']}")
-        print(f"텍스트: {ad['text'][:100]}...")
-        print(f"URL: {ad['url']}")
+    import sys
+    if len(sys.argv) >= 4:
+        # 서브프로세스 모드: 결과를 JSON으로 stdout 출력
+        import io
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+        kw = sys.argv[1]
+        country = sys.argv[2]
+        max_n = int(sys.argv[3])
+        results = _crawl_internal(kw, country, max_n)
+        print(json.dumps(results, ensure_ascii=False))
+    else:
+        # 직접 실행 테스트
+        results = crawl_meta_ads("유산균", max_ads=3)
+        for ad in results:
+            sys.stderr.write(f"광고주: {ad['advertiser']}\n")
+            sys.stderr.write(f"텍스트: {ad['text'][:80]}...\n\n")
