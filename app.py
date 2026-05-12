@@ -1815,10 +1815,10 @@ def page_adbanner():
                     cta = ad.get("cta", "")
                     landing = ad.get("landing_url", "")
 
-                    # 이미지 영역
+                    # 이미지 영역 (고정 높이)
                     img_html = (
-                        f'<div style="width:100%;background:#f8fafc;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:8px">'
-                        f'<img src="{img_url}" style="width:100%;object-fit:contain" onerror="this.parentElement.style.display=\'none\'">'
+                        f'<div style="width:100%;height:220px;background:#f8fafc;display:flex;align-items:center;justify-content:center;overflow:hidden">'
+                        f'<img src="{img_url}" style="max-width:100%;max-height:100%;object-fit:contain" onerror="this.parentElement.style.display=\'none\'">'
                         f'</div>'
                     ) if img_url else ""
 
