@@ -40,7 +40,7 @@ def _crawl_internal(keyword: str, country: str = "KR", max_ads: int = 28) -> lis
 
     try:
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
+            browser = p.chromium.launch(headless=True, args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"])
             page = browser.new_page(viewport={"width": 1280, "height": 800})
             page.goto(url, timeout=30000)
             page.wait_for_timeout(8000)
