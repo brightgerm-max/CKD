@@ -493,17 +493,24 @@ section[data-testid="stMainBlockContainer"] [data-testid="stLinkButton"] a:hover
     transform: translateY(-1px) !important;
 }
 /* text_area 스타일 */
-.stTextArea textarea {
+.stTextArea textarea,
+.stTextArea textarea:focus,
+.stTextArea textarea:active,
+div[data-testid="stTextArea"] textarea,
+div[data-testid="stTextArea"] textarea:focus {
     background: #ffffff !important;
     border: 1.5px solid var(--c-border) !important;
     border-radius: 10px !important;
     outline: none !important;
-}
-.stTextArea textarea:focus {
-    border-color: var(--c-primary) !important;
     box-shadow: none !important;
-    outline: none !important;
 }
+.stTextArea textarea:focus,
+div[data-testid="stTextArea"] textarea:focus {
+    border-color: var(--c-primary) !important;
+}
+/* Streamlit 기본 빨간 outline 제거 */
+*:focus { outline: none !important; }
+div[data-baseweb] *:focus { box-shadow: none !important; outline: none !important; }
 /* date_input 스타일 */
 .stDateInput > div > div {
     border-radius: 10px !important;
