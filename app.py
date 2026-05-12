@@ -1816,7 +1816,7 @@ def page_adbanner():
                     if idx >= len(ads):
                         break
                     ad = ads[idx]
-                    ad_text = ad.get("text", "").replace("\n", "<br>")
+                    ad_text = ad.get("text", "").replace("\n", " ")
                     if len(ad_text) > 150:
                         ad_text = ad_text[:150] + "..."
 
