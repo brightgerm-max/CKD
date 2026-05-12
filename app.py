@@ -746,8 +746,17 @@ def page_product_management():
         ingredients_html = "".join(f'<span style="display:inline-block;background:#eff6ff;color:#2563eb;padding:4px 12px;border-radius:20px;font-size:0.82rem;font-weight:500;margin:3px 4px">{ing}</span>' for ing in p.get("ingredients",[]))
         claims_html = "".join(f'<span style="display:inline-block;background:#f0fdf4;color:#059669;padding:4px 12px;border-radius:20px;font-size:0.82rem;font-weight:500;margin:3px 4px">{c}</span>' for c in p.get("health_claims",[]))
         subs_html = "".join(f'<span style="display:inline-block;background:#f5f3ff;color:#7c3aed;padding:4px 12px;border-radius:20px;font-size:0.82rem;font-weight:500;margin:3px 4px">{s}</span>' for s in p.get("sub_products",[]))
-        url = p.get("product_url","")
-        url_html = f'<a href="{url}" target="_blank" style="color:#2563eb;text-decoration:none;font-weight:500;font-size:0.85rem">🔗 상품몰 바로가기 →</a>' if url else ""
+        urls = p.get("product_urls", {})
+        if not isinstance(urls, dict):
+            urls = {"brand": str(urls)}
+        url_parts = []
+        if urls.get("naver"):
+            url_parts.append(f'<a href="{urls["naver"]}" target="_blank" style="text-decoration:none"><span style="background:#03c75a;color:#fff;padding:3px 8px;border-radius:6px;font-size:0.72rem;font-weight:700">네이버</span></a>')
+        if urls.get("coupang"):
+            url_parts.append(f'<a href="{urls["coupang"]}" target="_blank" style="text-decoration:none"><span style="background:#ef4444;color:#fff;padding:3px 8px;border-radius:6px;font-size:0.72rem;font-weight:700">쿠팡</span></a>')
+        if urls.get("brand"):
+            url_parts.append(f'<a href="{urls["brand"]}" target="_blank" style="text-decoration:none"><span style="background:#2563eb;color:#fff;padding:3px 8px;border-radius:6px;font-size:0.72rem;font-weight:700">자사몰</span></a>')
+        url_html = " ".join(url_parts) if url_parts else ""
 
         st.markdown(f"""
         <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:18px; overflow:hidden; box-shadow:0 4px 16px rgba(0,0,0,0.06); margin-bottom:20px">
