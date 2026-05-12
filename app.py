@@ -33,6 +33,7 @@ from clinicaltrials_client import search_clinical_trials
 from price_client import search_product_prices
 from competitor_scanner import scan_competitors, compare_ingredients
 from ad_reviewer import review_ad_text, ALLOWED_CLAIMS
+from product_scraper import scrape_product_info
 
 # ─── 경로 & 데이터 ───
 DATA_DIR = Path(__file__).parent / "data"
@@ -2193,6 +2194,13 @@ def page_api_keys():
 # ═══════════════════════════════════════════
 # 설정: 경쟁사 DB 관리
 # ═══════════════════════════════════════════
+def _detect_url_type(u):
+    if "smartstore.naver.com" in u or "shopping.naver.com" in u or "search.shopping.naver" in u:
+        return "naver"
+    if "coupang.com" in u:
+        return "coupang"
+    return "brand"
+
 def page_competitor_db_mgmt():
     render_page_header("🏢","경쟁사 DB 관리","카테고리별 경쟁사 정보를 추가/수정/삭제합니다","orange")
 
@@ -2208,25 +2216,54 @@ def page_competitor_db_mgmt():
             else:
                 st.caption("등록된 경쟁사 없음")
 
+            # URL 자동추출
+            st.markdown("**상품 URL로 자동 입력**")
+            ac1, ac2 = st.columns([4, 1])
+            with ac1:
+                auto_url = st.text_input("상품 페이지 URL", placeholder="네이버/쿠팡/자사몰 URL 입력", key=f"cdb_autourl_{cat_name}")
+            with ac2:
+                st.markdown('<div style="height:28px"></div>', unsafe_allow_html=True)
+                auto_btn = st.button("자동 추출", type="primary", use_container_width=True, key=f"cdb_autobtn_{cat_name}")
+
+            # 자동추출 결과를 세션에 저장
+            auto_key = f"_auto_result_{cat_name}"
+            if auto_btn and auto_url:
+                with st.spinner("상품 페이지 분석 중..."):
+                    auto_result = scrape_product_info(auto_url)
+                    if "_error" in auto_result:
+                        st.error(f"추출 실패: {auto_result['_error']}")
+                    else:
+                        st.session_state[auto_key] = auto_result
+                        st.session_state[f"_auto_url_{cat_name}"] = auto_url
+                        st.success("추출 완료! 아래 폼에 자동 입력되었습니다.")
+
+            # 자동추출 결과 가져오기
+            ar = st.session_state.get(auto_key, {})
+            ar_url = st.session_state.get(f"_auto_url_{cat_name}", "")
+
+            ar_urls = {"naver": "", "coupang": "", "brand": ""}
+            if ar_url:
+                ar_urls[_detect_url_type(ar_url)] = ar_url
+
             # 추가 폼
             with st.form(f"cdb_add_{cat_name}"):
                 st.markdown("**경쟁사 추가**")
                 a1, a2 = st.columns(2)
                 with a1:
-                    add_brand_name = st.text_input("브랜드", key=f"cdb_co_{cat_name}")
-                    add_product_name = st.text_input("제품명", key=f"cdb_br_{cat_name}")
-                    add_ingredients = st.text_input("핵심 성분 (쉼표 구분)", key=f"cdb_ing_{cat_name}")
+                    add_brand_name = st.text_input("브랜드", value=ar.get("brand_name", ""), key=f"cdb_co_{cat_name}")
+                    add_product_name = st.text_input("제품명", value=ar.get("product_name", ""), key=f"cdb_br_{cat_name}")
+                    add_ingredients = st.text_input("핵심 성분 (쉼표 구분)", value=", ".join(ar.get("ingredients", [])), key=f"cdb_ing_{cat_name}")
                 with a2:
-                    add_headline = st.text_input("USP 헤드라인", key=f"cdb_hl_{cat_name}")
-                    add_claims = st.text_input("건강기능 표시 (쉼표 구분)", key=f"cdb_cl_{cat_name}")
-                    add_sp = st.text_area("셀링포인트 (줄바꿈 구분)", height=60, key=f"cdb_sp_{cat_name}")
+                    add_headline = st.text_input("USP 헤드라인", value=ar.get("headline", ""), key=f"cdb_hl_{cat_name}")
+                    add_claims = st.text_input("건강기능 표시 (쉼표 구분)", value=", ".join(ar.get("health_claims", [])), key=f"cdb_cl_{cat_name}")
+                    add_sp = st.text_area("셀링포인트 (줄바꿈 구분)", value="\n".join(ar.get("selling_points", [])), height=60, key=f"cdb_sp_{cat_name}")
                 au1, au2, au3 = st.columns(3)
                 with au1:
-                    add_url_naver = st.text_input("네이버 URL", key=f"cdb_un_{cat_name}")
+                    add_url_naver = st.text_input("네이버 URL", value=ar_urls.get("naver", ""), key=f"cdb_un_{cat_name}")
                 with au2:
-                    add_url_coupang = st.text_input("쿠팡 URL", key=f"cdb_uc_{cat_name}")
+                    add_url_coupang = st.text_input("쿠팡 URL", value=ar_urls.get("coupang", ""), key=f"cdb_uc_{cat_name}")
                 with au3:
-                    add_url_brand = st.text_input("자사몰 URL", key=f"cdb_ub_{cat_name}")
+                    add_url_brand = st.text_input("자사몰 URL", value=ar_urls.get("brand", ""), key=f"cdb_ub_{cat_name}")
                 if st.form_submit_button("추가", type="primary"):
                     if add_brand_name and add_product_name:
                         comps.append({
@@ -2240,13 +2277,17 @@ def page_competitor_db_mgmt():
                                     "target": "", "key_claim": ""},
                             "channels": [], "price_position": "중", "premium_score": 5, "price_score": 5,
                         })
+                        # 자동추출 세션 정리
+                        st.session_state.pop(auto_key, None)
+                        st.session_state.pop(f"_auto_url_{cat_name}", None)
                         save_competitor_db(competitor_db)
                         st.rerun()
 
             # 수정/삭제
             if comps:
+                st.markdown("---")
                 st.markdown("**경쟁사 수정/삭제**")
-                comp_labels = [f'{c.get("brand_name","")} {c.get("brand","")}' for c in comps]
+                comp_labels = [f'{c.get("brand_name","")} {c.get("product_name","")}' for c in comps]
                 sel_idx = st.selectbox("경쟁사 선택", range(len(comps)), format_func=lambda i: comp_labels[i], key=f"cdb_sel_{cat_name}")
 
                 c = comps[sel_idx]
@@ -2256,6 +2297,42 @@ def page_competitor_db_mgmt():
                 tgt = usp.get("target", "") if isinstance(usp, dict) else ""
 
                 c_urls = c.get("product_urls", {})
+
+                # 수정 시 URL 자동추출
+                edit_auto_key = f"_auto_edit_{cat_name}_{sel_idx}"
+                ec1, ec2 = st.columns([4, 1])
+                with ec1:
+                    edit_auto_url = st.text_input("URL로 정보 자동 갱신", placeholder="상품 URL 입력 후 자동 추출", key=f"cdb_eaurl_{cat_name}_{sel_idx}")
+                with ec2:
+                    st.markdown('<div style="height:28px"></div>', unsafe_allow_html=True)
+                    edit_auto_btn = st.button("자동 추출", key=f"cdb_eabtn_{cat_name}_{sel_idx}")
+
+                if edit_auto_btn and edit_auto_url:
+                    with st.spinner("상품 페이지 분석 중..."):
+                        edit_result = scrape_product_info(edit_auto_url)
+                        if "_error" in edit_result:
+                            st.error(f"추출 실패: {edit_result['_error']}")
+                        else:
+                            # 기존 데이터에 병합 (빈 값은 기존 유지)
+                            if edit_result.get("ingredients"):
+                                c["ingredients"] = edit_result["ingredients"]
+                            if edit_result.get("health_claims"):
+                                c["health_claims"] = edit_result["health_claims"]
+                            if edit_result.get("headline"):
+                                if isinstance(c.get("usp"), dict):
+                                    c["usp"]["headline"] = edit_result["headline"]
+                            if edit_result.get("selling_points"):
+                                if isinstance(c.get("usp"), dict):
+                                    c["usp"]["selling_points"] = edit_result["selling_points"]
+                            # URL 자동 배정
+                            url_type = _detect_url_type(edit_auto_url)
+                            if "product_urls" not in c:
+                                c["product_urls"] = {"naver": "", "coupang": "", "brand": ""}
+                            c["product_urls"][url_type] = edit_auto_url
+                            save_competitor_db(competitor_db)
+                            st.success("자동 추출 결과가 반영되었습니다.")
+                            st.rerun()
+
                 with st.form(f"cdb_edit_{cat_name}_{sel_idx}"):
                     e1, e2 = st.columns(2)
                     with e1:
