@@ -504,11 +504,16 @@ textarea[type="textarea"]:focus-visible {
     border: 1.5px solid var(--c-border) !important;
 }
 /* container 내 AI 응답 텍스트 크기 제한 */
-div[data-testid="stVerticalBlockBorderWrapper"] h1 { font-size: var(--font-lg) !important; }
-div[data-testid="stVerticalBlockBorderWrapper"] h2 { font-size: var(--font-base) !important; }
-div[data-testid="stVerticalBlockBorderWrapper"] h3 { font-size: var(--font-sm) !important; }
+div[data-testid="stVerticalBlockBorderWrapper"] h1 { font-size: var(--font-base) !important; font-weight: 700 !important; color: var(--c-text) !important; margin: 12px 0 6px !important; padding-bottom: 6px !important; border-bottom: 1px solid var(--c-border-light) !important; }
+div[data-testid="stVerticalBlockBorderWrapper"] h2 { font-size: var(--font-base) !important; font-weight: 700 !important; color: var(--c-text) !important; margin: 10px 0 4px !important; }
+div[data-testid="stVerticalBlockBorderWrapper"] h3 { font-size: var(--font-sm) !important; font-weight: 600 !important; color: var(--c-text-sub) !important; margin: 8px 0 4px !important; }
 div[data-testid="stVerticalBlockBorderWrapper"] p,
 div[data-testid="stVerticalBlockBorderWrapper"] li { font-size: var(--font-sm) !important; line-height: 1.7 !important; }
+/* container 내 표 스타일 */
+div[data-testid="stVerticalBlockBorderWrapper"] table { width: 100% !important; border-collapse: collapse !important; font-size: var(--font-sm) !important; margin: 8px 0 !important; }
+div[data-testid="stVerticalBlockBorderWrapper"] th { background: var(--c-primary-light) !important; color: var(--c-primary) !important; font-weight: 700 !important; padding: 8px 12px !important; text-align: left !important; border: 1px solid var(--c-border) !important; font-size: var(--font-xs) !important; }
+div[data-testid="stVerticalBlockBorderWrapper"] td { padding: 8px 12px !important; border: 1px solid var(--c-border-light) !important; font-size: var(--font-sm) !important; }
+div[data-testid="stVerticalBlockBorderWrapper"] tr:nth-child(even) { background: #f8fafc !important; }
 /* date_input 스타일 */
 .stDateInput > div > div {
     border-radius: 10px !important;
@@ -1951,9 +1956,11 @@ def page_ai_review():
 
 작성 규칙:
 - 한국어로 작성
-- 마크다운 헤딩(#)은 사용하지 말고, **볼드**와 리스트(-)로 구조화
-- 실무 담당자가 바로 심의 신청에 활용할 수 있도록 구체적으로 작성
-- 표는 마크다운 표 형식으로 작성"""
+- 절대 마크다운 헤딩(#, ##, ###)을 사용하지 마세요
+- 섹션 구분은 **볼드 텍스트**로만 하세요 (예: **1. 위반 분석**)
+- 리스트(-)와 표(| |)를 적극 활용하세요
+- 표 제목도 볼드로 작성하세요
+- 실무 담당자가 바로 심의 신청에 활용할 수 있도록 구체적으로 작성"""
 
                         msg = client.messages.create(
                             model="claude-haiku-4-5-20251001",
