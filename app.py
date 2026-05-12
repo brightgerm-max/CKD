@@ -706,7 +706,7 @@ def page_product_management():
             with st.form("add_product_form"):
                 c1, c2 = st.columns(2)
                 with c1:
-                    new_brand = st.text_input("브랜드명 *")
+                    new_brand = st.text_input("제품명 *")
                     new_category = st.text_input("카테고리 *")
                     new_target = st.text_input("타겟 (예: 30-50대)")
                 with c2:
@@ -817,7 +817,7 @@ def page_product_management():
             with st.form(f"edit_form_{selected_idx}"):
                 c1, c2 = st.columns(2)
                 with c1:
-                    edit_brand = st.text_input("브랜드명", value=p["brand"])
+                    edit_brand = st.text_input("제품명", value=p["brand"])
                     edit_category = st.text_input("카테고리", value=p["category"])
                     edit_target = st.text_input("타겟", value=p.get("target_demographic",{}).get("primary_age",""))
                 with c2:
@@ -1075,7 +1075,7 @@ def page_data_collection():
                 st.markdown(
                     f'<div class="d-item">'
                     f'<div class="d-title">{item["name"]}</div>'
-                    f'<div class="d-meta">{item["company"]} · 인정일 {item["approval_date"][:4]}.{item["approval_date"][4:6]}'
+                    f'<div class="d-meta">{item["brand_name"]} · 인정일 {item["approval_date"][:4]}.{item["approval_date"][4:6]}'
                     f' · <a href="{item["url"]}" target="_blank" class="d-link">원문 →</a></div>'
                     f'<div style="font-size:0.8rem;color:#64748b;margin-top:4px">기능성: {fnclty}...</div>'
                     f'</div>', unsafe_allow_html=True)
@@ -2187,7 +2187,7 @@ def page_competitor_db_mgmt():
         with st.expander(f"📁 {cat_name} ({len(comps)}개)", expanded=False):
             # 현재 경쟁사 뱃지 표시
             if comps:
-                st.markdown(" · ".join(f'`{c.get("company","")} {c.get("brand","")}`' for c in comps))
+                st.markdown(" · ".join(f'`{c.get("brand_name","")} {c.get("brand","")}`' for c in comps))
             else:
                 st.caption("등록된 경쟁사 없음")
 
@@ -2196,8 +2196,8 @@ def page_competitor_db_mgmt():
                 st.markdown("**경쟁사 추가**")
                 a1, a2 = st.columns(2)
                 with a1:
-                    add_company = st.text_input("회사명", key=f"cdb_co_{cat_name}")
-                    add_brand = st.text_input("브랜드명", key=f"cdb_br_{cat_name}")
+                    add_brand_name = st.text_input("브랜드", key=f"cdb_co_{cat_name}")
+                    add_product_name = st.text_input("제품명", key=f"cdb_br_{cat_name}")
                     add_ingredients = st.text_input("핵심 성분 (쉼표 구분)", key=f"cdb_ing_{cat_name}")
                 with a2:
                     add_headline = st.text_input("USP 헤드라인", key=f"cdb_hl_{cat_name}")
@@ -2211,14 +2211,14 @@ def page_competitor_db_mgmt():
                 with au3:
                     add_url_brand = st.text_input("자사몰 URL", key=f"cdb_ub_{cat_name}")
                 if st.form_submit_button("추가", type="primary"):
-                    if add_company and add_brand:
+                    if add_brand_name and add_product_name:
                         comps.append({
-                            "company": add_company, "brand": add_brand,
-                            "search_keyword": f"{add_brand} {add_company}",
+                            "brand_name": add_brand_name, "product_name": add_product_name,
+                            "search_keyword": f"{add_product_name} {add_brand_name}",
                             "ingredients": [x.strip() for x in add_ingredients.split(",") if x.strip()],
                             "health_claims": [x.strip() for x in add_claims.split(",") if x.strip()],
                             "product_urls": {"naver": add_url_naver, "coupang": add_url_coupang, "brand": add_url_brand},
-                            "usp": {"headline": add_headline or add_brand,
+                            "usp": {"headline": add_headline or add_product_name,
                                     "selling_points": [s.strip() for s in add_sp.split("\n") if s.strip()],
                                     "target": "", "key_claim": ""},
                             "channels": [], "price_position": "중", "premium_score": 5, "price_score": 5,
@@ -2229,7 +2229,7 @@ def page_competitor_db_mgmt():
             # 수정/삭제
             if comps:
                 st.markdown("**경쟁사 수정/삭제**")
-                comp_labels = [f'{c.get("company","")} {c.get("brand","")}' for c in comps]
+                comp_labels = [f'{c.get("brand_name","")} {c.get("brand","")}' for c in comps]
                 sel_idx = st.selectbox("경쟁사 선택", range(len(comps)), format_func=lambda i: comp_labels[i], key=f"cdb_sel_{cat_name}")
 
                 c = comps[sel_idx]
@@ -2242,8 +2242,8 @@ def page_competitor_db_mgmt():
                 with st.form(f"cdb_edit_{cat_name}_{sel_idx}"):
                     e1, e2 = st.columns(2)
                     with e1:
-                        ed_company = st.text_input("회사명", value=c.get("company",""))
-                        ed_brand = st.text_input("브랜드명", value=c.get("brand",""))
+                        ed_brand_name = st.text_input("브랜드", value=c.get("brand_name",""))
+                        ed_product_name = st.text_input("제품명", value=c.get("product_name",""))
                         ed_ingredients = st.text_input("핵심 성분 (쉼표 구분)", value=", ".join(c.get("ingredients",[])))
                     with e2:
                         ed_headline = st.text_input("USP 헤드라인", value=hl)
@@ -2263,9 +2263,9 @@ def page_competitor_db_mgmt():
                         del_btn = st.form_submit_button("삭제")
 
                     if save_btn:
-                        c["company"] = ed_company
-                        c["brand"] = ed_brand
-                        c["search_keyword"] = f"{ed_brand} {ed_company}"
+                        c["brand_name"] = ed_brand_name
+                        c["product_name"] = ed_product_name
+                        c["search_keyword"] = f"{ed_product_name} {ed_brand_name}"
                         c["ingredients"] = [x.strip() for x in ed_ingredients.split(",") if x.strip()]
                         c["health_claims"] = [x.strip() for x in ed_claims.split(",") if x.strip()]
                         c["product_urls"] = {"naver": ed_url_naver, "coupang": ed_url_coupang, "brand": ed_url_brand}

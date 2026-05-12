@@ -4,8 +4,6 @@
       "ckd_brand": "콘드로이친",
       "competitors": [
         {
-          "company": "주영에이스",
-          "brand": "뮤코다당 단백 콘드로이친 1200플러스",
           "search_keyword": "주영에이스 콘드로이친 1200",
           "ingredients": [],
           "health_claims": [],
@@ -23,11 +21,11 @@
           "channels": [],
           "price_position": "중",
           "premium_score": 5,
-          "price_score": 5
+          "price_score": 5,
+          "brand_name": "주영에이스",
+          "product_name": "뮤코다당 단백 콘드로이친 1200플러스"
         },
         {
-          "company": "뉴트리코어",
-          "brand": "철갑상어 콘드로이친 1200",
           "search_keyword": "뉴트리코어 콘드로이친 1200",
           "ingredients": [],
           "health_claims": [],
@@ -45,11 +43,11 @@
           "channels": [],
           "price_position": "중",
           "premium_score": 5,
-          "price_score": 5
+          "price_score": 5,
+          "brand_name": "뉴트리코어",
+          "product_name": "철갑상어 콘드로이친 1200"
         },
         {
-          "company": "닥터린",
-          "brand": "철갑상어 콘드로이친 1200맥스 저분자 뮤코다당단백",
           "search_keyword": "닥터린 콘드로이친 1200",
           "ingredients": [],
           "health_claims": [],
@@ -67,7 +65,9 @@
           "channels": [],
           "price_position": "중",
           "premium_score": 5,
-          "price_score": 5
+          "price_score": 5,
+          "brand_name": "닥터린",
+          "product_name": "철갑상어 콘드로이친 1200맥스 저분자 뮤코다당단백"
         }
       ],
       "ckd_position": {
@@ -87,8 +87,6 @@
       "ckd_brand": "비피더스 유산균",
       "competitors": [
         {
-          "company": "덴프스",
-          "brand": "덴마크 유산균 이야기",
           "search_keyword": "덴프스 덴마크 유산균",
           "ingredients": [],
           "health_claims": [],
@@ -106,11 +104,11 @@
           "channels": [],
           "price_position": "중",
           "premium_score": 5,
-          "price_score": 5
+          "price_score": 5,
+          "brand_name": "덴프스",
+          "product_name": "덴마크 유산균 이야기"
         },
         {
-          "company": "비피젠",
-          "brand": "퓨어 비피더스 프리미엄",
           "search_keyword": "비피젠 비피더스",
           "ingredients": [],
           "health_claims": [],
@@ -128,11 +126,11 @@
           "channels": [],
           "price_position": "중",
           "premium_score": 5,
-          "price_score": 5
+          "price_score": 5,
+          "brand_name": "비피젠",
+          "product_name": "퓨어 비피더스 프리미엄"
         },
         {
-          "company": "레디웰",
-          "brand": "프로바이오틱스밸런스 레디웰 비피더스유산균",
           "search_keyword": "레디웰 비피더스",
           "ingredients": [],
           "health_claims": [],
@@ -150,7 +148,9 @@
           "channels": [],
           "price_position": "중",
           "premium_score": 5,
-          "price_score": 5
+          "price_score": 5,
+          "brand_name": "레디웰",
+          "product_name": "프로바이오틱스밸런스 레디웰 비피더스유산균"
         }
       ],
       "ckd_position": {
@@ -170,8 +170,6 @@
       "ckd_brand": "포스파티딜세린",
       "competitors": [
         {
-          "company": "뉴트리원",
-          "brand": "인지력 개선엔 포스파티딜세린",
           "search_keyword": "뉴트리원 포스파티딜세린",
           "ingredients": [],
           "health_claims": [],
@@ -189,11 +187,11 @@
           "channels": [],
           "price_position": "중",
           "premium_score": 5,
-          "price_score": 5
+          "price_score": 5,
+          "brand_name": "뉴트리원",
+          "product_name": "인지력 개선엔 포스파티딜세린"
         },
         {
-          "company": "뉴트리코어",
-          "brand": "포스파티딜세린 PS",
           "search_keyword": "뉴트리코어 포스파티딜세린",
           "ingredients": [],
           "health_claims": [],
@@ -211,7 +209,9 @@
           "channels": [],
           "price_position": "중",
           "premium_score": 5,
-          "price_score": 5
+          "price_score": 5,
+          "brand_name": "뉴트리코어",
+          "product_name": "포스파티딜세린 PS"
         }
       ],
       "ckd_position": {
