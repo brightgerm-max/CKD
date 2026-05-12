@@ -1848,7 +1848,7 @@ def page_adbanner():
                     with col:
                         st.markdown(
                             f'<div style="background:var(--c-card);border:1px solid var(--c-border);border-radius:var(--radius);'
-                            f'padding:0;margin-bottom:10px;overflow:hidden;height:460px;display:flex;flex-direction:column">'
+                            f'padding:0;margin-bottom:10px;overflow:hidden">'
                             # 상단: 광고주 + 날짜
                             f'<div style="padding:10px 12px 6px">'
                             f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">'
@@ -1857,13 +1857,12 @@ def page_adbanner():
                             f'</div>'
                             f'<span style="font-size:var(--font-xs);color:var(--c-text-muted)">광고</span>'
                             f'</div>'
-                            # 광고 텍스트 (고정 높이)
-                            f'<div style="padding:0 12px 8px;font-size:var(--font-xs);color:var(--c-text-sub);line-height:1.5;'
-                            f'height:60px;overflow:hidden">{ad_text}</div>'
+                            # 광고 텍스트
+                            f'<div style="padding:0 12px 8px;font-size:var(--font-xs);color:var(--c-text-sub);line-height:1.5">{ad_text}</div>'
                             # 이미지 (고정 높이)
                             f'{img_html}'
                             # CTA + 랜딩 (하단 고정)
-                            f'<div style="padding:6px 12px 10px;margin-top:auto">'
+                            f'<div style="padding:6px 12px 10px">'
                             f'{cta_html}'
                             f'<div style="text-align:right;margin-top:4px">'
                             f'<a href="{ad.get("url","#")}" target="_blank" style="font-size:var(--font-xs);color:var(--c-primary);font-weight:600;text-decoration:none">Ad Library에서 보기 →</a>'
