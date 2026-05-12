@@ -2447,6 +2447,7 @@ def page_competitor_db_mgmt():
                     with e1:
                         ed_brand_name = st.text_input("브랜드", value=c.get("brand_name",""))
                         ed_product_name = st.text_input("제품명", value=c.get("product_name",""))
+                        ed_search_kw = st.text_input("검색 키워드 (가격 검색용)", value=c.get("search_keyword",""))
                         ed_ingredients = st.text_input("핵심 성분 (쉼표 구분)", value=", ".join(c.get("ingredients",[])))
                     with e2:
                         ed_headline = st.text_input("USP 헤드라인", value=hl)
@@ -2479,7 +2480,7 @@ def page_competitor_db_mgmt():
                     if save_btn:
                         c["brand_name"] = ed_brand_name
                         c["product_name"] = ed_product_name
-                        c["search_keyword"] = f"{ed_product_name} {ed_brand_name}"
+                        c["search_keyword"] = ed_search_kw or f"{ed_product_name} {ed_brand_name}"
                         c["ingredients"] = [x.strip() for x in ed_ingredients.split(",") if x.strip()]
                         c["health_claims"] = [x.strip() for x in ed_claims.split(",") if x.strip()]
                         c["product_urls"] = {"naver": ed_url_naver, "coupang": ed_url_coupang, "brand": ed_url_brand}
