@@ -1717,9 +1717,9 @@ def page_adbanner():
         if ad_cache_key not in st.session_state:
             with st.spinner(f"Meta Ad Library에서 '{search_kw}' 관련 광고를 수집하고 있습니다... (10~20초 소요)"):
                 try:
-                    import subprocess as _sp
+                    import subprocess as _sp, sys as _sys
                     _result = _sp.run(
-                        [sys.executable, "-c", "from playwright.sync_api import sync_playwright; print('playwright OK')"],
+                        [_sys.executable, "-c", "from playwright.sync_api import sync_playwright; print('playwright OK')"],
                         capture_output=True, timeout=10,
                     )
                     pw_check = _result.stdout.decode("utf-8", errors="replace").strip()
