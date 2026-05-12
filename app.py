@@ -1874,6 +1874,136 @@ def page_ai_review():
                     f'<span style="font-size:var(--font-sm);color:var(--c-success);font-weight:600">✅ {a}</span>'
                     f'</div>', unsafe_allow_html=True)
 
+    # ── AI 심층 분석 + 증빙자료 ──
+    st.markdown('<div class="s-header">🤖 AI 심층 분석 + 증빙자료</div>', unsafe_allow_html=True)
+
+    ai_review_key = f"ai_review_{hash(ad_text)}"
+    if ai_review_key not in st.session_state:
+        if st.button("AI 심층 분석 실행", type="primary", use_container_width=True):
+            api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+            if not api_key:
+                st.warning("Anthropic API Key가 설정되지 않았습니다.")
+            else:
+                with st.spinner("AI가 광고 문구를 분석하고 증빙자료를 수집하고 있습니다..."):
+                    try:
+                        import anthropic
+                        client = anthropic.Anthropic(api_key=api_key)
+
+                        # 허용 표현 목록
+                        allowed_list = "\n".join(f"- {a}" for a in ALLOWED_CLAIMS.get(category, []))
+                        violation_list = "\n".join(f"- [{v['level']}] \"{v['matched']}\" ({v['type']}, {v['law']})" for v in violations)
+                        warning_list = "\n".join(f"- \"{w['matched']}\" ({w['type']})" for w in warnings)
+
+                        prompt = f"""당신은 건강기능식품 광고 심의 전문가입니다. 아래 광고 문구를 분석하고 3가지를 제공해주세요.
+
+## 광고 문구
+{ad_text}
+
+## 제품 카테고리
+{category or "미선택"}
+
+## 식약처 인정 기능성 표현 (이 범위 내에서만 광고 가능)
+{allowed_list or "없음"}
+
+## 자동 감지된 위반 사항
+{violation_list or "없음"}
+
+## 자동 감지된 주의 사항
+{warning_list or "없음"}
+
+## 요청 사항
+
+### 1. 문구 분석
+- 위반/주의 항목에 대해 왜 문제가 되는지 구체적으로 설명
+- 식약처 인정 기능성 범위를 초과하는 표현이 있는지 분석
+
+### 2. 수정 제안
+- 위반 표현을 식약처 기준에 맞게 수정한 대안 문구를 제시
+- 전체 광고 문구의 수정 버전을 작성
+
+### 3. 증빙자료 추천
+- 이 광고에서 주장하는 효능을 뒷받침할 수 있는 과학적 근거 유형 제안
+- PubMed에서 검색할 수 있는 관련 키워드 3~5개 제안
+
+한국어로 작성해주세요. 식약처 광고 심의 기준을 엄격히 적용해주세요."""
+
+                        msg = client.messages.create(
+                            model="claude-haiku-4-5-20251001",
+                            max_tokens=1500,
+                            messages=[{"role": "user", "content": prompt}],
+                        )
+                        ai_result = msg.content[0].text
+
+                        # PubMed 증빙자료 자동 검색
+                        evidence = {}
+                        if category:
+                            en_keywords = []
+                            sel_p = next((p for p in products if p.get("category") == category), None)
+                            if sel_p:
+                                en_keywords = sel_p.get("ingredient_keywords_en", [])[:3]
+                            if en_keywords:
+                                try:
+                                    query = " OR ".join(f'"{kw}"[tiab]' for kw in en_keywords)
+                                    query += ' AND "supplement"[tiab]'
+                                    pmids = search_pubmed(query, max_results=5, days_back=1825)
+                                    time.sleep(0.4)
+                                    articles = fetch_article_details(pmids)
+                                    evidence["pubmed"] = articles
+                                except Exception:
+                                    evidence["pubmed"] = []
+                            try:
+                                ct_query = " ".join(en_keywords) + " supplement"
+                                evidence["clinical"] = search_clinical_trials(ct_query, max_results=3)
+                            except Exception:
+                                evidence["clinical"] = []
+
+                        st.session_state[ai_review_key] = {"analysis": ai_result, "evidence": evidence}
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"AI 분석 실패: {e}")
+
+    if ai_review_key in st.session_state:
+        ai_data = st.session_state[ai_review_key]
+
+        # AI 분석 결과
+        st.markdown(
+            f'<div style="background:var(--c-card);border:1px solid var(--c-border);border-radius:var(--radius);padding:20px;margin-bottom:16px">'
+            f'<div style="font-size:var(--font-base);font-weight:700;color:var(--c-text);margin-bottom:12px">🤖 AI 분석 결과</div>'
+            f'</div>', unsafe_allow_html=True)
+        st.markdown(ai_data["analysis"])
+
+        # 증빙자료
+        evidence = ai_data.get("evidence", {})
+        pubmed_articles = evidence.get("pubmed", [])
+        clinical_trials = evidence.get("clinical", [])
+
+        if pubmed_articles or clinical_trials:
+            st.markdown('<div class="s-header">📄 증빙자료 (자동 수집)</div>', unsafe_allow_html=True)
+
+            if pubmed_articles:
+                st.markdown(f"**PubMed 관련 논문 ({len(pubmed_articles)}건)**")
+                for a in pubmed_articles:
+                    st.markdown(
+                        f'<div class="d-item">'
+                        f'<div class="d-title">{a["title"][:100]}</div>'
+                        f'<div class="d-meta">{a.get("journal","")} · {a.get("pub_date","")}'
+                        f' · <a href="{a.get("url","#")}" target="_blank" class="d-link">원문 →</a></div>'
+                        f'</div>', unsafe_allow_html=True)
+
+            if clinical_trials:
+                st.markdown(f"**ClinicalTrials.gov 임상시험 ({len(clinical_trials)}건)**")
+                for t in clinical_trials:
+                    sc = {"RECRUITING":"#059669","COMPLETED":"#2563eb"}.get(t["status"],"#64748b")
+                    st.markdown(
+                        f'<div class="d-item">'
+                        f'<div class="d-title">{t["title"][:100]}</div>'
+                        f'<div class="d-meta"><span style="color:{sc};font-weight:600">{t["status"]}</span>'
+                        f' · Phase {t["phase"]}'
+                        f' · <a href="{t["url"]}" target="_blank" class="d-link">원문 →</a></div>'
+                        f'</div>', unsafe_allow_html=True)
+
+            st.caption("위 자료는 심의 신청 시 증빙자료로 활용할 수 있습니다.")
+
     # 면책 문구
     st.markdown("")
     st.caption("⚠️ 본 검토 결과는 참고용이며, 한국건강기능식품협회의 공식 심의를 대체하지 않습니다. 실제 심의는 ad.khff.or.kr에서 신청하세요.")
