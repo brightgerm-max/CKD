@@ -1822,18 +1822,21 @@ def page_adbanner():
                         f'</div>'
                     ) if img_url else ""
 
-                    # CTA 버튼
+                    # CTA 영역
+                    cta_desc = ad.get("cta_desc", "").replace("\n", "<br/>")
                     cta_html = ""
-                    if cta or landing:
+                    if cta or landing or cta_desc:
                         cta_label = cta or "더 알아보기"
-                        landing_html = f'<span style="font-size:var(--font-xs);color:var(--c-text-muted);text-transform:uppercase">{landing}</span>' if landing else ""
+                        landing_html = f'<div style="font-size:var(--font-xs);color:var(--c-text-muted);text-transform:uppercase;margin-bottom:4px">{landing}</div>' if landing else ""
+                        desc_html = f'<div style="font-size:var(--font-xs);color:var(--c-text);line-height:1.5;margin-bottom:4px">{cta_desc}</div>' if cta_desc else ""
                         cta_html = (
-                            f'<div style="border-top:1px solid var(--c-border-light);padding-top:8px;margin-top:8px;'
-                            f'display:flex;justify-content:space-between;align-items:center">'
+                            f'<div style="border-top:1px solid var(--c-border-light);padding-top:8px;margin-top:8px">'
                             f'{landing_html}'
-                            f'<div style="background:var(--c-border-light);padding:4px 14px;border-radius:6px;'
+                            f'{desc_html}'
+                            f'<div style="display:flex;justify-content:flex-end">'
+                            f'<div style="background:var(--c-border-light);padding:5px 16px;border-radius:6px;'
                             f'font-size:var(--font-xs);font-weight:600;color:var(--c-text)">{cta_label}</div>'
-                            f'</div>'
+                            f'</div></div>'
                         )
 
                     with col:

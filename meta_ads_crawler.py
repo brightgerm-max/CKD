@@ -124,6 +124,11 @@ def _crawl_internal(keyword: str, country: str = "KR", max_ads: int = 10) -> lis
                                   "지금 쇼핑하기", "가입하기", "예약하기", "다운로드", "문의하기",
                                   "지금 신청하기", "지금 주문하기", "더 보기", "구매하기"]:
                         current_ad["cta"] = line
+                        # CTA 앞 2줄을 CTA 설명으로 분리
+                        cta_desc_lines = []
+                        while text_buffer and len(cta_desc_lines) < 2:
+                            cta_desc_lines.insert(0, text_buffer.pop())
+                        current_ad["cta_desc"] = "\n".join(cta_desc_lines)
 
                     # 랜딩 URL 감지 (대문자 도메인)
                     elif line.endswith(".COM") or line.endswith(".CO.KR") or line.endswith(".KR") or ".com" in line.lower():
