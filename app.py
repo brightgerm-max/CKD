@@ -1823,6 +1823,12 @@ def page_adbanner():
                         f'</div>'
                     ) if img_url else ""
 
+                    # CTA 설명 자르기
+                    cta_desc_raw = ad.get("cta_desc", "")
+                    if len(cta_desc_raw) > 60:
+                        cta_desc_raw = cta_desc_raw[:60] + "..."
+                    cta_desc = cta_desc_raw.replace("\n", "<br/>")
+
                     # CTA 영역
                     cta_html = ""
                     if cta or landing or cta_desc:
@@ -1838,12 +1844,6 @@ def page_adbanner():
                             f'font-size:var(--font-xs);font-weight:600;color:var(--c-text)">{cta_label}</div>'
                             f'</div></div>'
                         )
-
-                    # CTA 설명도 자르기
-                    cta_desc_raw = ad.get("cta_desc", "")
-                    if len(cta_desc_raw) > 60:
-                        cta_desc_raw = cta_desc_raw[:60] + "..."
-                    cta_desc = cta_desc_raw.replace("\n", "<br/>")
 
                     with col:
                         st.markdown(
