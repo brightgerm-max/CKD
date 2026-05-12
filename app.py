@@ -1974,11 +1974,12 @@ def page_ai_review():
         ai_data = st.session_state[ai_review_key]
 
         # AI 분석 결과
+        st.markdown('<div class="s-header">AI 분석 결과</div>', unsafe_allow_html=True)
         st.markdown(
-            f'<div style="background:var(--c-card);border:1px solid var(--c-border);border-radius:var(--radius);padding:20px;margin-bottom:16px">'
-            f'<div style="font-size:var(--font-base);font-weight:700;color:var(--c-text);margin-bottom:12px">🤖 AI 분석 결과</div>'
+            f'<div style="background:var(--c-card);border:1px solid var(--c-border);border-radius:var(--radius);'
+            f'padding:20px;font-size:var(--font-sm);color:var(--c-text);line-height:1.8">'
+            f'{ai_data["analysis"].replace(chr(10), "<br>")}'
             f'</div>', unsafe_allow_html=True)
-        st.markdown(ai_data["analysis"])
 
         # 증빙자료
         evidence = ai_data.get("evidence", {})
