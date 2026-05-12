@@ -2213,25 +2213,14 @@ def page_competitor_db_mgmt():
 
     # 데이터 내보내기 / 가져오기
     with st.expander("데이터 내보내기 / 가져오기", expanded=False):
-        dl1, dl2 = st.columns(2)
-        with dl1:
-            st.download_button(
-                "경쟁사 DB 다운로드 (JSON)",
-                data=json.dumps(competitor_db, ensure_ascii=False, indent=2),
-                file_name="competitor_db.json",
-                mime="application/json",
-                use_container_width=True,
-            )
-            products_data = load_products()
-            st.download_button(
-                "자사상품 DB 다운로드 (JSON)",
-                data=json.dumps(products_data, ensure_ascii=False, indent=2),
-                file_name="product_ingredient_db.json",
-                mime="application/json",
-                use_container_width=True,
-            )
-        with dl2:
-            uploaded_comp = st.file_uploader("경쟁사 DB 업로드", type=["json"], key="upload_comp_db")
+        products_data = load_products()
+        st.caption("경쟁사 DB")
+        c1, c2 = st.columns([1, 2])
+        with c1:
+            st.download_button("다운로드", data=json.dumps(competitor_db, ensure_ascii=False, indent=2),
+                               file_name="competitor_db.json", mime="application/json", use_container_width=True)
+        with c2:
+            uploaded_comp = st.file_uploader("업로드", type=["json"], key="upload_comp_db", label_visibility="collapsed")
             if uploaded_comp:
                 try:
                     new_data = json.loads(uploaded_comp.read().decode("utf-8"))
@@ -2243,7 +2232,13 @@ def page_competitor_db_mgmt():
                         st.error("올바른 경쟁사 DB 형식이 아닙니다.")
                 except Exception as e:
                     st.error(f"파일 읽기 실패: {e}")
-            uploaded_prod = st.file_uploader("자사상품 DB 업로드", type=["json"], key="upload_prod_db")
+        st.caption("자사상품 DB")
+        p1, p2 = st.columns([1, 2])
+        with p1:
+            st.download_button("다운로드", data=json.dumps(products_data, ensure_ascii=False, indent=2),
+                               file_name="product_ingredient_db.json", mime="application/json", use_container_width=True, key="dl_prod")
+        with p2:
+            uploaded_prod = st.file_uploader("업로드", type=["json"], key="upload_prod_db", label_visibility="collapsed")
             if uploaded_prod:
                 try:
                     new_data = json.loads(uploaded_prod.read().decode("utf-8"))
