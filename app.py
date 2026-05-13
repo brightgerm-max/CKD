@@ -2375,20 +2375,64 @@ def page_creative_report():
                             for ci, cr in enumerate(creatives):
                                 with cr_cols[ci % 3]:
                                     is_active = cr.get("isActive", True)
-                                    opacity = "1" if is_active else "0.5"
-                                    status_badge = '<span style="background:#059669;color:#fff;padding:1px 6px;border-radius:10px;font-size:0.65rem">ON</span>' if is_active else '<span style="background:#dc2626;color:#fff;padding:1px 6px;border-radius:10px;font-size:0.65rem">OFF</span>'
+                                    opacity = "1" if is_active else "0.55"
+                                    is_best = ci == 0 and is_active
+                                    border_color = "#dc2626" if is_best else ("var(--c-border)" if is_active else "var(--c-border)")
+                                    border_w = "2px" if is_best else "1px"
+                                    grayscale = "" if is_active else "filter:grayscale(1);"
+
+                                    # 상태 뱃지
+                                    status_dot = "#059669" if is_active else "#a1a1aa"
+                                    status_text = "ON" if is_active else "OFF"
+                                    status_bg = "#ecfdf5" if is_active else "#f4f4f5"
+                                    status_color = "#047857" if is_active else "#71717a"
+
+                                    # 이미지 영역
+                                    img_data = cr.get("imageData")
+                                    if img_data:
+                                        img_html = f'<img src="{img_data}" style="width:100%;height:100%;object-fit:cover;{grayscale}"/>'
+                                    else:
+                                        img_html = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:4px"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#a1a1aa" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg><span style="font-size:0.6rem;color:#a1a1aa;letter-spacing:0.1em">소재 없음</span></div>'
+
+                                    # BEST 뱃지
+                                    best_html = '<span style="background:#dc2626;color:#fff;padding:1px 6px;border-radius:4px;font-size:0.55rem;font-weight:700;letter-spacing:0.05em">BEST</span>' if is_best else ""
 
                                     st.markdown(
-                                        f'<div style="background:var(--c-card);border:1px solid var(--c-border);border-radius:10px;padding:12px;margin-bottom:8px;opacity:{opacity}">'
-                                        f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
-                                        f'<span style="font-size:0.75rem;font-weight:600;color:var(--c-text)">{cr["name"][:25]}</span>'
-                                        f'{status_badge}</div>'
-                                        f'<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:4px;font-size:0.7rem">'
-                                        f'<div><span style="color:var(--c-text-muted)">ROAS</span> <span style="font-weight:700;font-family:monospace">{_fmt_roas(cr.get("roas",0))}</span></div>'
-                                        f'<div><span style="color:var(--c-text-muted)">CTR</span> <span style="font-weight:700;font-family:monospace">{_fmt_ctr(cr.get("ctr",0))}</span></div>'
-                                        f'<div><span style="color:var(--c-text-muted)">매출</span> <span style="font-weight:700;font-family:monospace">{_fmt_krw(cr.get("revenue",0))}</span></div>'
-                                        f'<div><span style="color:var(--c-text-muted)">지출</span> <span style="font-weight:700;font-family:monospace">{_fmt_krw(cr.get("spend",0))}</span></div>'
-                                        f'</div></div>', unsafe_allow_html=True)
+                                        f'<div style="background:#fff;border:{border_w} solid {border_color};border-radius:10px;overflow:hidden;margin-bottom:10px;opacity:{opacity};transition:all 0.2s">'
+                                        # 이미지 영역 (4:3)
+                                        f'<div style="position:relative;width:100%;padding-top:75%;background:#fafafa;overflow:hidden">'
+                                        f'<div style="position:absolute;top:0;left:0;width:100%;height:100%">{img_html}</div>'
+                                        # 순위 + 상태 뱃지
+                                        f'<div style="position:absolute;top:8px;left:8px;display:flex;align-items:center;gap:4px">'
+                                        f'<span style="background:#fff;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:700;box-shadow:0 1px 2px rgba(0,0,0,0.06)">{ci+1}</span>'
+                                        f'{best_html}'
+                                        f'<span style="background:{status_bg};color:{status_color};padding:1px 6px;border-radius:10px;font-size:0.55rem;font-weight:700;display:flex;align-items:center;gap:3px">'
+                                        f'<span style="width:5px;height:5px;border-radius:50%;background:{status_dot};display:inline-block"></span>{status_text}</span>'
+                                        f'</div></div>'
+                                        # 하단 메타
+                                        f'<div style="padding:10px 14px 14px">'
+                                        f'<p style="font-size:0.78rem;font-weight:600;color:#18181b;margin:0 0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="{cr["name"]}">{cr["name"]}</p>'
+                                        # 하이라이트 지표
+                                        f'<div style="margin-bottom:8px"><span style="font-family:monospace;font-size:1.3rem;font-weight:700;color:{"#dc2626" if is_active else "#a1a1aa"};letter-spacing:-0.02em">{_fmt_roas(cr.get("roas",0))}</span></div>'
+                                        # 2x2 그리드
+                                        f'<div style="border-top:1px solid #e4e4e7;padding-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:0.68rem;color:#71717a">'
+                                        f'<div style="display:flex;justify-content:space-between"><span>ROAS</span><span style="font-family:monospace;font-weight:500;color:#3f3f46">{_fmt_roas(cr.get("roas",0))}</span></div>'
+                                        f'<div style="display:flex;justify-content:space-between"><span>CTR</span><span style="font-family:monospace;font-weight:500;color:#3f3f46">{_fmt_ctr(cr.get("ctr",0))}</span></div>'
+                                        f'<div style="display:flex;justify-content:space-between"><span>지출</span><span style="font-family:monospace;font-weight:500;color:#3f3f46">{_fmt_krw(cr.get("spend",0))}</span></div>'
+                                        f'<div style="display:flex;justify-content:space-between"><span>매출</span><span style="font-family:monospace;font-weight:500;color:#3f3f46">{_fmt_krw(cr.get("revenue",0))}</span></div>'
+                                        f'</div></div></div>', unsafe_allow_html=True)
+
+                                    # 이미지 업로드
+                                    uploaded = st.file_uploader("이미지", type=["png","jpg","jpeg","webp"], key=f"img_{tab_idx}_{si}_{ci}", label_visibility="collapsed")
+                                    if uploaded:
+                                        import base64
+                                        img_bytes = uploaded.read()
+                                        b64 = base64.b64encode(img_bytes).decode()
+                                        ext = uploaded.name.split(".")[-1].lower()
+                                        mime = {"png":"image/png","jpg":"image/jpeg","jpeg":"image/jpeg","webp":"image/webp"}.get(ext,"image/jpeg")
+                                        cr["imageData"] = f"data:{mime};base64,{b64}"
+                                        save_report_snapshot(snapshot)
+                                        st.rerun()
 
                         # 소재 추가/수정
                         with st.expander(f"소재 관리 ({sub['name']})", expanded=False):
