@@ -57,6 +57,13 @@ def load_products():
 def load_competitor_db():
     return load_json("competitor_db.json")
 
+def load_report_snapshot():
+    return load_json("report_snapshot.json")
+
+def save_report_snapshot(data):
+    with open(DATA_DIR / "report_snapshot.json", "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
 def load_trend_keywords():
     return load_json("trend_keywords.json")
 
@@ -2227,17 +2234,371 @@ def page_review_dashboard():
 # ═══════════════════════════════════════════
 # EASY 리포팅: 소재 실적관리
 # ═══════════════════════════════════════════
+def _fmt_krw(v):
+    """원화 포맷: 1억2천만, 3,456만 등"""
+    if v >= 100000000:
+        return f"{v/100000000:.1f}억"
+    if v >= 10000:
+        return f"{v/10000:,.0f}만"
+    return f"{v:,.0f}"
+
+def _fmt_roas(v):
+    return f"{v:.2f}x" if v else "0x"
+
+def _fmt_ctr(v):
+    return f"{v:.2f}%" if v else "0%"
+
+def _fmt_num(v):
+    if v >= 1000000:
+        return f"{v/1000000:.1f}M"
+    if v >= 1000:
+        return f"{v/1000:.1f}K"
+    return f"{v:,.0f}"
+
 def page_creative_report():
     render_page_header("🎯","소재 실적관리","소재별 실적을 직관적으로 관리하고 ON/OFF를 제어합니다","green")
-    st.info("소재 실적관리 기능은 준비 중입니다.")
+
+    snapshot = load_report_snapshot()
+    categories = snapshot.get("categories", [])
+    daily = snapshot.get("dailyTimeline", [])
+
+    if not categories:
+        st.info("등록된 카테고리가 없습니다. 라벨링 리포트에서 먼저 카테고리를 설정해주세요.")
+        return
+
+    # ── 카테고리 탭 ──
+    cat_names = [c["categoryName"] for c in categories]
+    tabs = st.tabs(cat_names)
+
+    for tab_idx, tab in enumerate(tabs):
+        with tab:
+            cat = categories[tab_idx]
+            subs = cat.get("subs", [])
+
+            # ── 일별 트렌드 차트 ──
+            if daily:
+                metric_key = st.selectbox("지표 선택", ["roas", "revenue", "spend", "purchases", "ctr"],
+                                          format_func=lambda x: {"roas":"ROAS","revenue":"매출","spend":"지출","purchases":"구매수","ctr":"CTR"}[x],
+                                          key=f"cr_metric_{tab_idx}")
+                df_daily = pd.DataFrame(daily)
+                df_daily["date"] = pd.to_datetime(df_daily["date"])
+
+                fig_trend = go.Figure()
+                y_vals = df_daily[metric_key].tolist()
+                avg_val = sum(y_vals) / len(y_vals) if y_vals else 0
+
+                fig_trend.add_trace(go.Scatter(
+                    x=df_daily["date"], y=y_vals,
+                    mode="lines", fill="tozeroy",
+                    line=dict(color="#2563eb", width=2),
+                    fillcolor="rgba(37,99,235,0.1)",
+                    name=metric_key.upper()
+                ))
+                fig_trend.add_hline(y=avg_val, line_dash="dash", line_color="#94a3b8",
+                                    annotation_text=f"평균: {avg_val:,.1f}", annotation_position="top right")
+                fig_trend.update_layout(
+                    height=250, margin=dict(t=20,b=30,l=40,r=20),
+                    paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                    yaxis=dict(gridcolor="#f1f5f9"),
+                    xaxis=dict(gridcolor="#f1f5f9"),
+                )
+                st.plotly_chart(fig_trend, use_container_width=True)
+
+            # ── Hero KPI ──
+            total_spend = sum(s.get("spend",0) for s in subs)
+            total_rev = sum(s.get("revenue",0) for s in subs)
+            total_purch = sum(s.get("purchases",0) for s in subs)
+            total_imp = sum(s.get("impressions",0) for s in subs)
+            total_clicks = sum(s.get("clicks",0) for s in subs)
+            overall_roas = round(total_rev / total_spend, 2) if total_spend > 0 else 0
+            overall_ctr = round(total_clicks / total_imp * 100, 2) if total_imp > 0 else 0
+
+            k1, k2, k3, k4, k5 = st.columns(5)
+            k1.metric("ROAS", _fmt_roas(overall_roas))
+            k2.metric("매출", _fmt_krw(total_rev))
+            k3.metric("지출", _fmt_krw(total_spend))
+            k4.metric("구매수", f"{total_purch:,}건")
+            k5.metric("CTR", _fmt_ctr(overall_ctr))
+
+            st.markdown("---")
+
+            # ── 소카테고리 비교 차트 + 카드 ──
+            if subs:
+                col_chart, col_cards = st.columns([1, 2])
+
+                with col_chart:
+                    st.markdown("**소카테고리 비교**")
+                    comp_metric = st.selectbox("비교 지표", ["roas","revenue","spend","purchases","ctr"],
+                                               format_func=lambda x: {"roas":"ROAS","revenue":"매출","spend":"지출","purchases":"구매수","ctr":"CTR"}[x],
+                                               key=f"cr_comp_{tab_idx}")
+                    sub_names = [s["name"] for s in subs]
+                    sub_vals = [s.get(comp_metric, 0) for s in subs]
+
+                    fig_comp = go.Figure(go.Bar(
+                        y=sub_names, x=sub_vals, orientation="h",
+                        marker_color="#2563eb", text=[f"{v:,.1f}" for v in sub_vals],
+                        textposition="outside",
+                    ))
+                    fig_comp.update_layout(
+                        height=max(200, len(subs)*60), margin=dict(t=10,b=10,l=10,r=40),
+                        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                        xaxis=dict(gridcolor="#f1f5f9"), yaxis=dict(autorange="reversed"),
+                    )
+                    st.plotly_chart(fig_comp, use_container_width=True)
+
+                with col_cards:
+                    for si, sub in enumerate(subs):
+                        creatives = sub.get("creatives", [])
+                        active_count = sum(1 for c in creatives if c.get("isActive", True))
+
+                        # 소카테고리 헤더
+                        st.markdown(
+                            f'<div style="background:var(--c-card);border:1px solid var(--c-border);border-radius:var(--radius);padding:16px;margin-bottom:12px">'
+                            f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
+                            f'<div><span style="font-weight:700;font-size:var(--font-base)">{sub["name"]}</span>'
+                            f'<span style="color:var(--c-text-muted);font-size:var(--font-xs);margin-left:8px">'
+                            f'소재 {len(creatives)}개 (활성 {active_count})</span></div>'
+                            f'<span style="font-weight:800;color:var(--c-primary);font-size:var(--font-lg)">{_fmt_roas(sub.get("roas",0))}</span></div>'
+                            # KPI 스트립
+                            f'<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;font-size:var(--font-xs);text-align:center;margin-bottom:12px">'
+                            f'<div><div style="color:var(--c-text-muted)">매출</div><div style="font-weight:700;font-family:monospace">{_fmt_krw(sub.get("revenue",0))}</div></div>'
+                            f'<div><div style="color:var(--c-text-muted)">지출</div><div style="font-weight:700;font-family:monospace">{_fmt_krw(sub.get("spend",0))}</div></div>'
+                            f'<div><div style="color:var(--c-text-muted)">구매</div><div style="font-weight:700;font-family:monospace">{sub.get("purchases",0):,}</div></div>'
+                            f'<div><div style="color:var(--c-text-muted)">노출</div><div style="font-weight:700;font-family:monospace">{_fmt_num(sub.get("impressions",0))}</div></div>'
+                            f'<div><div style="color:var(--c-text-muted)">클릭</div><div style="font-weight:700;font-family:monospace">{_fmt_num(sub.get("clicks",0))}</div></div>'
+                            f'<div><div style="color:var(--c-text-muted)">CTR</div><div style="font-weight:700;font-family:monospace">{_fmt_ctr(sub.get("ctr",0))}</div></div>'
+                            f'</div></div>', unsafe_allow_html=True)
+
+                        # 소재 카드들
+                        if creatives:
+                            cr_cols = st.columns(3)
+                            for ci, cr in enumerate(creatives):
+                                with cr_cols[ci % 3]:
+                                    is_active = cr.get("isActive", True)
+                                    opacity = "1" if is_active else "0.5"
+                                    status_badge = '<span style="background:#059669;color:#fff;padding:1px 6px;border-radius:10px;font-size:0.65rem">ON</span>' if is_active else '<span style="background:#dc2626;color:#fff;padding:1px 6px;border-radius:10px;font-size:0.65rem">OFF</span>'
+
+                                    st.markdown(
+                                        f'<div style="background:var(--c-card);border:1px solid var(--c-border);border-radius:10px;padding:12px;margin-bottom:8px;opacity:{opacity}">'
+                                        f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
+                                        f'<span style="font-size:0.75rem;font-weight:600;color:var(--c-text)">{cr["name"][:25]}</span>'
+                                        f'{status_badge}</div>'
+                                        f'<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:4px;font-size:0.7rem">'
+                                        f'<div><span style="color:var(--c-text-muted)">ROAS</span> <span style="font-weight:700;font-family:monospace">{_fmt_roas(cr.get("roas",0))}</span></div>'
+                                        f'<div><span style="color:var(--c-text-muted)">CTR</span> <span style="font-weight:700;font-family:monospace">{_fmt_ctr(cr.get("ctr",0))}</span></div>'
+                                        f'<div><span style="color:var(--c-text-muted)">매출</span> <span style="font-weight:700;font-family:monospace">{_fmt_krw(cr.get("revenue",0))}</span></div>'
+                                        f'<div><span style="color:var(--c-text-muted)">지출</span> <span style="font-weight:700;font-family:monospace">{_fmt_krw(cr.get("spend",0))}</span></div>'
+                                        f'</div></div>', unsafe_allow_html=True)
+
+                        # 소재 추가/수정
+                        with st.expander(f"소재 관리 ({sub['name']})", expanded=False):
+                            # 소재 추가
+                            with st.form(f"add_cr_{tab_idx}_{si}"):
+                                st.markdown("**소재 추가**")
+                                fc1, fc2 = st.columns(2)
+                                with fc1:
+                                    new_cr_name = st.text_input("소재명", key=f"crn_{tab_idx}_{si}")
+                                    new_cr_spend = st.number_input("지출(원)", min_value=0, value=0, key=f"crs_{tab_idx}_{si}")
+                                    new_cr_rev = st.number_input("매출(원)", min_value=0, value=0, key=f"crr_{tab_idx}_{si}")
+                                with fc2:
+                                    new_cr_purch = st.number_input("구매수", min_value=0, value=0, key=f"crp_{tab_idx}_{si}")
+                                    new_cr_imp = st.number_input("노출수", min_value=0, value=0, key=f"cri_{tab_idx}_{si}")
+                                    new_cr_clicks = st.number_input("클릭수", min_value=0, value=0, key=f"crc_{tab_idx}_{si}")
+                                new_cr_active = st.checkbox("활성 (ON)", value=True, key=f"cra_{tab_idx}_{si}")
+
+                                if st.form_submit_button("소재 추가", type="primary"):
+                                    if new_cr_name:
+                                        import uuid
+                                        roas = round(new_cr_rev / new_cr_spend, 2) if new_cr_spend > 0 else 0
+                                        ctr = round(new_cr_clicks / new_cr_imp * 100, 2) if new_cr_imp > 0 else 0
+                                        creatives.append({
+                                            "id": f"cr-{uuid.uuid4().hex[:8]}",
+                                            "name": new_cr_name, "imageData": None, "isActive": new_cr_active,
+                                            "spend": new_cr_spend, "revenue": new_cr_rev, "purchases": new_cr_purch,
+                                            "impressions": new_cr_imp, "clicks": new_cr_clicks, "roas": roas, "ctr": ctr,
+                                        })
+                                        # 소카테고리 합산 재계산
+                                        sub["spend"] = sum(c.get("spend",0) for c in creatives)
+                                        sub["revenue"] = sum(c.get("revenue",0) for c in creatives)
+                                        sub["purchases"] = sum(c.get("purchases",0) for c in creatives)
+                                        sub["impressions"] = sum(c.get("impressions",0) for c in creatives)
+                                        sub["clicks"] = sum(c.get("clicks",0) for c in creatives)
+                                        sub["roas"] = round(sub["revenue"] / sub["spend"], 2) if sub["spend"] > 0 else 0
+                                        sub["ctr"] = round(sub["clicks"] / sub["impressions"] * 100, 2) if sub["impressions"] > 0 else 0
+                                        save_report_snapshot(snapshot)
+                                        st.rerun()
+
+                            # 기존 소재 수정/삭제/토글
+                            if creatives:
+                                cr_labels = [c["name"] for c in creatives]
+                                sel_cr = st.selectbox("소재 선택", range(len(creatives)), format_func=lambda i: cr_labels[i], key=f"sel_cr_{tab_idx}_{si}")
+                                cr = creatives[sel_cr]
+
+                                tc1, tc2, tc3 = st.columns(3)
+                                with tc1:
+                                    if st.button("ON/OFF 전환", key=f"tog_{tab_idx}_{si}"):
+                                        cr["isActive"] = not cr.get("isActive", True)
+                                        save_report_snapshot(snapshot)
+                                        st.rerun()
+                                with tc2:
+                                    if st.button("삭제", key=f"del_cr_{tab_idx}_{si}"):
+                                        creatives.pop(sel_cr)
+                                        sub["spend"] = sum(c.get("spend",0) for c in creatives)
+                                        sub["revenue"] = sum(c.get("revenue",0) for c in creatives)
+                                        sub["purchases"] = sum(c.get("purchases",0) for c in creatives)
+                                        sub["impressions"] = sum(c.get("impressions",0) for c in creatives)
+                                        sub["clicks"] = sum(c.get("clicks",0) for c in creatives)
+                                        sub["roas"] = round(sub["revenue"] / sub["spend"], 2) if sub["spend"] > 0 else 0
+                                        sub["ctr"] = round(sub["clicks"] / sub["impressions"] * 100, 2) if sub["impressions"] > 0 else 0
+                                        save_report_snapshot(snapshot)
+                                        st.rerun()
+
+                                with st.form(f"edit_cr_{tab_idx}_{si}_{sel_cr}"):
+                                    st.markdown(f"**소재 수정: {cr['name']}**")
+                                    ec1, ec2 = st.columns(2)
+                                    with ec1:
+                                        ed_name = st.text_input("소재명", value=cr["name"])
+                                        ed_spend = st.number_input("지출(원)", min_value=0, value=int(cr.get("spend",0)))
+                                        ed_rev = st.number_input("매출(원)", min_value=0, value=int(cr.get("revenue",0)))
+                                    with ec2:
+                                        ed_purch = st.number_input("구매수", min_value=0, value=int(cr.get("purchases",0)))
+                                        ed_imp = st.number_input("노출수", min_value=0, value=int(cr.get("impressions",0)))
+                                        ed_clicks = st.number_input("클릭수", min_value=0, value=int(cr.get("clicks",0)))
+                                    ed_roas = round(ed_rev / ed_spend, 2) if ed_spend > 0 else 0
+                                    ed_ctr = round(ed_clicks / ed_imp * 100, 2) if ed_imp > 0 else 0
+                                    st.caption(f"자동 계산 — ROAS: {_fmt_roas(ed_roas)} / CTR: {_fmt_ctr(ed_ctr)}")
+                                    if st.form_submit_button("저장", type="primary"):
+                                        cr["name"] = ed_name
+                                        cr["spend"] = ed_spend; cr["revenue"] = ed_rev; cr["purchases"] = ed_purch
+                                        cr["impressions"] = ed_imp; cr["clicks"] = ed_clicks
+                                        cr["roas"] = ed_roas; cr["ctr"] = ed_ctr
+                                        sub["spend"] = sum(c.get("spend",0) for c in creatives)
+                                        sub["revenue"] = sum(c.get("revenue",0) for c in creatives)
+                                        sub["purchases"] = sum(c.get("purchases",0) for c in creatives)
+                                        sub["impressions"] = sum(c.get("impressions",0) for c in creatives)
+                                        sub["clicks"] = sum(c.get("clicks",0) for c in creatives)
+                                        sub["roas"] = round(sub["revenue"] / sub["spend"], 2) if sub["spend"] > 0 else 0
+                                        sub["ctr"] = round(sub["clicks"] / sub["impressions"] * 100, 2) if sub["impressions"] > 0 else 0
+                                        save_report_snapshot(snapshot)
+                                        st.rerun()
 
 
 # ═══════════════════════════════════════════
 # EASY 리포팅: 라벨링 리포트
 # ═══════════════════════════════════════════
 def page_label_report():
-    render_page_header("🏷️","라벨링 리포트","제품별/타겟별/퍼널별 라벨링 기반 리포트를 조회합니다","green")
-    st.info("라벨링 리포트 기능은 준비 중입니다.")
+    render_page_header("🏷️","라벨링 리포트","카테고리/소카테고리/키워드 구조를 설정합니다","green")
+
+    snapshot = load_report_snapshot()
+    categories = snapshot.get("categories", [])
+
+    # ── 카테고리 추가 ──
+    with st.expander("카테고리 추가", expanded=False):
+        with st.form("add_category"):
+            new_cat_name = st.text_input("카테고리명", placeholder="예: 제품명별, 소구점별, 타겟별")
+            if st.form_submit_button("추가", type="primary"):
+                if new_cat_name:
+                    import uuid
+                    categories.append({"id": f"cat-{uuid.uuid4().hex[:8]}", "categoryName": new_cat_name, "subs": []})
+                    save_report_snapshot(snapshot)
+                    st.rerun()
+
+    # ── 벌크 임포트 ──
+    with st.expander("벌크 임포트", expanded=False):
+        st.caption("형식: 소카테고리명[탭]키워드1,키워드2,키워드3")
+        bulk_cat = st.selectbox("대상 카테고리", range(len(categories)), format_func=lambda i: categories[i]["categoryName"], key="bulk_cat") if categories else None
+        bulk_text = st.text_area("데이터 입력", height=100, placeholder="락토핏\t락토핏,lactofit,생유산균\n프로젝트365\t프로젝트365,오메가3")
+        if st.button("임포트", type="primary") and bulk_text and bulk_cat is not None:
+            import uuid
+            for line in bulk_text.strip().split("\n"):
+                parts = line.split("\t")
+                if len(parts) >= 1:
+                    sub_name = parts[0].strip()
+                    keywords = [k.strip() for k in parts[1].split(",") if k.strip()] if len(parts) >= 2 else []
+                    categories[bulk_cat]["subs"].append({
+                        "id": f"sub-{uuid.uuid4().hex[:8]}", "name": sub_name, "keywords": keywords,
+                        "matchScope": "ad", "spend": 0, "revenue": 0, "purchases": 0,
+                        "impressions": 0, "clicks": 0, "roas": 0, "ctr": 0, "creatives": [],
+                    })
+            save_report_snapshot(snapshot)
+            st.rerun()
+
+    # ── 카테고리별 관리 ──
+    for ci, cat in enumerate(categories):
+        subs = cat.get("subs", [])
+        with st.expander(f"{cat['categoryName']} ({len(subs)}개 소카테고리)", expanded=False):
+            # 카테고리 삭제
+            if st.button(f"카테고리 삭제", key=f"del_cat_{ci}"):
+                categories.pop(ci)
+                save_report_snapshot(snapshot)
+                st.rerun()
+
+            # 소카테고리 목록
+            for si, sub in enumerate(subs):
+                st.markdown(
+                    f'<div style="background:var(--c-border-light);border-radius:8px;padding:10px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center">'
+                    f'<div><span style="font-weight:600;font-size:var(--font-sm)">{sub["name"]}</span>'
+                    f'<span style="color:var(--c-text-muted);font-size:var(--font-xs);margin-left:8px">'
+                    f'{", ".join(sub.get("keywords",[])[:5])}</span>'
+                    f'<span style="background:var(--c-primary);color:#fff;padding:1px 6px;border-radius:8px;font-size:0.6rem;margin-left:6px">{sub.get("matchScope","ad")}</span></div>'
+                    f'<span style="color:var(--c-text-muted);font-size:var(--font-xs)">소재 {len(sub.get("creatives",[]))}개</span>'
+                    f'</div>', unsafe_allow_html=True)
+
+            # 소카테고리 추가
+            with st.form(f"add_sub_{ci}"):
+                st.markdown("**소카테고리 추가**")
+                sc1, sc2, sc3 = st.columns([2, 3, 1])
+                with sc1:
+                    new_sub_name = st.text_input("소카테고리명", key=f"nsn_{ci}")
+                with sc2:
+                    new_sub_kw = st.text_input("키워드 (쉼표 구분)", key=f"nsk_{ci}")
+                with sc3:
+                    new_sub_scope = st.selectbox("매칭범위", ["ad", "adset", "campaign"],
+                                                  format_func=lambda x: {"ad":"광고","adset":"광고세트","campaign":"캠페인"}[x],
+                                                  key=f"nss_{ci}")
+                if st.form_submit_button("추가", type="primary"):
+                    if new_sub_name:
+                        import uuid
+                        subs.append({
+                            "id": f"sub-{uuid.uuid4().hex[:8]}", "name": new_sub_name,
+                            "keywords": [k.strip() for k in new_sub_kw.split(",") if k.strip()],
+                            "matchScope": new_sub_scope,
+                            "spend": 0, "revenue": 0, "purchases": 0,
+                            "impressions": 0, "clicks": 0, "roas": 0, "ctr": 0, "creatives": [],
+                        })
+                        save_report_snapshot(snapshot)
+                        st.rerun()
+
+            # 소카테고리 수정/삭제
+            if subs:
+                sel_sub = st.selectbox("소카테고리 선택", range(len(subs)), format_func=lambda i: subs[i]["name"], key=f"sel_sub_{ci}")
+                s = subs[sel_sub]
+                with st.form(f"edit_sub_{ci}_{sel_sub}"):
+                    es1, es2, es3 = st.columns([2, 3, 1])
+                    with es1:
+                        ed_sub_name = st.text_input("소카테고리명", value=s["name"])
+                    with es2:
+                        ed_sub_kw = st.text_input("키워드 (쉼표 구분)", value=", ".join(s.get("keywords",[])))
+                    with es3:
+                        scope_opts = ["ad", "adset", "campaign"]
+                        ed_sub_scope = st.selectbox("매칭범위", scope_opts,
+                                                     index=scope_opts.index(s.get("matchScope","ad")),
+                                                     format_func=lambda x: {"ad":"광고","adset":"광고세트","campaign":"캠페인"}[x])
+                    sb1, sb2, _ = st.columns([1, 1, 4])
+                    with sb1:
+                        save_sub = st.form_submit_button("저장", type="primary")
+                    with sb2:
+                        del_sub = st.form_submit_button("삭제")
+                    if save_sub:
+                        s["name"] = ed_sub_name
+                        s["keywords"] = [k.strip() for k in ed_sub_kw.split(",") if k.strip()]
+                        s["matchScope"] = ed_sub_scope
+                        save_report_snapshot(snapshot)
+                        st.rerun()
+                    if del_sub:
+                        subs.pop(sel_sub)
+                        save_report_snapshot(snapshot)
+                        st.rerun()
 
 
 # ═══════════════════════════════════════════

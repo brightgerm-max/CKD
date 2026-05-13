@@ -1,0 +1,274 @@
+{
+  "generatedAt": "2026-04-30T15:00:00+09:00",
+  "periodLabel": "2026-04-01 ~ 2026-04-30",
+  "brandLabel": "종근당건강",
+  "dailyTimeline": [
+    { "date": "2026-04-01", "spend": 3800000, "revenue": 13680000, "purchases": 92,  "impressions": 1100000, "clicks": 16500, "roas": 3.6, "ctr": 1.5 },
+    { "date": "2026-04-02", "spend": 4100000, "revenue": 15580000, "purchases": 105, "impressions": 1180000, "clicks": 18100, "roas": 3.8, "ctr": 1.53 },
+    { "date": "2026-04-03", "spend": 4250000, "revenue": 17000000, "purchases": 115, "impressions": 1230000, "clicks": 19100, "roas": 4.0, "ctr": 1.55 },
+    { "date": "2026-04-04", "spend": 3900000, "revenue": 15210000, "purchases": 102, "impressions": 1140000, "clicks": 17400, "roas": 3.9, "ctr": 1.53 },
+    { "date": "2026-04-05", "spend": 3600000, "revenue": 13320000, "purchases": 89,  "impressions": 1060000, "clicks": 15800, "roas": 3.7, "ctr": 1.49 },
+    { "date": "2026-04-06", "spend": 4400000, "revenue": 18920000, "purchases": 128, "impressions": 1290000, "clicks": 20100, "roas": 4.3, "ctr": 1.56 },
+    { "date": "2026-04-07", "spend": 4650000, "revenue": 20460000, "purchases": 138, "impressions": 1380000, "clicks": 21800, "roas": 4.4, "ctr": 1.58 },
+    { "date": "2026-04-08", "spend": 4500000, "revenue": 20250000, "purchases": 132, "impressions": 1340000, "clicks": 21000, "roas": 4.5, "ctr": 1.57 },
+    { "date": "2026-04-09", "spend": 4800000, "revenue": 22560000, "purchases": 148, "impressions": 1420000, "clicks": 22600, "roas": 4.7, "ctr": 1.59 },
+    { "date": "2026-04-10", "spend": 5100000, "revenue": 25500000, "purchases": 162, "impressions": 1510000, "clicks": 24100, "roas": 5.0, "ctr": 1.6 },
+    { "date": "2026-04-11", "spend": 4900000, "revenue": 23030000, "purchases": 152, "impressions": 1460000, "clicks": 23100, "roas": 4.7, "ctr": 1.58 },
+    { "date": "2026-04-12", "spend": 4600000, "revenue": 20240000, "purchases": 133, "impressions": 1370000, "clicks": 21300, "roas": 4.4, "ctr": 1.55 },
+    { "date": "2026-04-13", "spend": 5200000, "revenue": 26000000, "purchases": 168, "impressions": 1550000, "clicks": 24800, "roas": 5.0, "ctr": 1.6 },
+    { "date": "2026-04-14", "spend": 5400000, "revenue": 28080000, "purchases": 181, "impressions": 1610000, "clicks": 26100, "roas": 5.2, "ctr": 1.62 },
+    { "date": "2026-04-15", "spend": 5600000, "revenue": 30240000, "purchases": 195, "impressions": 1680000, "clicks": 27500, "roas": 5.4, "ctr": 1.64 },
+    { "date": "2026-04-16", "spend": 5800000, "revenue": 32480000, "purchases": 208, "impressions": 1750000, "clicks": 28900, "roas": 5.6, "ctr": 1.65 },
+    { "date": "2026-04-17", "spend": 6200000, "revenue": 35960000, "purchases": 232, "impressions": 1880000, "clicks": 31300, "roas": 5.8, "ctr": 1.66 },
+    { "date": "2026-04-18", "spend": 6000000, "revenue": 33000000, "purchases": 212, "impressions": 1810000, "clicks": 29900, "roas": 5.5, "ctr": 1.65 },
+    { "date": "2026-04-19", "spend": 5500000, "revenue": 28600000, "purchases": 183, "impressions": 1650000, "clicks": 26700, "roas": 5.2, "ctr": 1.62 },
+    { "date": "2026-04-20", "spend": 5300000, "revenue": 26500000, "purchases": 171, "impressions": 1580000, "clicks": 25400, "roas": 5.0, "ctr": 1.61 },
+    { "date": "2026-04-21", "spend": 5600000, "revenue": 28560000, "purchases": 184, "impressions": 1680000, "clicks": 27100, "roas": 5.1, "ctr": 1.61 },
+    { "date": "2026-04-22", "spend": 5400000, "revenue": 27000000, "purchases": 172, "impressions": 1620000, "clicks": 26000, "roas": 5.0, "ctr": 1.6 },
+    { "date": "2026-04-23", "spend": 5100000, "revenue": 24990000, "purchases": 159, "impressions": 1540000, "clicks": 24500, "roas": 4.9, "ctr": 1.59 },
+    { "date": "2026-04-24", "spend": 4900000, "revenue": 23030000, "purchases": 145, "impressions": 1470000, "clicks": 23200, "roas": 4.7, "ctr": 1.58 },
+    { "date": "2026-04-25", "spend": 4600000, "revenue": 20700000, "purchases": 130, "impressions": 1380000, "clicks": 21500, "roas": 4.5, "ctr": 1.56 },
+    { "date": "2026-04-26", "spend": 4700000, "revenue": 21620000, "purchases": 136, "impressions": 1420000, "clicks": 22100, "roas": 4.6, "ctr": 1.56 },
+    { "date": "2026-04-27", "spend": 4400000, "revenue": 19360000, "purchases": 122, "impressions": 1320000, "clicks": 20500, "roas": 4.4, "ctr": 1.55 },
+    { "date": "2026-04-28", "spend": 4200000, "revenue": 17640000, "purchases": 110, "impressions": 1270000, "clicks": 19400, "roas": 4.2, "ctr": 1.53 },
+    { "date": "2026-04-29", "spend": 4300000, "revenue": 18920000, "purchases": 119, "impressions": 1300000, "clicks": 19900, "roas": 4.4, "ctr": 1.53 },
+    { "date": "2026-04-30", "spend": 4500000, "revenue": 20250000, "purchases": 128, "impressions": 1360000, "clicks": 20900, "roas": 4.5, "ctr": 1.54 }
+  ],
+  "categories": [
+    {
+      "id": "cat-product",
+      "categoryName": "제품명별",
+      "subs": [
+        {
+          "id": "sub-lactofit",
+          "name": "락토핏",
+          "keywords": ["락토핏", "lactofit", "생유산균", "프리바이오틱스"],
+          "matchScope": "ad",
+          "spend": 28400000,
+          "revenue": 173240000,
+          "purchases": 4810,
+          "impressions": 9820000,
+          "clicks": 178000,
+          "roas": 6.1,
+          "ctr": 1.81,
+          "creatives": [
+            { "id": "cr-lf-1", "name": "락토핏_생유산균골드_3D애니_A", "imageData": null, "isActive": true, "spend": 11200000, "revenue": 78400000, "purchases": 2180, "impressions": 3900000, "clicks": 73200, "roas": 7.0, "ctr": 1.88 },
+            { "id": "cr-lf-2", "name": "락토핏_프리바이오틱스_가족모델_B", "imageData": null, "isActive": true, "spend": 8500000, "revenue": 51000000, "purchases": 1410, "impressions": 2900000, "clicks": 53400, "roas": 6.0, "ctr": 1.84 },
+            { "id": "cr-lf-3", "name": "락토핏_장건강루틴_BeforeAfter_C", "imageData": null, "isActive": true, "spend": 5200000, "revenue": 26520000, "purchases": 758, "impressions": 1820000, "clicks": 32100, "roas": 5.1, "ctr": 1.76 },
+            { "id": "cr-lf-4", "name": "락토핏_슬림_체지방감소_D", "imageData": null, "isActive": false, "spend": 3500000, "revenue": 17320000, "purchases": 462, "impressions": 1200000, "clicks": 19300, "roas": 4.95, "ctr": 1.61 }
+          ]
+        },
+        {
+          "id": "sub-project365",
+          "name": "프로젝트365",
+          "keywords": ["프로젝트365", "project365", "오메가3", "루테인"],
+          "matchScope": "ad",
+          "spend": 12800000,
+          "revenue": 44800000,
+          "purchases": 1080,
+          "impressions": 4200000,
+          "clicks": 71400,
+          "roas": 3.5,
+          "ctr": 1.7,
+          "creatives": [
+            { "id": "cr-p365-1", "name": "프로젝트365_오메가3_혈행건강_A", "imageData": null, "isActive": true, "spend": 5800000, "revenue": 23200000, "purchases": 552, "impressions": 1900000, "clicks": 32300, "roas": 4.0, "ctr": 1.7 },
+            { "id": "cr-p365-2", "name": "프로젝트365_루테인_눈건강_B", "imageData": null, "isActive": true, "spend": 4200000, "revenue": 14280000, "purchases": 340, "impressions": 1400000, "clicks": 23800, "roas": 3.4, "ctr": 1.7 },
+            { "id": "cr-p365-3", "name": "프로젝트365_종합비타민_C", "imageData": null, "isActive": false, "spend": 2800000, "revenue": 7320000, "purchases": 188, "impressions": 900000, "clicks": 15300, "roas": 2.61, "ctr": 1.7 }
+          ]
+        },
+        {
+          "id": "sub-benvity",
+          "name": "벤비티",
+          "keywords": ["벤비티", "benvity", "콜라겐", "글루타치온"],
+          "matchScope": "ad",
+          "spend": 9600000,
+          "revenue": 39840000,
+          "purchases": 960,
+          "impressions": 3100000,
+          "clicks": 49600,
+          "roas": 4.15,
+          "ctr": 1.6,
+          "creatives": [
+            { "id": "cr-bv-1", "name": "벤비티_콜라겐_30대여성_A", "imageData": null, "isActive": true, "spend": 5100000, "revenue": 23460000, "purchases": 564, "impressions": 1650000, "clicks": 26600, "roas": 4.6, "ctr": 1.61 },
+            { "id": "cr-bv-2", "name": "벤비티_글루타치온_미백_B", "imageData": null, "isActive": true, "spend": 3000000, "revenue": 11400000, "purchases": 276, "impressions": 950000, "clicks": 15100, "roas": 3.8, "ctr": 1.59 },
+            { "id": "cr-bv-3", "name": "벤비티_구미_데일리이너뷰티_C", "imageData": null, "isActive": true, "spend": 1500000, "revenue": 4980000, "purchases": 120, "impressions": 500000, "clicks": 7900, "roas": 3.32, "ctr": 1.58 }
+          ]
+        },
+        {
+          "id": "sub-chimhyang",
+          "name": "침향환",
+          "keywords": ["침향환", "효도선물", "프리미엄건강"],
+          "matchScope": "ad",
+          "spend": 6800000,
+          "revenue": 15640000,
+          "purchases": 280,
+          "impressions": 1900000,
+          "clicks": 28500,
+          "roas": 2.3,
+          "ctr": 1.5,
+          "creatives": [
+            { "id": "cr-cy-1", "name": "침향환_프리미엄_효도선물_A", "imageData": null, "isActive": true, "spend": 3600000, "revenue": 9000000, "purchases": 162, "impressions": 1000000, "clicks": 15200, "roas": 2.5, "ctr": 1.52 },
+            { "id": "cr-cy-2", "name": "침향환_부모님선물_B", "imageData": null, "isActive": true, "spend": 2200000, "revenue": 4620000, "purchases": 82, "impressions": 620000, "clicks": 9000, "roas": 2.1, "ctr": 1.45 },
+            { "id": "cr-cy-3", "name": "침향환_전통한방_C", "imageData": null, "isActive": false, "spend": 1000000, "revenue": 2020000, "purchases": 36, "impressions": 280000, "clicks": 4300, "roas": 2.02, "ctr": 1.54 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cat-appeal",
+      "categoryName": "소구점별",
+      "subs": [
+        {
+          "id": "sub-gut",
+          "name": "장건강·유산균",
+          "keywords": ["장건강", "유산균", "프로바이오틱스", "변비"],
+          "matchScope": "adset",
+          "spend": 31200000,
+          "revenue": 184080000,
+          "purchases": 5070,
+          "impressions": 10500000,
+          "clicks": 189000,
+          "roas": 5.9,
+          "ctr": 1.8,
+          "creatives": [
+            { "id": "cr-gut-1", "name": "장건강_유산균효능_A", "imageData": null, "isActive": true, "spend": 15600000, "revenue": 99840000, "purchases": 2750, "impressions": 5200000, "clicks": 96200, "roas": 6.4, "ctr": 1.85 },
+            { "id": "cr-gut-2", "name": "장건강_변비탈출후기_B", "imageData": null, "isActive": true, "spend": 9800000, "revenue": 55860000, "purchases": 1540, "impressions": 3400000, "clicks": 60500, "roas": 5.7, "ctr": 1.78 },
+            { "id": "cr-gut-3", "name": "장건강_가족유산균_C", "imageData": null, "isActive": true, "spend": 5800000, "revenue": 28380000, "purchases": 780, "impressions": 1900000, "clicks": 32300, "roas": 4.89, "ctr": 1.7 }
+          ]
+        },
+        {
+          "id": "sub-immune",
+          "name": "면역력",
+          "keywords": ["면역력", "면역", "이뮨", "비타민C"],
+          "matchScope": "adset",
+          "spend": 11500000,
+          "revenue": 42550000,
+          "purchases": 980,
+          "impressions": 3800000,
+          "clicks": 60800,
+          "roas": 3.7,
+          "ctr": 1.6,
+          "creatives": [
+            { "id": "cr-im-1", "name": "면역력_이뮨듀오_환절기_A", "imageData": null, "isActive": true, "spend": 6200000, "revenue": 24180000, "purchases": 558, "impressions": 2100000, "clicks": 33600, "roas": 3.9, "ctr": 1.6 },
+            { "id": "cr-im-2", "name": "면역력_비타민C_데일리_B", "imageData": null, "isActive": true, "spend": 3500000, "revenue": 12740000, "purchases": 294, "impressions": 1150000, "clicks": 18400, "roas": 3.64, "ctr": 1.6 },
+            { "id": "cr-im-3", "name": "면역력_시즌환절기_엄마용_C", "imageData": null, "isActive": false, "spend": 1800000, "revenue": 5630000, "purchases": 128, "impressions": 550000, "clicks": 8800, "roas": 3.13, "ctr": 1.6 }
+          ]
+        },
+        {
+          "id": "sub-innerbeauty",
+          "name": "이너뷰티",
+          "keywords": ["이너뷰티", "콜라겐", "글루타치온", "피부미백"],
+          "matchScope": "adset",
+          "spend": 10200000,
+          "revenue": 38760000,
+          "purchases": 920,
+          "impressions": 3300000,
+          "clicks": 52800,
+          "roas": 3.8,
+          "ctr": 1.6,
+          "creatives": [
+            { "id": "cr-ib-1", "name": "이너뷰티_콜라겐_30대여성_A", "imageData": null, "isActive": true, "spend": 5500000, "revenue": 23100000, "purchases": 549, "impressions": 1800000, "clicks": 28800, "roas": 4.2, "ctr": 1.6 },
+            { "id": "cr-ib-2", "name": "이너뷰티_글루타치온_미백후기_B", "imageData": null, "isActive": true, "spend": 3200000, "revenue": 10880000, "purchases": 258, "impressions": 1050000, "clicks": 16800, "roas": 3.4, "ctr": 1.6 },
+            { "id": "cr-ib-3", "name": "이너뷰티_구미_2030데일리_C", "imageData": null, "isActive": true, "spend": 1500000, "revenue": 4780000, "purchases": 113, "impressions": 450000, "clicks": 7200, "roas": 3.19, "ctr": 1.6 }
+          ]
+        },
+        {
+          "id": "sub-energy",
+          "name": "활력·피로회복",
+          "keywords": ["활력", "피로회복", "에너지", "직장인"],
+          "matchScope": "adset",
+          "spend": 7600000,
+          "revenue": 16720000,
+          "purchases": 380,
+          "impressions": 2400000,
+          "clicks": 37200,
+          "roas": 2.2,
+          "ctr": 1.55,
+          "creatives": [
+            { "id": "cr-en-1", "name": "활력_에너지부스터_직장인_A", "imageData": null, "isActive": true, "spend": 4200000, "revenue": 10080000, "purchases": 230, "impressions": 1350000, "clicks": 21100, "roas": 2.4, "ctr": 1.56 },
+            { "id": "cr-en-2", "name": "활력_피로회복_야근족_B", "imageData": null, "isActive": false, "spend": 2400000, "revenue": 4810000, "purchases": 110, "impressions": 730000, "clicks": 11300, "roas": 2.0, "ctr": 1.55 },
+            { "id": "cr-en-3", "name": "활력_침향환_프리미엄에너지_C", "imageData": null, "isActive": false, "spend": 1000000, "revenue": 1830000, "purchases": 40, "impressions": 320000, "clicks": 4800, "roas": 1.83, "ctr": 1.5 }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cat-target",
+      "categoryName": "타겟별",
+      "subs": [
+        {
+          "id": "sub-3040f",
+          "name": "30-40대 여성",
+          "keywords": ["30대여성", "40대여성", "이너뷰티", "워킹맘"],
+          "matchScope": "adset",
+          "spend": 18400000,
+          "revenue": 83260000,
+          "purchases": 1830,
+          "impressions": 6100000,
+          "clicks": 100600,
+          "roas": 4.52,
+          "ctr": 1.65,
+          "creatives": [
+            { "id": "cr-3040-1", "name": "30-40여성_벤비티콜라겐_A", "imageData": null, "isActive": true, "spend": 9500000, "revenue": 47500000, "purchases": 1042, "impressions": 3100000, "clicks": 51200, "roas": 5.0, "ctr": 1.65 },
+            { "id": "cr-3040-2", "name": "30-40여성_락토핏_워킹맘루틴_B", "imageData": null, "isActive": true, "spend": 6200000, "revenue": 26660000, "purchases": 588, "impressions": 2100000, "clicks": 34600, "roas": 4.3, "ctr": 1.65 },
+            { "id": "cr-3040-3", "name": "30-40여성_안티에이징_세럼결합_C", "imageData": null, "isActive": true, "spend": 2700000, "revenue": 9100000, "purchases": 200, "impressions": 900000, "clicks": 14800, "roas": 3.37, "ctr": 1.64 }
+          ]
+        },
+        {
+          "id": "sub-senior",
+          "name": "중장년 (50-60대)",
+          "keywords": ["중장년", "5060", "관절건강", "혈행건강"],
+          "matchScope": "adset",
+          "spend": 14600000,
+          "revenue": 54020000,
+          "purchases": 1090,
+          "impressions": 4900000,
+          "clicks": 73500,
+          "roas": 3.7,
+          "ctr": 1.5,
+          "creatives": [
+            { "id": "cr-sen-1", "name": "중장년_오메가3_혈행_A", "imageData": null, "isActive": true, "spend": 7800000, "revenue": 30420000, "purchases": 614, "impressions": 2600000, "clicks": 39500, "roas": 3.9, "ctr": 1.52 },
+            { "id": "cr-sen-2", "name": "중장년_침향환_부모님선물_B", "imageData": null, "isActive": true, "spend": 4500000, "revenue": 15750000, "purchases": 317, "impressions": 1500000, "clicks": 22500, "roas": 3.5, "ctr": 1.5 },
+            { "id": "cr-sen-3", "name": "중장년_루테인_눈건강_C", "imageData": null, "isActive": true, "spend": 2300000, "revenue": 7850000, "purchases": 159, "impressions": 800000, "clicks": 11500, "roas": 3.41, "ctr": 1.44 }
+          ]
+        },
+        {
+          "id": "sub-officeworker",
+          "name": "직장인",
+          "keywords": ["직장인", "야근족", "피로", "오피스"],
+          "matchScope": "adset",
+          "spend": 12800000,
+          "revenue": 32640000,
+          "purchases": 728,
+          "impressions": 4400000,
+          "clicks": 66000,
+          "roas": 2.55,
+          "ctr": 1.5,
+          "creatives": [
+            { "id": "cr-of-1", "name": "직장인_피로회복_빠른흡수_A", "imageData": null, "isActive": true, "spend": 6500000, "revenue": 17550000, "purchases": 392, "impressions": 2200000, "clicks": 33000, "roas": 2.7, "ctr": 1.5 },
+            { "id": "cr-of-2", "name": "직장인_종합비타민_데일리_B", "imageData": null, "isActive": true, "spend": 4100000, "revenue": 10160000, "purchases": 226, "impressions": 1400000, "clicks": 21000, "roas": 2.48, "ctr": 1.5 },
+            { "id": "cr-of-3", "name": "직장인_숙취해소_깨노니_C", "imageData": null, "isActive": false, "spend": 2200000, "revenue": 4930000, "purchases": 110, "impressions": 800000, "clicks": 12000, "roas": 2.24, "ctr": 1.5 }
+          ]
+        },
+        {
+          "id": "sub-parents",
+          "name": "어린이 부모",
+          "keywords": ["어린이", "키즈", "아이건강", "엄마"],
+          "matchScope": "adset",
+          "spend": 6400000,
+          "revenue": 24320000,
+          "purchases": 540,
+          "impressions": 2200000,
+          "clicks": 33000,
+          "roas": 3.8,
+          "ctr": 1.5,
+          "creatives": [
+            { "id": "cr-par-1", "name": "어린이부모_키즈유산균_A", "imageData": null, "isActive": true, "spend": 3300000, "revenue": 13530000, "purchases": 300, "impressions": 1140000, "clicks": 17200, "roas": 4.1, "ctr": 1.51 },
+            { "id": "cr-par-2", "name": "어린이부모_키즈비타민_달콤_B", "imageData": null, "isActive": true, "spend": 2100000, "revenue": 7770000, "purchases": 173, "impressions": 730000, "clicks": 11000, "roas": 3.7, "ctr": 1.51 },
+            { "id": "cr-par-3", "name": "어린이부모_면역키즈구미_C", "imageData": null, "isActive": true, "spend": 1000000, "revenue": 3020000, "purchases": 67, "impressions": 330000, "clicks": 4800, "roas": 3.02, "ctr": 1.45 }
+          ]
+        }
+      ]
+    }
+  ]
+}
