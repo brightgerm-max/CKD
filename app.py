@@ -2302,7 +2302,7 @@ def page_creative_report():
                     yaxis=dict(gridcolor="#f1f5f9"),
                     xaxis=dict(gridcolor="#f1f5f9"),
                 )
-                st.plotly_chart(fig_trend, use_container_width=True)
+                st.plotly_chart(fig_trend, use_container_width=True, key=f"trend_chart_{tab_idx}")
 
             # ── Hero KPI ──
             total_spend = sum(s.get("spend",0) for s in subs)
@@ -2344,7 +2344,7 @@ def page_creative_report():
                         paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
                         xaxis=dict(gridcolor="#f1f5f9"), yaxis=dict(autorange="reversed"),
                     )
-                    st.plotly_chart(fig_comp, use_container_width=True)
+                    st.plotly_chart(fig_comp, use_container_width=True, key=f"comp_chart_{tab_idx}")
 
                 with col_cards:
                     for si, sub in enumerate(subs):
