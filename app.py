@@ -567,14 +567,14 @@ div[data-testid="stVerticalBlock"] > div[data-testid="stVerticalBlockBorderWrapp
 
 # ─── 사이드바 ───
 MENU_SECTIONS = [
-    {"section": "🛡️ 광고심의", "items": [
-        {"key": "ai_review",        "label": "AI 사전검토"},
-        {"key": "review_dashboard", "label": "심의현황 대시보드"},
-    ]},
-    {"section": "📈 EASY 리포팅", "items": [
-        {"key": "creative_report",  "label": "소재 실적관리"},
-        {"key": "label_report",     "label": "라벨링 리포트"},
-    ]},
+    # {"section": "🛡️ 광고심의", "items": [
+    #     {"key": "ai_review",        "label": "AI 사전검토"},
+    #     {"key": "review_dashboard", "label": "심의현황 대시보드"},
+    # ]},
+    # {"section": "📈 EASY 리포팅", "items": [
+    #     {"key": "creative_report",  "label": "소재 실적관리"},
+    #     {"key": "label_report",     "label": "라벨링 리포트"},
+    # ]},
     {"section": "🔍 시장조사", "items": [
         {"key": "search_query",     "label": "검색쿼리 분석"},
         {"key": "ad_research",      "label": "광고배너 조사"},
