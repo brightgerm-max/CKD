@@ -37,7 +37,19 @@ from product_scraper import scrape_product_info
 from price_scraper import scrape_prices_from_urls
 
 # ─── 경로 & 데이터 ───
-DATA_DIR = Path(__file__).parent / "data"
+# Railway Volume이 마운트되면 /data 사용, 없으면 로컬 data/ 사용
+_VOLUME_DIR = Path("/data")
+_LOCAL_DIR = Path(__file__).parent / "data"
+if _VOLUME_DIR.exists() and _VOLUME_DIR.is_dir():
+    DATA_DIR = _VOLUME_DIR
+    # 최초 실행 시 Git 기본 데이터를 Volume에 복사
+    import shutil
+    for f in _LOCAL_DIR.glob("*.json"):
+        dest = DATA_DIR / f.name
+        if not dest.exists():
+            shutil.copy2(f, dest)
+else:
+    DATA_DIR = _LOCAL_DIR
 
 def load_json(filename):
     with open(DATA_DIR / filename, "r", encoding="utf-8") as f:
