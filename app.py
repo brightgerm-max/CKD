@@ -848,6 +848,7 @@ def page_product_management():
                 with c2:
                     edit_ingredients = st.text_area("핵심 성분", value=", ".join(p.get("ingredients",[])))
                     edit_claims = st.text_area("건강기능 표시", value=", ".join(p.get("health_claims",[])))
+                edit_subs = st.text_input("서브 제품 (쉼표 구분)", value=", ".join(p.get("sub_products",[])))
                 urls = p.get("product_urls", {})
                 eu1, eu2, eu3 = st.columns(3)
                 with eu1:
@@ -856,12 +857,37 @@ def page_product_management():
                     edit_url_coupang = st.text_input("쿠팡 URL", value=urls.get("coupang",""))
                 with eu3:
                     edit_url_brand = st.text_input("자사몰 URL", value=urls.get("brand",""))
+                p_mp = p.get("manual_prices", {})
+                st.markdown("**채널별 가격 (선택, 0=API 자동)**")
+                st.caption("단위 입력 형식: 60정, 120캡슐, 30포, 2개월분, 90일분")
+                ep1, ep2, ep3 = st.columns(3)
+                with ep1:
+                    _pn = p_mp.get("naver", {})
+                    ep_naver = st.number_input("네이버 가격(원)", min_value=0, value=int(_pn.get("price",0) if isinstance(_pn, dict) else _pn))
+                    eq_naver = st.text_input("네이버 단위", value=_pn.get("quantity","") if isinstance(_pn, dict) else "")
+                with ep2:
+                    _pc = p_mp.get("coupang", {})
+                    ep_coupang = st.number_input("쿠팡 가격(원)", min_value=0, value=int(_pc.get("price",0) if isinstance(_pc, dict) else _pc))
+                    eq_coupang = st.text_input("쿠팡 단위", value=_pc.get("quantity","") if isinstance(_pc, dict) else "")
+                with ep3:
+                    _pb = p_mp.get("brand", {})
+                    ep_brand = st.number_input("자사몰 가격(원)", min_value=0, value=int(_pb.get("price",0) if isinstance(_pb, dict) else _pb))
+                    eq_brand = st.text_input("자사몰 단위", value=_pb.get("quantity","") if isinstance(_pb, dict) else "")
                 if st.form_submit_button("저장", type="primary"):
                     p["brand"]=edit_brand; p["category"]=edit_category
                     p["target_demographic"]["primary_age"]=edit_target
                     p["ingredients"]=[x.strip() for x in edit_ingredients.split(",") if x.strip()]
                     p["health_claims"]=[x.strip() for x in edit_claims.split(",") if x.strip()]
+                    p["sub_products"]=[x.strip() for x in edit_subs.split(",") if x.strip()]
                     p["product_urls"]={"naver":edit_url_naver,"coupang":edit_url_coupang,"brand":edit_url_brand}
+                    mp = {}
+                    if ep_naver > 0: mp["naver"] = {"price": ep_naver, "quantity": eq_naver}
+                    if ep_coupang > 0: mp["coupang"] = {"price": ep_coupang, "quantity": eq_coupang}
+                    if ep_brand > 0: mp["brand"] = {"price": ep_brand, "quantity": eq_brand}
+                    if mp:
+                        p["manual_prices"] = mp
+                    elif "manual_prices" in p:
+                        del p["manual_prices"]
                     save_product_db(products_data)
                     st.session_state.pop("mgmt_edit_mode",None)
                     st.rerun()
@@ -1466,7 +1492,41 @@ def page_competitor():
     if price_cache_key not in st.session_state:
         with st.spinner("자사 및 경쟁사 채널별 가격을 조회하고 있습니다..."):
             all_prices = {}
-            all_prices["ckd"] = search_product_prices(f"종근당 {product['brand']}", brand_keywords=["종근당","종근당건강","ckd"])
+            ckd_api = search_product_prices(f"종근당 {product['brand']}", brand_keywords=["종근당","종근당건강","ckd"])
+            # 자사 수동 가격 오버라이드
+            ckd_mp = product.get("manual_prices", {})
+            if ckd_mp:
+                import re as _re
+                ckd_urls = product.get("product_urls", {})
+                def _parse_days(q):
+                    dm = _re.search(r"(\d+)\s*개월\s*분", q)
+                    if dm: return int(dm.group(1)) * 30
+                    dm = _re.search(r"(\d+)\s*일\s*분", q)
+                    if dm: return int(dm.group(1))
+                    dm = _re.search(r"(\d+)\s*(?:포|정|캡슐|입)", q)
+                    if dm: return int(dm.group(1))
+                    return 0
+                for ch in ["naver", "coupang", "brand"]:
+                    ch_data = ckd_mp.get(ch, {})
+                    if isinstance(ch_data, dict):
+                        manual_p = ch_data.get("price", 0)
+                        qty_raw = ch_data.get("quantity", "")
+                    else:
+                        manual_p = int(ch_data) if ch_data else 0
+                        qty_raw = ""
+                    if manual_p > 0:
+                        days = _parse_days(qty_raw)
+                        dp = round(manual_p / days) if days > 0 else 0
+                        ckd_api[ch] = [{
+                            "name": product.get("brand", ""),
+                            "price": manual_p,
+                            "link": ckd_urls.get(ch, ""),
+                            "mall": "",
+                            "quantity": qty_raw,
+                            "days": days,
+                            "daily_price": dp,
+                        }]
+            all_prices["ckd"] = ckd_api
             for comp in db_comps:
                 c_brand = comp.get("brand_name", "")
                 search_kw = comp.get("search_keyword", f'{comp.get("product_name","")} {c_brand}')
