@@ -728,24 +728,51 @@ def page_product_management():
     # 상품 추가 폼
     if st.session_state.get("mgmt_add_mode"):
         with st.expander("새 상품 등록", expanded=True):
+            # URL 자동추출
+            st.markdown("**상품 URL로 자동 입력**")
+            au1, au2 = st.columns([4, 1])
+            with au1:
+                add_auto_url = st.text_input("상품 페이지 URL", placeholder="네이버/쿠팡/자사몰 URL 입력", key="prod_add_autourl")
+            with au2:
+                st.markdown('<div style="height:28px"></div>', unsafe_allow_html=True)
+                add_auto_btn = st.button("자동 추출", type="primary", use_container_width=True, key="prod_add_autobtn")
+
+            if add_auto_btn and add_auto_url:
+                with st.spinner("상품 페이지 분석 중... (최대 90초 소요)"):
+                    auto_result = scrape_product_info(add_auto_url)
+                if "_error" in auto_result:
+                    st.error(f"추출 실패: {auto_result['_error']}")
+                elif not auto_result.get("brand_name") and not auto_result.get("ingredients"):
+                    st.warning("페이지에서 정보를 추출하지 못했습니다.")
+                else:
+                    st.session_state["prod_add_brand"] = auto_result.get("product_name", "")
+                    st.session_state["prod_add_ings"] = ", ".join(auto_result.get("ingredients", []))
+                    st.session_state["prod_add_claims"] = ", ".join(auto_result.get("health_claims", []))
+                    url_type = _detect_url_type(add_auto_url)
+                    st.session_state["prod_add_url_naver"] = add_auto_url if url_type == "naver" else ""
+                    st.session_state["prod_add_url_coupang"] = add_auto_url if url_type == "coupang" else ""
+                    st.session_state["prod_add_url_brand"] = add_auto_url if url_type == "brand" else ""
+                    st.success(f"추출 완료! 제품: {auto_result.get('product_name','')}, 성분: {len(auto_result.get('ingredients',[]))}개")
+                    st.rerun()
+
             with st.form("add_product_form"):
                 c1, c2 = st.columns(2)
                 with c1:
-                    new_brand = st.text_input("제품명 *")
+                    new_brand = st.text_input("제품명 *", key="prod_add_brand")
                     new_category = st.text_input("카테고리 *")
                     new_target = st.text_input("타겟 (예: 30-50대)")
                 with c2:
-                    new_ingredients = st.text_area("핵심 성분 (쉼표 구분)")
+                    new_ingredients = st.text_area("핵심 성분 (쉼표 구분)", key="prod_add_ings")
                     new_kr_keywords = st.text_area("한글 키워드 (쉼표 구분)")
                     new_en_keywords = st.text_area("영문 키워드 (쉼표 구분)")
-                new_claims = st.text_input("건강기능 표시 (쉼표 구분)")
+                new_claims = st.text_input("건강기능 표시 (쉼표 구분)", key="prod_add_claims")
                 uc1, uc2, uc3 = st.columns(3)
                 with uc1:
-                    new_url_naver = st.text_input("네이버 URL")
+                    new_url_naver = st.text_input("네이버 URL", key="prod_add_url_naver")
                 with uc2:
-                    new_url_coupang = st.text_input("쿠팡 URL")
+                    new_url_coupang = st.text_input("쿠팡 URL", key="prod_add_url_coupang")
                 with uc3:
-                    new_url_brand = st.text_input("자사몰 URL")
+                    new_url_brand = st.text_input("자사몰 URL", key="prod_add_url_brand")
                 if st.form_submit_button("등록", type="primary"):
                     if new_brand and new_category:
                         products_data["products"].append({
@@ -839,6 +866,32 @@ def page_product_management():
                     st.rerun()
 
         if st.session_state.get("mgmt_edit_mode") == selected_idx:
+            # URL 자동추출
+            ea1, ea2 = st.columns([4, 1])
+            with ea1:
+                edit_auto_url = st.text_input("URL로 정보 자동 갱신", placeholder="상품 URL 입력 후 자동 추출", key=f"prod_edit_autourl_{selected_idx}")
+            with ea2:
+                st.markdown('<div style="height:28px"></div>', unsafe_allow_html=True)
+                edit_auto_btn = st.button("자동 추출", key=f"prod_edit_autobtn_{selected_idx}")
+
+            if edit_auto_btn and edit_auto_url:
+                with st.spinner("상품 페이지 분석 중..."):
+                    edit_result = scrape_product_info(edit_auto_url)
+                    if "_error" in edit_result:
+                        st.error(f"추출 실패: {edit_result['_error']}")
+                    else:
+                        if edit_result.get("ingredients"):
+                            p["ingredients"] = edit_result["ingredients"]
+                        if edit_result.get("health_claims"):
+                            p["health_claims"] = edit_result["health_claims"]
+                        url_type = _detect_url_type(edit_auto_url)
+                        if "product_urls" not in p:
+                            p["product_urls"] = {"naver": "", "coupang": "", "brand": ""}
+                        p["product_urls"][url_type] = edit_auto_url
+                        save_product_db(products_data)
+                        st.success("자동 추출 결과가 반영되었습니다.")
+                        st.rerun()
+
             with st.form(f"edit_form_{selected_idx}"):
                 c1, c2 = st.columns(2)
                 with c1:
