@@ -619,7 +619,7 @@ with st.sidebar:
         f'<div style="text-align:center; padding:6px 16px 0">'
         f'<div class="sidebar-brand-text" style="text-align:center">CKD Insight Radar</div>'
         f'</div>'
-        f'<div class="sidebar-brand-sub" style="text-align:center">종근당건강 · Trend Marketing Platform</div>'
+        f'<div class="sidebar-brand-sub" style="text-align:center">종근당 · Trend Marketing Platform</div>'
         f'<div style="height:24px"></div>',
         unsafe_allow_html=True,
     )
@@ -646,7 +646,7 @@ with st.sidebar:
         dot = "sidebar-dot sidebar-dot-on" if on else "sidebar-dot sidebar-dot-off"
         st.markdown(f'<div class="sidebar-src"><span class="{dot}"></span> {name}</div>', unsafe_allow_html=True)
 
-    st.markdown('<hr class="sidebar-hr"><div class="sidebar-ver">v2.0 — 종근당건강 제안용</div>', unsafe_allow_html=True)
+    st.markdown('<hr class="sidebar-hr"><div class="sidebar-ver">v2.0 — 종근당 제안용</div>', unsafe_allow_html=True)
 
 # ─── 유틸리티 ───
 def render_page_header(icon, title, desc, color="blue"):
@@ -719,7 +719,7 @@ def page_product_management():
 
     col_h, col_btn = st.columns([5, 1])
     with col_h:
-        render_page_header("📦","자사 상품관리","종근당건강 제품 라인업을 등록·관리합니다","blue")
+        render_page_header("📦","자사 상품관리","종근당 제품 라인업을 등록·관리합니다","blue")
     with col_btn:
         st.markdown("")
         if st.button("＋ 상품 추가", type="primary", use_container_width=True):
@@ -997,7 +997,7 @@ def page_product_management():
 
         st.markdown(
             f'<div class="summary-panel">'
-            f'<div class="summary-title">종근당건강 제품 라인업 요약</div>'
+            f'<div class="summary-title">종근당 제품 라인업 요약</div>'
             f'<div class="summary-grid">'
             f'<div class="summary-item"><div class="summary-val">{len(products)}</div><div class="summary-lbl">등록 상품</div></div>'
             f'<div class="summary-item"><div class="summary-val">{len(cats)}</div><div class="summary-lbl">건강 카테고리</div></div>'
@@ -3226,4 +3226,4 @@ elif pg=="data": page_data_collection()
 elif pg=="usp": page_usp()
 elif pg=="adbanner": page_adbanner()
 
-st.markdown('<div class="footer">CKD Insight Radar v1.0 — 성분 기반 트렌드 선점 마케팅 솔루션 · 종근당건강</div>', unsafe_allow_html=True)
+st.markdown('<div class="footer">CKD Insight Radar v1.0 — 성분 기반 트렌드 선점 마케팅 솔루션 · 종근당</div>', unsafe_allow_html=True)
