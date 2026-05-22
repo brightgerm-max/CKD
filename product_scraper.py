@@ -5,10 +5,11 @@ import json
 import subprocess
 import sys
 import os
+import base64
 
 
 def scrape_product_info(url: str) -> dict:
-    """서브프로세스에서 Playwright 크롤링 후 AI로 파싱"""
+    """서브프로세스에서 Playwright 크롤링 후 AI로 파싱 (텍스트 + 스크린샷)"""
     try:
         result = subprocess.run(
             [sys.executable, __file__, url],
@@ -29,14 +30,62 @@ def scrape_product_info(url: str) -> dict:
         return {"_error": str(e)}
 
 
-def _extract_page_text(url: str) -> str:
-    """Playwright로 페이지 텍스트 추출"""
+def analyze_image(image_bytes: bytes) -> dict:
+    """이미지 바이트를 Claude Vision으로 분석하여 성분/건강기능 표시 추출"""
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    if not api_key:
+        return {"_error": "ANTHROPIC_API_KEY 미설정"}
+
+    try:
+        import anthropic
+        client = anthropic.Anthropic(api_key=api_key)
+
+        b64 = base64.b64encode(image_bytes).decode()
+
+        response = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=1500,
+            messages=[{"role": "user", "content": [
+                {"type": "image", "source": {"type": "base64", "media_type": "image/png", "data": b64}},
+                {"type": "text", "text": """이 이미지는 건강기능식품의 성분표/상세정보입니다.
+이미지에서 아래 정보를 추출해주세요.
+
+다음 JSON 형식으로만 응답하세요 (다른 텍스트 없이):
+{
+  "brand_name": "브랜드명",
+  "product_name": "제품명",
+  "ingredients": ["기능성 성분1", "성분2", ...],
+  "health_claims": ["건강기능 표시1", "표시2", ...],
+  "headline": "제품 USP 한 줄 요약",
+  "selling_points": ["셀링포인트1", "셀링포인트2", ...]
+}
+
+규칙:
+- ingredients: 기능성 원료만 (부형제/첨가물 제외). 학명이 있으면 한글명도 함께
+- health_claims: 식약처 인정 건강기능 표시
+- selling_points: 함량, 특허, 제조방식 등 차별화 포인트
+- 정보를 찾을 수 없으면 빈 배열/빈 문자열로"""}
+            ]}]
+        )
+
+        resp_text = response.content[0].text.strip()
+        match = re.search(r'\{[\s\S]*\}', resp_text)
+        if match:
+            return json.loads(match.group())
+        return {"_error": f"AI 응답에서 JSON을 찾을 수 없음: {resp_text[:200]}"}
+    except Exception as e:
+        return {"_error": f"이미지 분석 실패: {e}"}
+
+
+def _extract_page_text_and_screenshot(url: str) -> tuple:
+    """Playwright로 페이지 텍스트 + 스크린샷 추출. 반환: (text, screenshot_bytes_list)"""
     try:
         from playwright.sync_api import sync_playwright
     except ImportError:
-        return "[오류: playwright 미설치]"
+        return "[오류: playwright 미설치]", []
 
     text = ""
+    screenshots = []
     try:
         with sync_playwright() as p:
             browser = p.chromium.launch(
@@ -87,23 +136,42 @@ def _extract_page_text(url: str) -> str:
                     text = main_text + "\n\n--- iframe ---\n\n" + iframe_text[:8000]
                 else:
                     text = main_text
+
+                # 스크린샷 캡처 (상세 영역)
+                try:
+                    # 상단 스크린샷
+                    page.evaluate("window.scrollTo(0, 0)")
+                    page.wait_for_timeout(500)
+                    screenshots.append(page.screenshot(type="png"))
+                    # 스크롤 내려서 상세 영역 스크린샷
+                    page.evaluate("window.scrollBy(0, 900)")
+                    page.wait_for_timeout(500)
+                    screenshots.append(page.screenshot(type="png"))
+                    page.evaluate("window.scrollBy(0, 900)")
+                    page.wait_for_timeout(500)
+                    screenshots.append(page.screenshot(type="png"))
+                except Exception:
+                    pass
             else:
-                # 일반 사이트
                 for _ in range(3):
                     page.evaluate("window.scrollBy(0, 1000)")
                     page.wait_for_timeout(500)
                 text = page.inner_text("body")[:15000]
+                try:
+                    screenshots.append(page.screenshot(type="png"))
+                except Exception:
+                    pass
 
             browser.close()
     except Exception as e:
         import traceback
         text = f"[크롤링 오류: {e}\n{traceback.format_exc()[:300]}]"
 
-    return text
+    return text, screenshots
 
 
-def _parse_with_ai(page_text: str, url: str) -> dict:
-    """Claude AI로 상품 정보 파싱"""
+def _parse_with_ai(page_text: str, url: str, screenshots: list = None) -> dict:
+    """Claude AI로 상품 정보 파싱 (텍스트 + 스크린샷 Vision)"""
     api_key = os.environ.get("ANTHROPIC_API_KEY", "")
     if not api_key:
         result = _parse_with_regex(page_text)
@@ -114,13 +182,28 @@ def _parse_with_ai(page_text: str, url: str) -> dict:
         import anthropic
         client = anthropic.Anthropic(api_key=api_key)
 
-        prompt = f"""다음은 건강기능식품 상품 페이지에서 추출한 텍스트입니다.
-이 텍스트에서 아래 정보를 추출해주세요.
+        # 메시지 구성: 텍스트 + 스크린샷 이미지
+        content = []
+
+        # 스크린샷 추가 (최대 3장)
+        if screenshots:
+            for i, ss in enumerate(screenshots[:3]):
+                b64 = base64.b64encode(ss).decode()
+                content.append({
+                    "type": "image",
+                    "source": {"type": "base64", "media_type": "image/png", "data": b64}
+                })
+
+        content.append({
+            "type": "text",
+            "text": f"""다음은 건강기능식품 상품 페이지에서 추출한 텍스트와 스크린샷입니다.
+텍스트와 이미지 모두 분석하여 아래 정보를 추출해주세요.
+이미지에 성분표, 건강기능 표시, 제품 상세가 있으면 반드시 반영하세요.
 
 URL: {url}
 
 텍스트:
-{page_text[:8000]}
+{page_text[:6000]}
 
 다음 JSON 형식으로만 응답하세요 (다른 텍스트 없이):
 {{
@@ -133,15 +216,17 @@ URL: {url}
 }}
 
 규칙:
-- ingredients: 기능성 원료만 추출 (부형제/첨가물 제외). 예: 프로바이오틱스, 콘드로이친, 포스파티딜세린
+- ingredients: 기능성 원료만 추출 (부형제/첨가물 제외). 학명과 한글명 모두 포함
 - health_claims: 식약처 인정 건강기능 표시만. 예: 장 건강에 도움, 관절 건강에 도움
-- selling_points: 제품 차별화 포인트 (함량, 특허, 제조방식 등)
+- selling_points: 제품 차별화 포인트 (함량, 균수, 특허, 제조방식 등)
+- 이미지에서 읽은 정보도 반드시 포함
 - 정보를 찾을 수 없으면 빈 배열/빈 문자열로"""
+        })
 
         response = client.messages.create(
             model="claude-haiku-4-5-20251001",
-            max_tokens=1000,
-            messages=[{"role": "user", "content": prompt}]
+            max_tokens=1500,
+            messages=[{"role": "user", "content": content}]
         )
 
         resp_text = response.content[0].text.strip()
@@ -215,17 +300,17 @@ if __name__ == "__main__":
                     k, v = line.split("=", 1)
                     os.environ.setdefault(k.strip(), v.strip())
 
-        page_text = _extract_page_text(target_url)
+        page_text, screenshots = _extract_page_text_and_screenshot(target_url)
         text_len = len(page_text) if page_text else 0
         text_preview = page_text[:200] if page_text else ""
 
         if page_text and not page_text.startswith("[크롤링 오류") and not page_text.startswith("[오류"):
-            result = _parse_with_ai(page_text, target_url)
+            result = _parse_with_ai(page_text, target_url, screenshots)
         else:
             result = {"_error": page_text or "페이지 텍스트 추출 실패"}
 
-        # 디버그 정보 추가
         result["_text_length"] = text_len
         result["_text_preview"] = text_preview
+        result["_screenshots_count"] = len(screenshots)
 
         print(json.dumps(result, ensure_ascii=False))

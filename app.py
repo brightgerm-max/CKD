@@ -33,7 +33,7 @@ from clinicaltrials_client import search_clinical_trials
 from price_client import search_product_prices
 from competitor_scanner import scan_competitors, compare_ingredients
 from ad_reviewer import review_ad_text, ALLOWED_CLAIMS
-from product_scraper import scrape_product_info
+from product_scraper import scrape_product_info, analyze_image
 from price_scraper import scrape_prices_from_urls
 
 # ─── 경로 & 데이터 ───
@@ -755,6 +755,29 @@ def page_product_management():
                     st.success(f"추출 완료! 제품: {auto_result.get('product_name','')}, 성분: {len(auto_result.get('ingredients',[]))}개")
                     st.rerun()
 
+            # 이미지로 성분 분석
+            st.markdown("**성분표 이미지로 분석**")
+            img_file = st.file_uploader("성분표/상세정보 이미지 업로드", type=["png","jpg","jpeg","webp"], key="prod_add_img")
+            if img_file:
+                if st.button("이미지 분석", type="primary", key="prod_add_img_btn"):
+                    with st.spinner("이미지 분석 중..."):
+                        img_result = analyze_image(img_file.read())
+                    if "_error" in img_result:
+                        st.error(f"분석 실패: {img_result['_error']}")
+                    else:
+                        if img_result.get("ingredients"):
+                            existing = st.session_state.get("prod_add_ings", "")
+                            new_ings = ", ".join(img_result["ingredients"])
+                            st.session_state["prod_add_ings"] = f"{existing}, {new_ings}".strip(", ") if existing else new_ings
+                        if img_result.get("health_claims"):
+                            existing = st.session_state.get("prod_add_claims", "")
+                            new_claims = ", ".join(img_result["health_claims"])
+                            st.session_state["prod_add_claims"] = f"{existing}, {new_claims}".strip(", ") if existing else new_claims
+                        if img_result.get("product_name") and not st.session_state.get("prod_add_brand"):
+                            st.session_state["prod_add_brand"] = img_result["product_name"]
+                        st.success(f"이미지에서 성분 {len(img_result.get('ingredients',[]))}개, 건강기능 표시 {len(img_result.get('health_claims',[]))}개 추출")
+                        st.rerun()
+
             with st.form("add_product_form"):
                 c1, c2 = st.columns(2)
                 with c1:
@@ -890,6 +913,27 @@ def page_product_management():
                         p["product_urls"][url_type] = edit_auto_url
                         save_product_db(products_data)
                         st.success("자동 추출 결과가 반영되었습니다.")
+                        st.rerun()
+
+            # 이미지로 성분 분석
+            edit_img = st.file_uploader("성분표 이미지로 분석", type=["png","jpg","jpeg","webp"], key=f"prod_edit_img_{selected_idx}")
+            if edit_img:
+                if st.button("이미지 분석", type="primary", key=f"prod_edit_img_btn_{selected_idx}"):
+                    with st.spinner("이미지 분석 중..."):
+                        img_result = analyze_image(edit_img.read())
+                    if "_error" in img_result:
+                        st.error(f"분석 실패: {img_result['_error']}")
+                    else:
+                        if img_result.get("ingredients"):
+                            existing = set(p.get("ingredients", []))
+                            existing.update(img_result["ingredients"])
+                            p["ingredients"] = list(existing)
+                        if img_result.get("health_claims"):
+                            existing = set(p.get("health_claims", []))
+                            existing.update(img_result["health_claims"])
+                            p["health_claims"] = list(existing)
+                        save_product_db(products_data)
+                        st.success(f"이미지에서 성분 {len(img_result.get('ingredients',[]))}개, 건강기능 표시 {len(img_result.get('health_claims',[]))}개 추출 → 병합 완료")
                         st.rerun()
 
             with st.form(f"edit_form_{selected_idx}"):
@@ -2892,6 +2936,30 @@ def page_competitor_db_mgmt():
                     st.session_state[f"cdb_ub_{cat_name}"] = auto_url if url_type == "brand" else ""
                     st.success(f"추출 완료! 브랜드: {auto_result.get('brand_name','')}, 제품: {auto_result.get('product_name','')}, 성분: {len(auto_result.get('ingredients',[]))}개")
                     st.rerun()
+
+            # 이미지로 성분 분석 (추가용)
+            cdb_img = st.file_uploader("성분표 이미지로 분석", type=["png","jpg","jpeg","webp"], key=f"cdb_img_{cat_name}")
+            if cdb_img:
+                if st.button("이미지 분석", type="primary", key=f"cdb_img_btn_{cat_name}"):
+                    with st.spinner("이미지 분석 중..."):
+                        img_result = analyze_image(cdb_img.read())
+                    if "_error" in img_result:
+                        st.error(f"분석 실패: {img_result['_error']}")
+                    else:
+                        if img_result.get("ingredients"):
+                            existing = st.session_state.get(f"cdb_ing_{cat_name}", "")
+                            new_ings = ", ".join(img_result["ingredients"])
+                            st.session_state[f"cdb_ing_{cat_name}"] = f"{existing}, {new_ings}".strip(", ") if existing else new_ings
+                        if img_result.get("health_claims"):
+                            existing = st.session_state.get(f"cdb_cl_{cat_name}", "")
+                            new_claims = ", ".join(img_result["health_claims"])
+                            st.session_state[f"cdb_cl_{cat_name}"] = f"{existing}, {new_claims}".strip(", ") if existing else new_claims
+                        if img_result.get("brand_name") and not st.session_state.get(f"cdb_co_{cat_name}"):
+                            st.session_state[f"cdb_co_{cat_name}"] = img_result["brand_name"]
+                        if img_result.get("product_name") and not st.session_state.get(f"cdb_br_{cat_name}"):
+                            st.session_state[f"cdb_br_{cat_name}"] = img_result["product_name"]
+                        st.success(f"이미지에서 성분 {len(img_result.get('ingredients',[]))}개, 건강기능 표시 {len(img_result.get('health_claims',[]))}개 추출")
+                        st.rerun()
 
             # 추가 폼
             with st.form(f"cdb_add_{cat_name}"):
