@@ -550,6 +550,11 @@ div[data-testid="stVerticalBlockBorderWrapper"] tr:nth-child(even) { background:
     border-radius: 10px !important;
     background: linear-gradient(160deg, #ffffff 0%, #f0f4fa 100%) !important;
     border: 1.5px solid #e2e8f0 !important;
+    min-height: 42px !important;
+}
+.stDateInput > div > div > input {
+    min-height: 42px !important;
+    padding: 6px 12px !important;
 }
 .stDateInput > div > div:hover {
     border-color: #93c5fd !important;
