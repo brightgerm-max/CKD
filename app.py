@@ -3020,7 +3020,10 @@ def page_competitor_db_mgmt():
                 st.markdown("---")
                 st.markdown("**경쟁사 수정/삭제**")
                 comp_labels = [f'{c.get("brand_name","")} {c.get("product_name","")}' for c in comps]
-                sel_idx = st.selectbox("경쟁사 선택", range(len(comps)), format_func=lambda i: comp_labels[i], key=f"cdb_sel_{cat_name}")
+                st.markdown(
+                    '<div style="background:var(--c-primary);color:#fff;padding:10px 14px;border-radius:8px 8px 0 0;font-size:0.82rem;font-weight:600;margin-top:4px">수정할 경쟁사 선택</div>',
+                    unsafe_allow_html=True)
+                sel_idx = st.selectbox("경쟁사 선택", range(len(comps)), format_func=lambda i: comp_labels[i], key=f"cdb_sel_{cat_name}", label_visibility="collapsed")
 
                 c = comps[sel_idx]
                 usp = c.get("usp", {})
