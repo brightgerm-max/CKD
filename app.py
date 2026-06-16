@@ -2897,7 +2897,7 @@ def page_competitor_db_mgmt():
                 st.caption("등록된 경쟁사 없음")
 
             # URL 자동추출
-            st.markdown('<div style="background:#f8fafc;border-left:3px solid var(--c-primary);padding:8px 14px;font-size:0.95rem;font-weight:700;color:var(--c-primary);margin:4px 0 8px;border-radius:0 4px 4px 0">상품 URL로 자동 입력</div>', unsafe_allow_html=True)
+            st.markdown('<div style="font-size:0.95rem;font-weight:700;color:var(--c-primary);margin:4px 0 8px">상품 URL로 자동 입력</div>', unsafe_allow_html=True)
             ac1, ac2 = st.columns([4, 1])
             with ac1:
                 auto_url = st.text_input("상품 페이지 URL", placeholder="네이버/쿠팡/자사몰 URL 입력", key=f"cdb_autourl_{cat_name}")
@@ -2963,7 +2963,7 @@ def page_competitor_db_mgmt():
 
             # 추가 폼
             with st.form(f"cdb_add_{cat_name}"):
-                st.markdown('<div style="background:#f8fafc;border-left:3px solid var(--c-primary);padding:8px 14px;font-size:0.95rem;font-weight:700;color:var(--c-primary);margin:4px 0 8px;border-radius:0 4px 4px 0">경쟁사 추가</div>', unsafe_allow_html=True)
+                st.markdown('<div style="font-size:0.95rem;font-weight:700;color:var(--c-primary);margin:4px 0 8px">경쟁사 추가</div>', unsafe_allow_html=True)
                 # 기본 정보
                 st.markdown('<div style="font-size:0.85rem;font-weight:700;color:var(--c-text);margin:4px 0 2px">기본 정보</div>', unsafe_allow_html=True)
                 a1, a2 = st.columns(2)
@@ -3031,7 +3031,7 @@ def page_competitor_db_mgmt():
             # 수정/삭제
             if comps:
                 st.markdown("---")
-                st.markdown('<div style="background:#f8fafc;border-left:3px solid var(--c-primary);padding:8px 14px;font-size:0.95rem;font-weight:700;color:var(--c-primary);margin:4px 0 8px;border-radius:0 4px 4px 0">경쟁사 수정/삭제</div>', unsafe_allow_html=True)
+                st.markdown('<div style="font-size:0.95rem;font-weight:700;color:var(--c-primary);margin:4px 0 8px">경쟁사 수정/삭제</div>', unsafe_allow_html=True)
                 comp_labels = [f'{c.get("brand_name","")} {c.get("product_name","")}' for c in comps]
                 st.markdown(
                     '<div style="background:var(--c-primary);color:#fff;padding:10px 14px;border-radius:8px 8px 0 0;font-size:0.82rem;font-weight:600;margin-top:4px">수정할 경쟁사 선택</div>',
