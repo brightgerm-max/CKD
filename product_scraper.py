@@ -97,24 +97,32 @@ def _extract_page_text_and_screenshot(url: str) -> tuple:
                 user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             )
             page = context.new_page()
-            page.goto(url, timeout=30000, wait_until="domcontentloaded")
-            page.wait_for_timeout(5000)
+            page.goto(url, timeout=40000, wait_until="networkidle")
+            page.wait_for_timeout(3000)
 
             is_naver = any(d in url for d in ["smartstore.naver.com", "shopping.naver.com", "brand.naver.com"])
 
             if is_naver:
-                # 상세정보 탭 클릭
+                # 상세정보 탭 클릭 (여러 셀렉터 시도)
                 try:
-                    detail_tab = page.query_selector("a[href*='detail'], button:has-text('상세정보'), a:has-text('상세정보')")
-                    if detail_tab:
-                        detail_tab.click()
-                        page.wait_for_timeout(3000)
+                    for sel in [
+                        "a:has-text('상세정보')",
+                        "a:has-text('Detail')",
+                        "a[href*='detail']",
+                        "button:has-text('상세정보')",
+                        "li:has-text('상세정보') a",
+                    ]:
+                        detail_tab = page.query_selector(sel)
+                        if detail_tab:
+                            detail_tab.click()
+                            page.wait_for_timeout(4000)
+                            break
                 except Exception:
                     pass
-                # 스크롤 다운
-                for _ in range(5):
-                    page.evaluate("window.scrollBy(0, 1500)")
-                    page.wait_for_timeout(500)
+                # 충분히 스크롤 다운 (상세 이미지 lazy load 대응)
+                for _ in range(8):
+                    page.evaluate("window.scrollBy(0, 1200)")
+                    page.wait_for_timeout(600)
 
                 # iframe 내 텍스트도 추출 시도
                 iframe_text = ""
@@ -137,21 +145,24 @@ def _extract_page_text_and_screenshot(url: str) -> tuple:
                 else:
                     text = main_text
 
-                # 스크린샷 캡처 (상세 영역)
+                # 스크린샷 캡처 — 풀페이지로 1장 + 스크롤 위치별 2장
                 try:
-                    # 상단 스크린샷
-                    page.evaluate("window.scrollTo(0, 0)")
-                    page.wait_for_timeout(500)
-                    screenshots.append(page.screenshot(type="png"))
-                    # 스크롤 내려서 상세 영역 스크린샷
-                    page.evaluate("window.scrollBy(0, 900)")
-                    page.wait_for_timeout(500)
-                    screenshots.append(page.screenshot(type="png"))
-                    page.evaluate("window.scrollBy(0, 900)")
-                    page.wait_for_timeout(500)
-                    screenshots.append(page.screenshot(type="png"))
+                    # 풀페이지 스크린샷 (전체 콘텐츠)
+                    screenshots.append(page.screenshot(type="png", full_page=True))
                 except Exception:
-                    pass
+                    # 풀페이지 실패 시 뷰포트별 캡처
+                    try:
+                        page.evaluate("window.scrollTo(0, 0)")
+                        page.wait_for_timeout(300)
+                        screenshots.append(page.screenshot(type="png"))
+                        page.evaluate("window.scrollBy(0, 900)")
+                        page.wait_for_timeout(300)
+                        screenshots.append(page.screenshot(type="png"))
+                        page.evaluate("window.scrollBy(0, 900)")
+                        page.wait_for_timeout(300)
+                        screenshots.append(page.screenshot(type="png"))
+                    except Exception:
+                        pass
             else:
                 for _ in range(3):
                     page.evaluate("window.scrollBy(0, 1000)")

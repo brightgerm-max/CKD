@@ -2912,16 +2912,16 @@ def page_competitor_db_mgmt():
                 if "_error" in auto_result:
                     st.error(f"추출 실패: {auto_result['_error']}")
                 elif not auto_result.get("brand_name") and not auto_result.get("ingredients"):
-                    # 결과가 모두 빈 값
-                    debug_info = auto_result.get("_debug", "")
                     text_len = auto_result.get("_text_length", 0)
-                    text_preview = auto_result.get("_text_preview", "")[:200]
-                    st.warning(f"페이지에서 정보를 추출하지 못했습니다. (텍스트 {text_len}자 수집)")
-                    if text_preview:
-                        with st.expander("수집된 텍스트 미리보기"):
-                            st.text(text_preview)
-                    if debug_info:
-                        st.caption(f"디버그: {debug_info}")
+                    text_preview = auto_result.get("_text_preview", "")[:300]
+                    ss_count = auto_result.get("_screenshots_count", 0)
+                    debug_info = auto_result.get("_debug", "")
+                    st.warning(f"페이지에서 정보를 추출하지 못했습니다. (텍스트 {text_len}자, 스크린샷 {ss_count}장)")
+                    with st.expander("디버그 정보"):
+                        st.text(f"텍스트 미리보기:\n{text_preview}")
+                        if debug_info:
+                            st.text(f"디버그: {debug_info}")
+                    st.info("성분표 이미지를 직접 업로드하면 더 정확한 추출이 가능합니다.")
                 else:
                     # 위젯 key에 직접 값 설정 후 rerun
                     st.session_state[f"cdb_co_{cat_name}"] = auto_result.get("brand_name", "")
