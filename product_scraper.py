@@ -97,8 +97,8 @@ def _extract_page_text_and_screenshot(url: str) -> tuple:
                 user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             )
             page = context.new_page()
-            page.goto(url, timeout=40000, wait_until="networkidle")
-            page.wait_for_timeout(3000)
+            page.goto(url, timeout=30000, wait_until="domcontentloaded")
+            page.wait_for_timeout(6000)
 
             is_naver = any(d in url for d in ["smartstore.naver.com", "shopping.naver.com", "brand.naver.com"])
 
