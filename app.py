@@ -1826,9 +1826,9 @@ def page_trend():
     with cat_col:
         category = st.selectbox("카테고리", ["자사", "경쟁사", "제품", "시즌"], key="trend_cat")
     with d1_col:
-        start_date = st.date_input("시작일", value=_dt.now() - _td(days=365), key="trend_start")
+        start_date = st.date_input("시작일", value=_dt.now() - _td(days=365), min_value=_dt(2016,1,1), key="trend_start")
     with d2_col:
-        end_date = st.date_input("종료일", value=_dt.now(), key="trend_end")
+        end_date = st.date_input("종료일", value=_dt.now(), min_value=_dt(2016,1,1), key="trend_end")
     with unit_col:
         time_unit_map = {"일별":"date","월별":"month","연도별":"year"}
         time_unit_label = st.selectbox("단위", list(time_unit_map.keys()), index=1, key="trend_unit")
