@@ -2965,7 +2965,7 @@ def page_competitor_db_mgmt():
             with st.form(f"cdb_add_{cat_name}"):
                 st.markdown("**경쟁사 추가**")
                 # 기본 정보
-                st.markdown('<div style="background:#f8fafc;border-left:3px solid var(--c-primary);padding:6px 12px;font-size:0.8rem;font-weight:600;color:var(--c-primary);margin:4px 0;border-radius:0 4px 4px 0">기본 정보</div>', unsafe_allow_html=True)
+                st.markdown('<div style="background:#f8fafc;border-left:3px solid var(--c-primary);padding:6px 12px;font-size:0.95rem;font-weight:700;color:var(--c-primary);margin:4px 0;border-radius:0 4px 4px 0">기본 정보</div>', unsafe_allow_html=True)
                 a1, a2 = st.columns(2)
                 with a1:
                     add_brand_name = st.text_input("브랜드", key=f"cdb_co_{cat_name}")
@@ -2973,18 +2973,18 @@ def page_competitor_db_mgmt():
                 with a2:
                     pass
                 # 성분 / 건강기능
-                st.markdown('<div style="background:#f8fafc;border-left:3px solid var(--c-primary);padding:6px 12px;font-size:0.8rem;font-weight:600;color:var(--c-primary);margin:12px 0 4px;border-radius:0 4px 4px 0">성분 / 건강기능 표시</div>', unsafe_allow_html=True)
+                st.markdown('<div style="background:#f8fafc;border-left:3px solid var(--c-primary);padding:6px 12px;font-size:0.95rem;font-weight:700;color:var(--c-primary);margin:12px 0 4px;border-radius:0 4px 4px 0">성분 / 건강기능 표시</div>', unsafe_allow_html=True)
                 ig1, ig2 = st.columns(2)
                 with ig1:
                     add_ingredients = st.text_input("핵심 성분 (쉼표 구분)", key=f"cdb_ing_{cat_name}")
                 with ig2:
                     add_claims = st.text_input("건강기능 표시 (쉼표 구분)", key=f"cdb_cl_{cat_name}")
                 # USP / 셀링포인트
-                st.markdown('<div style="background:#f8fafc;border-left:3px solid var(--c-primary);padding:6px 12px;font-size:0.8rem;font-weight:600;color:var(--c-primary);margin:12px 0 4px;border-radius:0 4px 4px 0">USP / 셀링포인트</div>', unsafe_allow_html=True)
+                st.markdown('<div style="background:#f8fafc;border-left:3px solid var(--c-primary);padding:6px 12px;font-size:0.95rem;font-weight:700;color:var(--c-primary);margin:12px 0 4px;border-radius:0 4px 4px 0">USP / 셀링포인트</div>', unsafe_allow_html=True)
                 add_headline = st.text_input("USP 헤드라인", key=f"cdb_hl_{cat_name}")
                 add_sp = st.text_area("셀링포인트 (줄바꿈 구분)", height=60, key=f"cdb_sp_{cat_name}")
                 # 채널별 URL
-                st.markdown('<div style="background:#f8fafc;border-left:3px solid var(--c-primary);padding:6px 12px;font-size:0.8rem;font-weight:600;color:var(--c-primary);margin:12px 0 4px;border-radius:0 4px 4px 0">채널별 URL</div>', unsafe_allow_html=True)
+                st.markdown('<div style="background:#f8fafc;border-left:3px solid var(--c-primary);padding:6px 12px;font-size:0.95rem;font-weight:700;color:var(--c-primary);margin:12px 0 4px;border-radius:0 4px 4px 0">채널별 URL</div>', unsafe_allow_html=True)
                 au1, au2, au3 = st.columns(3)
                 with au1:
                     add_url_naver = st.text_input("네이버 URL", key=f"cdb_un_{cat_name}")
@@ -2993,7 +2993,7 @@ def page_competitor_db_mgmt():
                 with au3:
                     add_url_brand = st.text_input("자사몰 URL", key=f"cdb_ub_{cat_name}")
                 # 채널별 가격
-                st.markdown('<div style="background:#f8fafc;border-left:3px solid var(--c-primary);padding:6px 12px;font-size:0.8rem;font-weight:600;color:var(--c-primary);margin:12px 0 4px;border-radius:0 4px 4px 0">채널별 가격 <span style="font-weight:400;color:#94a3b8;font-size:0.72rem">(선택)</span></div>', unsafe_allow_html=True)
+                st.markdown('<div style="background:#f8fafc;border-left:3px solid var(--c-primary);padding:6px 12px;font-size:0.95rem;font-weight:700;color:var(--c-primary);margin:12px 0 4px;border-radius:0 4px 4px 0">채널별 가격 <span style="font-weight:400;color:#94a3b8;font-size:0.72rem">(선택)</span></div>', unsafe_allow_html=True)
                 st.caption("단위 입력 형식: 60정, 120캡슐, 30포, 2개월분, 90일분")
                 ap1, ap2, ap3 = st.columns(3)
                 with ap1:
@@ -3047,7 +3047,7 @@ def page_competitor_db_mgmt():
                 c_urls = c.get("product_urls", {})
 
                 # 수정 시 URL 자동추출
-                st.markdown('<div style="background:#f8fafc;border-left:3px solid var(--c-primary);padding:6px 12px;font-size:0.8rem;font-weight:600;color:var(--c-primary);margin:8px 0 4px;border-radius:0 4px 4px 0">자동 추출</div>', unsafe_allow_html=True)
+                st.markdown('<div style="background:#f8fafc;border-left:3px solid var(--c-primary);padding:6px 12px;font-size:0.95rem;font-weight:700;color:var(--c-primary);margin:8px 0 4px;border-radius:0 4px 4px 0">자동 추출</div>', unsafe_allow_html=True)
                 edit_auto_key = f"_auto_edit_{cat_name}_{sel_idx}"
                 ec1, ec2 = st.columns([4, 1])
                 with ec1:
@@ -3083,7 +3083,7 @@ def page_competitor_db_mgmt():
 
                 with st.form(f"cdb_edit_{cat_name}_{sel_idx}"):
                     # 기본 정보
-                    st.markdown('<div style="background:#f8fafc;border-left:3px solid var(--c-primary);padding:6px 12px;font-size:0.8rem;font-weight:600;color:var(--c-primary);margin:4px 0;border-radius:0 4px 4px 0">기본 정보</div>', unsafe_allow_html=True)
+                    st.markdown('<div style="background:#f8fafc;border-left:3px solid var(--c-primary);padding:6px 12px;font-size:0.95rem;font-weight:700;color:var(--c-primary);margin:4px 0;border-radius:0 4px 4px 0">기본 정보</div>', unsafe_allow_html=True)
                     e1, e2 = st.columns(2)
                     with e1:
                         ed_brand_name = st.text_input("브랜드", value=c.get("brand_name",""))
@@ -3092,7 +3092,7 @@ def page_competitor_db_mgmt():
                         ed_search_kw = st.text_input("검색 키워드 (가격 검색용)", value=c.get("search_keyword",""))
 
                     # 성분 & 건강기능
-                    st.markdown('<div style="background:#f8fafc;border-left:3px solid var(--c-primary);padding:6px 12px;font-size:0.8rem;font-weight:600;color:var(--c-primary);margin:12px 0 4px;border-radius:0 4px 4px 0">성분 / 건강기능 표시</div>', unsafe_allow_html=True)
+                    st.markdown('<div style="background:#f8fafc;border-left:3px solid var(--c-primary);padding:6px 12px;font-size:0.95rem;font-weight:700;color:var(--c-primary);margin:12px 0 4px;border-radius:0 4px 4px 0">성분 / 건강기능 표시</div>', unsafe_allow_html=True)
                     ig1, ig2 = st.columns(2)
                     with ig1:
                         ed_ingredients = st.text_input("핵심 성분 (쉼표 구분)", value=", ".join(c.get("ingredients",[])))
@@ -3100,12 +3100,12 @@ def page_competitor_db_mgmt():
                         ed_claims = st.text_input("건강기능 표시 (쉼표 구분)", value=", ".join(c.get("health_claims",[])))
 
                     # USP / 셀링포인트
-                    st.markdown('<div style="background:#f8fafc;border-left:3px solid var(--c-primary);padding:6px 12px;font-size:0.8rem;font-weight:600;color:var(--c-primary);margin:12px 0 4px;border-radius:0 4px 4px 0">USP / 셀링포인트</div>', unsafe_allow_html=True)
+                    st.markdown('<div style="background:#f8fafc;border-left:3px solid var(--c-primary);padding:6px 12px;font-size:0.95rem;font-weight:700;color:var(--c-primary);margin:12px 0 4px;border-radius:0 4px 4px 0">USP / 셀링포인트</div>', unsafe_allow_html=True)
                     ed_headline = st.text_input("USP 헤드라인", value=hl)
                     ed_sp = st.text_area("셀링포인트 (줄바꿈 구분)", value="\n".join(sp), height=60)
 
                     # 채널별 URL
-                    st.markdown('<div style="background:#f8fafc;border-left:3px solid var(--c-primary);padding:6px 12px;font-size:0.8rem;font-weight:600;color:var(--c-primary);margin:12px 0 4px;border-radius:0 4px 4px 0">채널별 URL</div>', unsafe_allow_html=True)
+                    st.markdown('<div style="background:#f8fafc;border-left:3px solid var(--c-primary);padding:6px 12px;font-size:0.95rem;font-weight:700;color:var(--c-primary);margin:12px 0 4px;border-radius:0 4px 4px 0">채널별 URL</div>', unsafe_allow_html=True)
                     eu1, eu2, eu3 = st.columns(3)
                     with eu1:
                         ed_url_naver = st.text_input("네이버 URL", value=c_urls.get("naver",""))
@@ -3116,7 +3116,7 @@ def page_competitor_db_mgmt():
 
                     # 채널별 가격
                     c_mp = c.get("manual_prices", {})
-                    st.markdown('<div style="background:#f8fafc;border-left:3px solid var(--c-primary);padding:6px 12px;font-size:0.8rem;font-weight:600;color:var(--c-primary);margin:12px 0 4px;border-radius:0 4px 4px 0">채널별 가격 <span style="font-weight:400;color:#94a3b8;font-size:0.72rem">(선택, 0=API 자동)</span></div>', unsafe_allow_html=True)
+                    st.markdown('<div style="background:#f8fafc;border-left:3px solid var(--c-primary);padding:6px 12px;font-size:0.95rem;font-weight:700;color:var(--c-primary);margin:12px 0 4px;border-radius:0 4px 4px 0">채널별 가격 <span style="font-weight:400;color:#94a3b8;font-size:0.72rem">(선택, 0=API 자동)</span></div>', unsafe_allow_html=True)
                     st.caption("단위 입력 형식: 60정, 120캡슐, 30포, 2개월분, 90일분")
                     ep1, ep2, ep3 = st.columns(3)
                     with ep1:
