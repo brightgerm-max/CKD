@@ -546,16 +546,20 @@ div[data-testid="stVerticalBlockBorderWrapper"] th { background: var(--c-primary
 div[data-testid="stVerticalBlockBorderWrapper"] td { padding: 8px 12px !important; border: 1px solid var(--c-border-light) !important; font-size: var(--font-sm) !important; }
 div[data-testid="stVerticalBlockBorderWrapper"] tr:nth-child(even) { background: #f8fafc !important; }
 /* date_input 스타일 */
+[data-testid="stDateInput"] > div > div,
 .stDateInput > div > div {
     border-radius: 10px !important;
     background: linear-gradient(160deg, #ffffff 0%, #f0f4fa 100%) !important;
     border: 1.5px solid #e2e8f0 !important;
-    min-height: 42px !important;
 }
-.stDateInput > div > div > input {
+[data-testid="stDateInput"] input,
+.stDateInput input {
+    height: 42px !important;
     min-height: 42px !important;
     padding: 6px 12px !important;
+    box-sizing: border-box !important;
 }
+[data-testid="stDateInput"] > div > div:hover,
 .stDateInput > div > div:hover {
     border-color: #93c5fd !important;
 }
