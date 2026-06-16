@@ -120,9 +120,34 @@ def _extract_page_text_and_screenshot(url: str) -> tuple:
                 except Exception:
                     pass
                 # 충분히 스크롤 다운 (상세 이미지 lazy load 대응)
-                for _ in range(8):
+                for _ in range(5):
                     page.evaluate("window.scrollBy(0, 1200)")
-                    page.wait_for_timeout(600)
+                    page.wait_for_timeout(500)
+
+                # "상품정보 펼쳐보기" 버튼 클릭
+                try:
+                    for sel in [
+                        "a:has-text('상품정보 펼쳐보기')",
+                        "button:has-text('상품정보 펼쳐보기')",
+                        "a:has-text('펼쳐보기')",
+                        "button:has-text('펼쳐보기')",
+                        "a:has-text('View More')",
+                        "button:has-text('View More')",
+                        "a:has-text('더보기')",
+                        "button:has-text('더보기')",
+                    ]:
+                        expand_btn = page.query_selector(sel)
+                        if expand_btn and expand_btn.is_visible():
+                            expand_btn.click()
+                            page.wait_for_timeout(3000)
+                            break
+                except Exception:
+                    pass
+
+                # 펼친 후 추가 스크롤
+                for _ in range(5):
+                    page.evaluate("window.scrollBy(0, 1200)")
+                    page.wait_for_timeout(500)
 
                 # iframe 내 텍스트도 추출 시도
                 iframe_text = ""
