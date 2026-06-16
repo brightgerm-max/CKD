@@ -3034,12 +3034,12 @@ def page_competitor_db_mgmt():
                 c_urls = c.get("product_urls", {})
 
                 # 수정 시 URL 자동추출
+                st.markdown('<div style="background:#f8fafc;border-left:3px solid var(--c-primary);padding:6px 12px;font-size:0.8rem;font-weight:600;color:var(--c-primary);margin:8px 0 4px;border-radius:0 4px 4px 0">자동 추출</div>', unsafe_allow_html=True)
                 edit_auto_key = f"_auto_edit_{cat_name}_{sel_idx}"
                 ec1, ec2 = st.columns([4, 1])
                 with ec1:
-                    edit_auto_url = st.text_input("URL로 정보 자동 갱신", placeholder="상품 URL 입력 후 자동 추출", key=f"cdb_eaurl_{cat_name}_{sel_idx}")
+                    edit_auto_url = st.text_input("URL로 정보 자동 갱신", placeholder="상품 URL 입력 후 자동 추출", key=f"cdb_eaurl_{cat_name}_{sel_idx}", label_visibility="collapsed")
                 with ec2:
-                    st.markdown('<div style="height:28px"></div>', unsafe_allow_html=True)
                     edit_auto_btn = st.button("자동 추출", key=f"cdb_eabtn_{cat_name}_{sel_idx}")
 
                 if edit_auto_btn and edit_auto_url:
@@ -3069,16 +3069,30 @@ def page_competitor_db_mgmt():
                             st.rerun()
 
                 with st.form(f"cdb_edit_{cat_name}_{sel_idx}"):
+                    # 기본 정보
+                    st.markdown('<div style="background:#f8fafc;border-left:3px solid #1e293b;padding:6px 12px;font-size:0.8rem;font-weight:600;color:#1e293b;margin:4px 0;border-radius:0 4px 4px 0">기본 정보</div>', unsafe_allow_html=True)
                     e1, e2 = st.columns(2)
                     with e1:
                         ed_brand_name = st.text_input("브랜드", value=c.get("brand_name",""))
                         ed_product_name = st.text_input("제품명", value=c.get("product_name",""))
-                        ed_search_kw = st.text_input("검색 키워드 (가격 검색용)", value=c.get("search_keyword",""))
-                        ed_ingredients = st.text_input("핵심 성분 (쉼표 구분)", value=", ".join(c.get("ingredients",[])))
                     with e2:
-                        ed_headline = st.text_input("USP 헤드라인", value=hl)
+                        ed_search_kw = st.text_input("검색 키워드 (가격 검색용)", value=c.get("search_keyword",""))
+
+                    # 성분 & 건강기능
+                    st.markdown('<div style="background:#f8fafc;border-left:3px solid #059669;padding:6px 12px;font-size:0.8rem;font-weight:600;color:#059669;margin:12px 0 4px;border-radius:0 4px 4px 0">성분 / 건강기능 표시</div>', unsafe_allow_html=True)
+                    ig1, ig2 = st.columns(2)
+                    with ig1:
+                        ed_ingredients = st.text_input("핵심 성분 (쉼표 구분)", value=", ".join(c.get("ingredients",[])))
+                    with ig2:
                         ed_claims = st.text_input("건강기능 표시 (쉼표 구분)", value=", ".join(c.get("health_claims",[])))
-                        ed_sp = st.text_area("셀링포인트 (줄바꿈 구분)", value="\n".join(sp), height=60)
+
+                    # USP / 셀링포인트
+                    st.markdown('<div style="background:#f8fafc;border-left:3px solid #d97706;padding:6px 12px;font-size:0.8rem;font-weight:600;color:#d97706;margin:12px 0 4px;border-radius:0 4px 4px 0">USP / 셀링포인트</div>', unsafe_allow_html=True)
+                    ed_headline = st.text_input("USP 헤드라인", value=hl)
+                    ed_sp = st.text_area("셀링포인트 (줄바꿈 구분)", value="\n".join(sp), height=60)
+
+                    # 채널별 URL
+                    st.markdown('<div style="background:#f8fafc;border-left:3px solid var(--c-primary);padding:6px 12px;font-size:0.8rem;font-weight:600;color:var(--c-primary);margin:12px 0 4px;border-radius:0 4px 4px 0">채널별 URL</div>', unsafe_allow_html=True)
                     eu1, eu2, eu3 = st.columns(3)
                     with eu1:
                         ed_url_naver = st.text_input("네이버 URL", value=c_urls.get("naver",""))
@@ -3086,8 +3100,10 @@ def page_competitor_db_mgmt():
                         ed_url_coupang = st.text_input("쿠팡 URL", value=c_urls.get("coupang",""))
                     with eu3:
                         ed_url_brand = st.text_input("자사몰 URL", value=c_urls.get("brand",""))
+
+                    # 채널별 가격
                     c_mp = c.get("manual_prices", {})
-                    st.markdown("**채널별 가격 (선택, 0=API 자동)**")
+                    st.markdown('<div style="background:#f8fafc;border-left:3px solid #dc2626;padding:6px 12px;font-size:0.8rem;font-weight:600;color:#dc2626;margin:12px 0 4px;border-radius:0 4px 4px 0">채널별 가격 <span style="font-weight:400;color:#94a3b8;font-size:0.72rem">(선택, 0=API 자동)</span></div>', unsafe_allow_html=True)
                     st.caption("단위 입력 형식: 60정, 120캡슐, 30포, 2개월분, 90일분")
                     ep1, ep2, ep3 = st.columns(3)
                     with ep1:
